@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CDD · Connect a source</title>
+<style>
+  :root{
+    --shell-bg:#F0F1F6; --sidebar:#112437; --sidebar-text:#AEB9CB; --sidebar-text-dim:#7C8AA0;
+    --sidebar-active:#3979BD; --brand-blue:#4EA1E8; --header-bg:#FFFFFF; --card-border:#CBDCF6;
+    --ink:#092339; --ink-2:#64748B; --ink-3:#8A93A6;
+    --ok:#1F9D55; --ok-soft:#E8F6EE; --warn:#D97706;
+    --font: "Segoe UI", Inter, system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif;
+  }
+  *{box-sizing:border-box;} html,body{margin:0;padding:0;}
+  body{font-family:var(--font);background:#E7E9F0;color:var(--ink);margin:0;}
+  .shell{width:100%;min-height:100vh;background:var(--shell-bg);padding:16px;display:flex;gap:20px;align-items:flex-start;}
+  .sidebar{width:264px;flex:0 0 264px;background:var(--sidebar);border-radius:16px;padding:24px 14px;min-height:880px;display:flex;flex-direction:column;position:sticky;top:24px;}
+  .brand{padding:0 10px 20px;}
+  .brand-row{display:flex;align-items:center;gap:8px;}
+  .brand-word{font-size:21px;font-weight:700;} .brand-word .data{color:#fff;} .brand-word .safe{color:var(--brand-blue);}
+  .brand-sub{margin-top:3px;font-size:11px;font-style:italic;font-weight:600;color:var(--brand-blue);display:flex;align-items:center;gap:6px;}
+  .brand-sub .sep{width:3px;height:3px;border-radius:50%;background:var(--brand-blue);opacity:.7;}
+  nav.primary{display:flex;flex-direction:column;gap:2px;}
+  .nav-top{display:flex;align-items:center;gap:10px;padding:10px 10px 8px;color:#fff;font-weight:700;font-size:14.5px;}
+  .nav-top .ico{width:19px;height:19px;color:#fff;}
+  .proj{padding:0 6px;margin-bottom:2px;}
+  .proj-sum{display:flex;align-items:center;gap:9px;padding:9px 6px;border-radius:8px;color:#fff;}
+  .proj-sum::before{content:"";width:8px;height:8px;border-radius:2px;background:var(--acc,#3979BD);flex:0 0 auto;}
+  .proj-name{flex:1;font-size:13.5px;font-weight:700;}
+  .proj-tag{font-size:9.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--sidebar-text-dim);}
+  .proj.active .proj-sum{background:rgba(255,255,255,.05);}
+  .proj.disabled .proj-sum{opacity:.45;}
+  .proj.disabled .proj-tag{color:#6E7C90;background:rgba(255,255,255,.06);padding:2px 7px;border-radius:20px;}
+  .proj-links{padding:4px 0 10px 33px;display:flex;flex-direction:column;gap:1px;}
+  .proj-links a{display:block;padding:7px 10px;border-radius:7px;font-size:13px;font-weight:500;color:var(--sidebar-text);text-decoration:none;}
+  .proj-links a:hover{background:rgba(255,255,255,.06);color:#fff;}
+  .proj-links a.active{background:var(--sidebar-active);color:#fff;font-weight:600;}
+  .sidebar-foot{margin-top:auto;padding:14px 10px 2px;border-top:1px solid rgba(255,255,255,.08);}
+  .sidebar-foot .line{font-size:10px;color:var(--sidebar-text-dim);line-height:1.6;}
+
+  .main{flex:1;min-width:0;display:flex;flex-direction:column;gap:12px;}
+  .header{background:var(--header-bg);border-radius:8px;padding:18px 28px;display:flex;align-items:center;justify-content:space-between;}
+  .header h1{margin:0;font-size:21px;font-weight:700;color:var(--ink);}
+  .header p{margin:3px 0 0;font-size:13px;color:var(--ink-2);}
+  .avatar{width:38px;height:38px;border-radius:50%;border:2px solid #E2E2E2;display:flex;align-items:center;justify-content:center;color:#B7BEC9;}
+
+  .content{background:#FFFFFF;border:1px solid var(--card-border);border-radius:11.5px;padding:26px 28px 34px;flex:1;max-width:760px;margin:0 auto;width:100%;}
+
+  /* stepper */
+  .stepper{display:flex;align-items:center;gap:0;margin-bottom:28px;}
+  .steplbl{display:flex;align-items:center;gap:9px;flex:1;cursor:default;}
+  .steplbl .n{width:26px;height:26px;border-radius:50%;background:#EEF1F7;color:var(--ink-3);font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:0 0 auto;}
+  .steplbl .t{font-size:12.5px;font-weight:600;color:var(--ink-3);}
+  .steplbl .bar{flex:1;height:2px;background:#EEF1F7;margin:0 8px;}
+  .steplbl:last-child .bar{display:none;}
+
+  input[name="wiz"]{position:absolute;opacity:0;pointer-events:none;}
+  #w1:checked ~ .stepper label[for="w1"] .n,
+  #w2:checked ~ .stepper label[for="w2"] .n,
+  #w3:checked ~ .stepper label[for="w3"] .n,
+  #w4:checked ~ .stepper label[for="w4"] .n { background:var(--sidebar-active); color:#fff; }
+  #w1:checked ~ .stepper label[for="w1"] .t,
+  #w2:checked ~ .stepper label[for="w2"] .t,
+  #w3:checked ~ .stepper label[for="w3"] .t,
+  #w4:checked ~ .stepper label[for="w4"] .t { color:var(--ink); }
+
+  .panel{display:none;}
+  #w1:checked ~ .panels .p1{display:block;}
+  #w2:checked ~ .panels .p2{display:block;}
+  #w3:checked ~ .panels .p3{display:block;}
+  #w4:checked ~ .panels .p4{display:block;}
+
+  h2.pageh{margin:0 0 4px;font-size:19px;font-weight:700;color:var(--ink);}
+  p.sub{margin:0 0 22px;font-size:13px;color:var(--ink-2);max-width:56ch;}
+  h3.stepq{font-size:16px;font-weight:700;margin:0 0 4px;}
+  p.stepd{font-size:13px;color:var(--ink-2);margin:0 0 20px;}
+
+  .choices{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:26px;}
+  .choice{border:1.5px solid #E7EAF2;border-radius:12px;padding:16px;cursor:pointer;}
+  .choice.sel{border-color:var(--sidebar-active);background:#F5F9FF;}
+  .choice .ico{width:34px;height:34px;border-radius:9px;background:#EEF3FC;color:var(--sidebar-active);display:flex;align-items:center;justify-content:center;margin-bottom:10px;}
+  .choice b{display:block;font-size:14px;color:var(--ink);}
+  .choice span{font-size:12px;color:var(--ink-2);}
+
+  .field{margin-bottom:16px;}
+  .field label{display:block;font-size:12.5px;font-weight:600;color:var(--ink-2);margin-bottom:6px;}
+  .field label .req{color:#EB5757;margin-left:2px;}
+  .field input, .field select{width:100%;padding:10px 12px;border:1px solid #B8CFF0;border-radius:6px;font:inherit;font-size:13.5px;color:var(--ink);background:#fff;}
+  .field input:focus, .field select:focus{outline:none;border-color:var(--sidebar-active);box-shadow:0 0 0 3px rgba(57,121,189,.12);}
+  .field.err input, .field.err select{border-color:#EB5757;}
+  .field .errmsg{display:none;font-size:11.5px;color:#EB5757;margin-top:5px;}
+  .field.err .errmsg{display:block;}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .assure{display:flex;gap:10px;align-items:flex-start;background:#F5F9FF;border:1px solid #DCEBFF;border-radius:9px;padding:12px 14px;margin-top:6px;font-size:12.5px;color:var(--ink-2);}
+  .assure b{color:var(--ink);}
+
+  .review{border:1px solid #E7EAF2;border-radius:10px;padding:16px 18px;margin-bottom:20px;}
+  .review .row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #F0F1F6;font-size:13px;}
+  .review .row:last-child{border-bottom:none;}
+  .review .row .k{color:var(--ink-2);}
+  .review .row .v{font-weight:600;}
+
+  .wizfoot{display:flex;justify-content:space-between;align-items:center;margin-top:6px;}
+  .btn{font:inherit;font-size:13px;font-weight:700;padding:10px 18px;border-radius:8px;border:1px solid var(--card-border);background:#fff;color:var(--ink);cursor:pointer;}
+  .btn-primary{background:var(--sidebar-active);color:#fff;border-color:var(--sidebar-active);}
+  label.btn{display:inline-block;}
+
+  @media (max-width:760px){ .shell{flex-direction:column;} .sidebar{width:100%;flex:none;position:static;} .choices,.two{grid-template-columns:1fr;} }
+  .header-right{display:flex;align-items:center;gap:12px;}
+  .role-select{font:inherit;font-size:12.5px;font-weight:600;color:var(--ink-2);background:#F3F5FA;
+    border:1px solid #E4E8F1;border-radius:20px;padding:7px 30px 7px 14px;cursor:pointer;
+    appearance:none;-webkit-appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235B6577' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 10px center;background-size:13px;}
+  .role-select:hover{border-color:var(--sidebar-active);}
+  .role-select:focus-visible{outline:2px solid var(--sidebar-active);outline-offset:1px;}
+  body[data-role="dpo"] .proj-links a:not([data-role~="dpo"]),
+  body[data-role="compliance"] .proj-links a:not([data-role~="compliance"]),
+  body[data-role="admin"] .proj-links a:not([data-role~="admin"]) { display:none; }
+  .version-switch{display:flex;border:1px solid #E4E8F1;border-radius:20px;overflow:hidden;background:#F3F5FA;flex:0 0 auto;}
+  .vbtn{font:inherit;font-size:12px;font-weight:700;padding:7px 13px;border:none;background:transparent;color:var(--ink-2);cursor:pointer;text-decoration:none;display:inline-block;}
+  .vbtn.active{background:var(--sidebar-active);color:#fff;cursor:default;}
+  .vbtn:hover:not(.active){color:var(--ink);background:#E9EDF5;}
+  .navgroup{padding:10px 10px 3px;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--sidebar-text-dim);}
+  .navgroup:first-child{padding-top:2px;}
+
+
+
+  .version-select{font:inherit;font-size:12px;font-weight:700;color:var(--ink-2);background:#F3F5FA;
+    border:1px solid #E4E8F1;border-radius:20px;padding:7px 28px 7px 14px;cursor:pointer;
+    appearance:none;-webkit-appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235B6577' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 9px center;background-size:12px;}
+  .version-select:hover{border-color:var(--sidebar-active);}
+  .version-select:focus-visible{outline:2px solid var(--sidebar-active);outline-offset:1px;}
+
+  .flowbar{background:linear-gradient(90deg,#F3EEFD,#EEF3FC);border:1px solid #E4D9FA;border-radius:10px;padding:12px 16px;margin-bottom:16px;}
+  .flowbar .ftop{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .flowbar .fic{flex:0 0 auto;font-size:15px;}
+  .flowbar .fstage{font-weight:800;font-size:12.5px;color:#4C3A7A;}
+  .flowbar .fstep{font-size:12px;color:#6B5A94;}
+  .flowbar .fnav{margin-left:auto;display:flex;gap:8px;}
+  .flowbar a.fbtn{font:inherit;font-size:12px;font-weight:700;padding:6px 12px;border-radius:7px;border:1px solid #D9C9F5;background:#fff;color:#4C3A7A;text-decoration:none;white-space:nowrap;}
+  .flowbar a.fbtn:hover{background:#7C3AED;color:#fff;}
+  .flowbar .fbar{height:4px;border-radius:2px;background:#E4D9FA;margin:9px 0 8px;overflow:hidden;}
+  .flowbar .fbar > span{display:block;height:100%;background:#7C3AED;border-radius:2px;}
+  .flowbar .fdo{font-size:12.5px;color:#4C3A7A;line-height:1.5;}
+  .flowbar .fdo b{color:#3A2A63;}
+  .flowbar .fnone{font-size:11px;color:#8A7BAE;font-weight:600;}
+
+  /* embedded-in-modal mode: hide the page chrome, let the wizard fill the iframe */
+  body.modal-embed{background:#fff;}
+  body.modal-embed .shell{padding:0;gap:0;min-height:auto;align-items:stretch;}
+  body.modal-embed .sidebar{display:none;}
+  body.modal-embed .header{display:none;}
+  body.modal-embed .flowbar{display:none;}
+  body.modal-embed .main{gap:0;}
+  body.modal-embed .content{max-width:none;border:none;border-radius:0;margin:0;padding:26px 28px 30px;}
+</style>
+</head>
+<body>
+<script>document.body.setAttribute("data-role", localStorage.getItem("cdd_role") || "dpo");</script>
+<div class="shell">
+
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-row">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 2l7 3v6c0 4.97-3.05 9.36-7 11-3.95-1.64-7-6.03-7-11V5l7-3z" stroke="#4EA1E8" stroke-width="1.6" stroke-linejoin="round"/></svg>
+        <span class="brand-word"><span class="data">data</span><span class="safe">safeguard</span></span>
+      </div>
+      <div class="brand-sub">Privacy<span class="sep"></span>Management</div>
+    </div>
+    <nav class="primary">
+      <div class="nav-top">
+        <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M12 3l8 3.2v5.4c0 5-3.4 8.9-8 10.4-4.6-1.5-8-5.4-8-10.4V6.2L12 3z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="12" cy="11" r="2.6" stroke="currentColor" stroke-width="1.6"/></svg>
+        <span>CDD</span>
+      </div>
+      <a class="proj-sum" href="walkthrough.html" style="--acc:#64748B"><span class="proj-name">Walkthrough</span></a>
+      <a class="proj-sum" href="journeys.html" style="--acc:#DB2777"><span class="proj-name">Journey</span></a>
+      <div class="proj active">
+        <div class="proj-sum" style="--acc:#16274F"><span class="proj-name">CDD</span></div>
+        <div class="proj-links">
+          <div class="navgroup">Overview</div>
+          <a href="index.html" data-role="dpo compliance admin">Dashboard</a>
+          <a href="ecosystem.html" data-role="dpo compliance admin">Data ecosystem</a>
+          <a href="search.html" data-role="dpo compliance admin">Search</a>
+          <div class="navgroup">Connect</div>
+          <a href="Sources/index.html" data-role="dpo admin">Sources</a>
+          <a href="ingestion-ops.html" data-role="admin">Ingestion ops</a>
+          <div class="navgroup">Watch</div>
+          <a href="Monitoring/index.html" data-role="dpo admin">Changes</a>
+          <a href="delta-ops.html" data-role="admin">Delta ops</a>
+          <div class="navgroup">Detect</div>
+          <a href="Detect/index.html" data-role="dpo compliance admin">Detection</a>
+          <a href="findings.html" data-role="dpo compliance">Findings</a>
+          <a href="elements.html" data-role="dpo compliance">Elements</a>
+          <a href="detection-infra.html" data-role="admin compliance">Detection infra</a>
+          <div class="navgroup">Trust</div>
+          <a href="Trust/index.html" data-role="dpo compliance admin">Trust</a>
+          <a href="model-ops.html" data-role="admin compliance">Model ops</a>
+          <div class="navgroup">Comply</div>
+          <a href="compliance.html" data-role="compliance">Compliance</a>
+          <a href="reports.html" data-role="dpo compliance">Reports &amp; evidence</a>
+          <div class="navgroup">Manage</div>
+          <a href="system-health.html" data-role="dpo admin">System health</a>
+          <a href="pipeline.html" data-role="admin">Pipeline</a>
+          <a href="platform-admin.html" data-role="admin">Platform admin</a>
+          <a href="admin.html" data-role="admin">Admin</a>
+        </div>
+      </div>
+    </nav>
+    <div class="sidebar-foot">
+      <div class="line">CDD® · Confidential Data Discovery</div>
+      <div class="line">ID-PRIVACY® platform</div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="header">
+      <div><h1>Connect a source</h1><p>Add a place where your business keeps data, so we can check it for sensitive information.</p></div>
+      <div class="header-right"><select class="version-select" id="versionSelect" aria-label="Prototype version"><option value="../CDD-Simple/index.html">v1.0</option><option value="../CDD-Simple-v2/index.html">v2.0</option><option value="../CDD-Simple-v3/index.html">v3.0</option><option value="../CDD-Simple-v3.1/index.html">v3.1</option><option value="" selected>v3.2</option></select>
+        <select class="role-select" id="roleSelect" aria-label="Switch role">
+          <option value="dpo">Priya N. · Privacy Ops</option>
+          <option value="compliance">Marcus T. · Compliance Ops</option>
+          <option value="admin">Sam R. · Platform Ops</option>
+        </select>
+        <div class="avatar"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3.4" stroke="currentColor" stroke-width="1.6"/><path d="M4.5 19.5c1.6-3.4 4.4-5 7.5-5s5.9 1.6 7.5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></div>
+      </div>
+    </header>
+
+    <section class="content">
+      <input type="radio" name="wiz" id="w1" checked>
+      <input type="radio" name="wiz" id="w2">
+      <input type="radio" name="wiz" id="w3">
+      <input type="radio" name="wiz" id="w4">
+
+      <div class="stepper">
+        <label class="steplbl" for="w1"><span class="n">1</span><span class="t">What to connect</span></label>
+        <span class="bar"></span>
+        <label class="steplbl" for="w2"><span class="n">2</span><span class="t">Give us access</span></label>
+        <span class="bar"></span>
+        <label class="steplbl" for="w3"><span class="n">3</span><span class="t">Scheduler</span></label>
+        <span class="bar"></span>
+        <label class="steplbl" for="w4"><span class="n">4</span><span class="t">Review &amp; connect</span></label>
+      </div>
+
+      <div class="panels">
+        <div class="panel p1">
+          <h3 class="stepq">What do you want to connect?</h3>
+          <p class="stepd">Pick the kind of place your data lives. You can add more sources later.</p>
+          <div class="choices" id="choices">
+            <div class="choice sel" data-type="database" data-name="Database">
+              <div class="ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><ellipse cx="12" cy="6" rx="8" ry="3" stroke="currentColor" stroke-width="1.6"/><path d="M4 6v6c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6" stroke="currentColor" stroke-width="1.6"/></svg></div>
+              <b>Database</b><span>Postgres, MySQL, SQL Server, Oracle…</span>
+            </div>
+            <div class="choice" data-type="files" data-name="Files & cloud storage">
+              <div class="ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 7a3 3 0 013-3h3l2 2h5a3 3 0 013 3v7a3 3 0 01-3 3H7a3 3 0 01-3-3V7z" stroke="currentColor" stroke-width="1.6"/></svg></div>
+              <b>Files &amp; cloud storage</b><span>SharePoint, S3, Google Drive…</span>
+            </div>
+            <div class="choice" data-type="email" data-name="Email">
+              <div class="ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="4" y="5" width="16" height="14" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M4 7l8 6 8-6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></div>
+              <b>Email</b><span>Outlook, Gmail, Exchange…</span>
+            </div>
+            <div class="choice" data-type="app" data-name="Business app">
+              <div class="ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="4" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.6"/><rect x="13" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.6"/><rect x="4" y="13" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.6"/><rect x="13" y="13" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.6"/></svg></div>
+              <b>Business app</b><span>Salesforce, HubSpot, Zendesk…</span>
+            </div>
+          </div>
+          <div class="wizfoot"><span></span><label class="btn btn-primary" for="w2">Continue</label></div>
+        </div>
+
+        <div class="panel p2">
+          <h3 class="stepq">Give us access</h3>
+          <p class="stepd">We use these details only to read your data and check it for sensitive information.</p>
+          <div class="field" id="fld-name"><label>Name this source<span class="req">*</span></label><input type="text" id="srcName" value="" placeholder="e.g. Sales database"><div class="errmsg" id="err-name">Give it a name — and make it different from your other sources.</div></div>
+          <div id="dynFields"></div>
+          <div class="assure"><span>🔒</span><div><b>We only read your data.</b> Nothing is ever changed or deleted, and you can remove this connection at any time.</div></div>
+          <div class="wizfoot" style="margin-top:20px;"><label class="btn" for="w1">Back</label><button type="button" class="btn btn-primary" id="continueW2">Continue</button></div>
+        </div>
+
+        <div class="panel p3">
+          <h3 class="stepq">When should we check it?</h3>
+          <p class="stepd">Set how often CDD checks this source for sensitive data. You can change this any time from Sources.</p>
+          <div class="field"><label>Check frequency</label>
+            <select id="f_freq">
+              <option>Every hour</option>
+              <option selected>Daily</option>
+              <option>Weekly</option>
+              <option>Monthly</option>
+              <option>One time</option>
+            </select>
+          </div>
+          <div class="field" id="fld-day" style="display:none;"><label>Day of the week</label>
+            <select id="f_day"><option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option><option>Saturday</option><option>Sunday</option></select>
+          </div>
+          <div class="field" id="fld-monthday" style="display:none;"><label>Day of the month</label>
+            <select id="f_monthday"></select>
+            <div class="errmsg" id="monthNote" style="display:block;color:var(--ink-3);margin-top:5px;">If a month doesn't have this day (like the 31st in April), we'll run on that month's last day instead.</div>
+          </div>
+          <div class="field" id="fld-onedate" style="display:none;"><label>Date<span class="req">*</span></label>
+            <input type="date" id="f_onedate">
+            <div class="errmsg" id="err-onedate">Pick a date for the one-time check.</div>
+          </div>
+          <div class="two" id="fld-timerow">
+            <div class="field"><label>Start time</label><input type="time" id="f_time" value="02:00"></div>
+            <div class="field"><label>Time zone</label><select id="f_tz"><option>UTC</option><option>Your local time</option></select></div>
+          </div>
+          <div class="field"><label>Email me when a check finishes <span style="color:var(--ink-3);font-weight:500;">(optional)</span></label><input type="email" id="f_email" placeholder="you@company.com"></div>
+          <div class="assure" id="scheduleAssure"><span>🗓️</span><div><b>Your first check starts right away.</b> After that, we'll check on the schedule above — you can pause it or run one manually at any time from Sources.</div></div>
+          <div class="wizfoot" style="margin-top:20px;"><label class="btn" for="w2">Back</label><button type="button" class="btn btn-primary" id="continueW3">Continue</button></div>
+        </div>
+
+        <div class="panel p4">
+          <h3 class="stepq">Review &amp; connect</h3>
+          <p class="stepd">This looks right — start your first check whenever you're ready.</p>
+          <div class="review" id="reviewBox"></div>
+          <div class="assure" id="finishAssure"><span>⏱️</span><div>Your first check usually finishes within a few hours, depending on how much data there is. You'll see it on your Dashboard when it's done.</div></div>
+          <div class="wizfoot" style="margin-top:20px;"><label class="btn" for="w3">Back</label><a class="btn btn-primary" href="Sources/index.html#scans" id="startCheck">Start checking →</a></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+</div>
+
+<script>
+(function () {
+  var TEMPLATES = {
+    database: {
+      typeLabel: "database",
+      defaultName: "Sales database",
+      fields:
+        '<div class="two">' +
+          '<div class="field"><label>Database type</label><select id="f_sub"><option>PostgreSQL</option><option>MySQL</option><option>SQL Server</option><option>Oracle</option></select></div>' +
+          '<div class="field" id="fld-loc"><label>Host<span class="req">*</span></label><input type="text" id="f_loc" placeholder="db.company.internal"><div class="errmsg" id="err-loc">This is required — we need somewhere to connect to.</div></div>' +
+        '</div>' +
+        '<div class="two">' +
+          '<div class="field"><label>Username</label><input type="text" placeholder="readonly_user"></div>' +
+          '<div class="field"><label>Password</label><input type="password" placeholder="••••••••••"></div>' +
+        '</div>',
+      access: "Read-only"
+    },
+    files: {
+      typeLabel: "files & cloud storage",
+      defaultName: "Marketing files",
+      fields:
+        '<div class="two">' +
+          '<div class="field"><label>Provider</label><select id="f_sub"><option>SharePoint</option><option>Amazon S3</option><option>Google Drive</option><option>OneDrive</option></select></div>' +
+          '<div class="field" id="fld-loc"><label>Folder or bucket path<span class="req">*</span></label><input type="text" id="f_loc" placeholder="/marketing/assets"><div class="errmsg" id="err-loc">This is required — we need somewhere to connect to.</div></div>' +
+        '</div>' +
+        '<div class="two">' +
+          '<div class="field"><label>Client ID</label><input type="text" placeholder="client-id"></div>' +
+          '<div class="field"><label>Client secret</label><input type="password" placeholder="••••••••••"></div>' +
+        '</div>',
+      access: "Read-only"
+    },
+    email: {
+      typeLabel: "email",
+      defaultName: "Support inbox",
+      fields:
+        '<div class="two">' +
+          '<div class="field"><label>Provider</label><select id="f_sub"><option>Outlook / Microsoft 365</option><option>Gmail / Google Workspace</option><option>Exchange (on-prem)</option></select></div>' +
+          '<div class="field" id="fld-loc"><label>Mailbox address<span class="req">*</span></label><input type="text" id="f_loc" placeholder="support@company.com"><div class="errmsg" id="err-loc">This is required — we need somewhere to connect to.</div></div>' +
+        '</div>' +
+        '<div class="two">' +
+          '<div class="field"><label>App password</label><input type="password" placeholder="••••••••••"></div>' +
+          '<div class="field"><label>Sync scope</label><select><option>Inbox &amp; Sent</option><option>All folders</option></select></div>' +
+        '</div>',
+      access: "Read-only"
+    },
+    app: {
+      typeLabel: "business app",
+      defaultName: "Sales data (Salesforce)",
+      fields:
+        '<div class="two">' +
+          '<div class="field"><label>App</label><select id="f_sub"><option>Salesforce</option><option>HubSpot</option><option>Zendesk</option></select></div>' +
+          '<div class="field" id="fld-loc"><label>Account URL<span class="req">*</span></label><input type="text" id="f_loc" placeholder="company.my.salesforce.com"><div class="errmsg" id="err-loc">This is required — we need somewhere to connect to.</div></div>' +
+        '</div>' +
+        '<div class="two">' +
+          '<div class="field"><label>API token</label><input type="password" placeholder="••••••••••"></div>' +
+          '<div class="field" style="visibility:hidden"></div>' +
+        '</div>',
+      access: "Read-only"
+    }
+  };
+
+  var choicesEl = document.getElementById("choices");
+  var dynFields = document.getElementById("dynFields");
+  var srcName = document.getElementById("srcName");
+  var selectedType = "database";
+  var nameTouched = false;
+
+  // Sources that already exist in the demo estate — used so a suggested name never
+  // silently collides with a real one (see the "Sales database x2" bug in the journey audit).
+  var EXISTING_SOURCES = ["Sales database", "Billing database", "HR files (SharePoint)", "Sales data (Salesforce)", "Marketing files (S3)", "Clinical database", "Legacy CRM"];
+  function nameTaken(name) {
+    var n = (name || "").trim().toLowerCase();
+    return EXISTING_SOURCES.some(function (s) { return s.toLowerCase() === n; });
+  }
+  function uniqueName(base) {
+    if (!nameTaken(base)) return base;
+    var i = 2;
+    while (nameTaken(base + " " + i)) i++;
+    return base + " " + i;
+  }
+
+  function renderFields(type) {
+    dynFields.innerHTML = TEMPLATES[type].fields;
+    var loc = document.getElementById("f_loc");
+    if (loc) loc.addEventListener("input", function () { clearFieldError("fld-loc"); });
+  }
+  renderFields(selectedType);
+  srcName.value = uniqueName(TEMPLATES[selectedType].defaultName);
+
+  function clearFieldError(fieldId) {
+    var f = document.getElementById(fieldId);
+    if (f) f.classList.remove("err");
+  }
+
+  choicesEl.addEventListener("click", function (e) {
+    var card = e.target.closest(".choice");
+    if (!card) return;
+    choicesEl.querySelectorAll(".choice").forEach(function (c) { c.classList.remove("sel"); });
+    card.classList.add("sel");
+    selectedType = card.getAttribute("data-type");
+    renderFields(selectedType);
+    if (!nameTouched) srcName.value = uniqueName(TEMPLATES[selectedType].defaultName);
+  });
+
+  srcName.addEventListener("input", function () { nameTouched = true; clearFieldError("fld-name"); });
+
+  /* ---- Scheduler step ---- */
+  function ordinalSimple(n) {
+    var v = n % 100;
+    if (v >= 11 && v <= 13) return n + "th";
+    if (n % 10 === 1) return n + "st";
+    if (n % 10 === 2) return n + "nd";
+    if (n % 10 === 3) return n + "rd";
+    return n + "th";
+  }
+
+  var monthdaySel = document.getElementById("f_monthday");
+  for (var d = 1; d <= 31; d++) {
+    var opt = document.createElement("option");
+    opt.value = String(d);
+    opt.textContent = ordinalSimple(d);
+    monthdaySel.appendChild(opt);
+  }
+  var lastOpt = document.createElement("option");
+  lastOpt.value = "last";
+  lastOpt.textContent = "Last day of the month";
+  monthdaySel.appendChild(lastOpt);
+
+  var freqEl = document.getElementById("f_freq");
+  var onedateEl = document.getElementById("f_onedate");
+  (function () {
+    var d = new Date();
+    d.setDate(d.getDate() + 7);
+    onedateEl.value = d.toISOString().slice(0, 10);
+  })();
+
+  function updateScheduleUI() {
+    var v = freqEl.value;
+    document.getElementById("fld-day").style.display = v === "Weekly" ? "" : "none";
+    document.getElementById("fld-monthday").style.display = v === "Monthly" ? "" : "none";
+    document.getElementById("fld-onedate").style.display = v === "One time" ? "" : "none";
+    document.getElementById("fld-timerow").style.display = v === "Every hour" ? "none" : "";
+    clearFieldError("fld-onedate");
+    var assure = document.getElementById("scheduleAssure");
+    if (v === "One time") {
+      assure.innerHTML = '<span>🗓️</span><div><b>This runs once, on the date above.</b> After that it stops automatically — come back here to schedule another check.</div>';
+    } else {
+      assure.innerHTML = '<span>🗓️</span><div><b>Your first check starts right away.</b> After that, we’ll check on the schedule above — you can pause it or run one manually at any time from Sources.</div>';
+    }
+  }
+  freqEl.addEventListener("change", updateScheduleUI);
+  updateScheduleUI();
+
+  function scheduleLong() {
+    var v = freqEl.value;
+    var time = document.getElementById("f_time").value || "02:00";
+    var tz = document.getElementById("f_tz").value;
+    if (v === "Every hour") return "Every hour";
+    if (v === "Daily") return "Daily at " + time + " (" + tz + ")";
+    if (v === "Weekly") return "Weekly on " + document.getElementById("f_day").value + " at " + time + " (" + tz + ")";
+    if (v === "Monthly") {
+      var md = monthdaySel.value;
+      return "Monthly on the " + (md === "last" ? "last day" : ordinalSimple(parseInt(md, 10))) + " at " + time + " (" + tz + ")";
+    }
+    if (v === "One time") return "Once on " + (onedateEl.value || "—") + " at " + time + " (" + tz + ")";
+    return v;
+  }
+  function scheduleShort() {
+    var v = freqEl.value;
+    if (v === "Every hour" || v === "Daily") return v;
+    if (v === "Weekly") return "Weekly · " + document.getElementById("f_day").value.slice(0, 3);
+    if (v === "Monthly") {
+      var md = monthdaySel.value;
+      return "Monthly · " + (md === "last" ? "last day" : ordinalSimple(parseInt(md, 10)));
+    }
+    if (v === "One time") return "Once · " + (onedateEl.value || "—");
+    return v;
+  }
+
+  function buildReview() {
+    var t = TEMPLATES[selectedType];
+    var sub = document.getElementById("f_sub");
+    var loc = document.getElementById("f_loc");
+    var subVal = sub ? sub.value : "";
+    var locVal = loc && loc.value ? loc.value : (loc ? loc.getAttribute("placeholder") : "");
+    var email = (document.getElementById("f_email").value || "").trim();
+    var box = document.getElementById("reviewBox");
+    box.innerHTML =
+      '<div class="row"><span class="k">Source name</span><span class="v">' + (srcName.value || t.defaultName) + '</span></div>' +
+      '<div class="row"><span class="k">Type</span><span class="v">' + subVal + '</span></div>' +
+      '<div class="row"><span class="k">Location</span><span class="v">' + locVal + '</span></div>' +
+      '<div class="row"><span class="k">Access</span><span class="v">' + t.access + '</span></div>' +
+      '<div class="row"><span class="k">Check schedule</span><span class="v">' + scheduleLong() + '</span></div>' +
+      (email ? '<div class="row"><span class="k">Email notifications</span><span class="v">' + email + '</span></div>' : '');
+    var finishAssure = document.getElementById("finishAssure");
+    finishAssure.innerHTML = email
+      ? '<span>⏱️</span><div>Your first check usually finishes within a few hours, depending on how much data there is. We’ll email <b>' + email + '</b> when it’s done.</div>'
+      : '<span>⏱️</span><div>Your first check usually finishes within a few hours, depending on how much data there is. You’ll see it on your Dashboard when it’s done.</div>';
+  }
+  document.getElementById("w4").addEventListener("change", function () { if (this.checked) buildReview(); });
+
+  document.getElementById("continueW2").addEventListener("click", function () {
+    var nameOk = srcName.value.trim().length > 0 && !nameTaken(srcName.value);
+    var loc = document.getElementById("f_loc");
+    var locOk = !loc || loc.value.trim().length > 0;
+    clearFieldError("fld-name");
+    clearFieldError("fld-loc");
+    if (!nameOk) {
+      document.getElementById("fld-name").classList.add("err");
+      document.getElementById("err-name").textContent = srcName.value.trim()
+        ? "That name is already in use by another source — pick a different one."
+        : "Give it a name — and make it different from your other sources.";
+    }
+    if (!locOk) document.getElementById("fld-loc").classList.add("err");
+    if (!nameOk || !locOk) {
+      (nameOk ? document.getElementById("f_loc") : srcName).focus();
+      return;
+    }
+    document.getElementById("w3").checked = true;
+  });
+
+  document.getElementById("continueW3").addEventListener("click", function () {
+    if (freqEl.value === "One time" && !onedateEl.value) {
+      document.getElementById("fld-onedate").classList.add("err");
+      onedateEl.focus();
+      return;
+    }
+    document.getElementById("w4").checked = true;
+    document.getElementById("w4").dispatchEvent(new Event("change"));
+  });
+
+  onedateEl.addEventListener("input", function () { clearFieldError("fld-onedate"); });
+
+  var CDD_MODAL_EMBED = new URLSearchParams(location.search).get("modal") === "1";
+  if (CDD_MODAL_EMBED) document.body.classList.add("modal-embed");
+
+  document.getElementById("startCheck").addEventListener("click", function (e) {
+    var name = srcName.value || TEMPLATES[selectedType].defaultName;
+    var sub = document.getElementById("f_sub");
+    var friendlyType = sub ? sub.value : TEMPLATES[selectedType].typeLabel;
+    var schedule = scheduleShort();
+    try {
+      localStorage.setItem("cdd_new_source", JSON.stringify({ name: name, type: friendlyType, schedule: schedule }));
+    } catch (err) { /* storage unavailable — link still navigates normally */ }
+    if (CDD_MODAL_EMBED && window.parent && window.parent !== window) {
+      e.preventDefault();
+      window.parent.postMessage({ type: "cdd-connect-done", redirect: "Sources/index.html#scans" }, "*");
+    }
+  });
+})();
+</script>
+<script>
+(function () {
+  var sel = document.getElementById("roleSelect");
+  var GREET = { dpo: "Priya", compliance: "Marcus", admin: "Sam" };
+  sel.value = document.body.getAttribute("data-role") || "dpo";
+  var h1 = document.querySelector(".header h1");
+  if (h1 && /^Welcome back, /.test(h1.textContent)) {
+    h1.textContent = "Welcome back, " + GREET[sel.value];
+  }
+  sel.addEventListener("change", function () {
+    document.body.setAttribute("data-role", sel.value);
+    try { localStorage.setItem("cdd_role", sel.value); } catch (e) {}
+    if (h1 && /^Welcome back, /.test(h1.textContent)) {
+      h1.textContent = "Welcome back, " + GREET[sel.value];
+    }
+  });
+})();
+</script>
+<script>document.getElementById("versionSelect").addEventListener("change", function () { if (this.value) window.location.href = this.value; });</script>
+<script>
+var CDD_STAGES = [{n:"Overview",p:["index.html","ecosystem.html","search.html"]},{n:"Connect",p:["Sources/index.html","ingestion-ops.html"]},{n:"Watch",p:["Monitoring/index.html","delta-ops.html"]},{n:"Detect",p:["Detect/index.html","findings.html","elements.html","detection-infra.html"]},{n:"Trust",p:["Trust/index.html","model-ops.html"]},{n:"Comply",p:["compliance.html","reports.html"]},{n:"Manage",p:["system-health.html","pipeline.html","platform-admin.html","admin.html"]}];
+(function () {
+  if (new URLSearchParams(location.search).get("modal") === "1") return;
+  var MY_PATH = "connect-source.html";
+  var DEPTH = "";
+  var flat = [];
+  for (var s = 0; s < CDD_STAGES.length; s++) {
+    for (var i = 0; i < CDD_STAGES[s].p.length; i++) { flat.push({path: CDD_STAGES[s].p[i], stageIdx: s}); }
+  }
+  var idx = -1;
+  for (var k = 0; k < flat.length; k++) { if (flat[k].path === MY_PATH) { idx = k; break; } }
+  if (idx === -1) return;
+  var content = document.querySelector(".content");
+  if (!content) return;
+  var hiddenSteps = [];
+  try { var hRaw = JSON.parse(localStorage.getItem("cdd_journey_hidden") || "[]"); if (Array.isArray(hRaw)) hiddenSteps = hRaw; } catch (e) {}
+  var visFlat = flat.filter(function (f) { return hiddenSteps.indexOf(f.path) === -1; });
+  var vidx = -1;
+  for (var vk = 0; vk < visFlat.length; vk++) { if (visFlat[vk].path === MY_PATH) { vidx = vk; break; } }
+  var useList = vidx !== -1 ? visFlat : flat;
+  var useIdx = vidx !== -1 ? vidx : idx;
+  var stage = CDD_STAGES[useList[useIdx].stageIdx];
+  var prevHtml = useIdx > 0 ? '<a class="fbtn" href="' + DEPTH + useList[useIdx - 1].path + '">&larr; Back</a>' : "";
+  var nextHtml = useIdx < useList.length - 1
+    ? '<a class="fbtn" href="' + DEPTH + useList[useIdx + 1].path + '">Next &rarr;</a>'
+    : '<a class="fbtn" href="' + DEPTH + 'journeys.html">Flow complete \u2713</a>';
+  var pct = Math.round(((useIdx + 1) / useList.length) * 100);
+  var el = document.createElement("div");
+  el.className = "flowbar";
+  el.innerHTML =
+    '<div class="ftop">' +
+      '<span class="fic">\uD83E\uDDED</span>' +
+      '<span class="fstage">' + stage.n + '</span>' +
+      '<span class="fstep">&middot; step ' + (useIdx + 1) + ' of ' + useList.length + '</span>' +
+      '<span class="fnav">' + prevHtml + nextHtml + '</span>' +
+    '</div>' +
+    '<div class="fbar"><span style="width:' + pct + '%"></span></div>';
+  content.insertBefore(el, content.firstChild);
+})();
+</script>
+</body>
+</html>

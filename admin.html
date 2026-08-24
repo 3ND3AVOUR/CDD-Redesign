@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CDD · Admin</title>
+<!-- v3.2 consolidation — Admin, Roles & permissions and Data retention folded into one page,
+     three tabs: who's on the team, what each role can see, and how long data is kept. -->
+<style>
+  :root{
+    --shell-bg:#F0F1F6; --sidebar:#112437; --sidebar-text:#AEB9CB; --sidebar-text-dim:#7C8AA0;
+    --sidebar-active:#3979BD; --brand-blue:#4EA1E8; --header-bg:#FFFFFF; --card-border:#CBDCF6;
+    --ink:#092339; --ink-2:#64748B; --ink-3:#8A93A6;
+    --ok:#1F9D55; --ok-soft:#E8F6EE; --warn:#B45309;
+    --acc2:#7C3AED;
+    --font: "Segoe UI", Inter, system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif;
+  }
+  *{box-sizing:border-box;} html,body{margin:0;padding:0;}
+  body{font-family:var(--font);background:#E7E9F0;color:var(--ink);margin:0;}
+  .shell{width:100%;min-height:100vh;background:var(--shell-bg);padding:16px;display:flex;gap:20px;align-items:flex-start;}
+  .sidebar{width:264px;flex:0 0 264px;background:var(--sidebar);border-radius:16px;padding:24px 14px;min-height:880px;display:flex;flex-direction:column;position:sticky;top:24px;}
+  .brand{padding:0 10px 20px;}
+  .brand-row{display:flex;align-items:center;gap:8px;}
+  .brand-word{font-size:21px;font-weight:700;} .brand-word .data{color:#fff;} .brand-word .safe{color:var(--brand-blue);}
+  .brand-sub{margin-top:3px;font-size:11px;font-style:italic;font-weight:600;color:var(--brand-blue);display:flex;align-items:center;gap:6px;}
+  .brand-sub .sep{width:3px;height:3px;border-radius:50%;background:var(--brand-blue);opacity:.7;}
+  nav.primary{display:flex;flex-direction:column;gap:2px;}
+  .nav-top{display:flex;align-items:center;gap:10px;padding:10px 10px 8px;color:#fff;font-weight:700;font-size:14.5px;}
+  .nav-top .ico{width:19px;height:19px;color:#fff;}
+  .proj{padding:0 6px;margin-bottom:2px;}
+  .proj-sum{display:flex;align-items:center;gap:9px;padding:9px 6px;border-radius:8px;color:#fff;text-decoration:none;}
+  .proj-sum::before{content:"";width:8px;height:8px;border-radius:2px;background:var(--acc,#3979BD);flex:0 0 auto;}
+  .proj-name{flex:1;font-size:13.5px;font-weight:700;}
+  .proj.active .proj-sum{background:rgba(255,255,255,.05);}
+  .proj-links{padding:4px 0 10px 33px;display:flex;flex-direction:column;gap:1px;}
+  .proj-links a{display:block;padding:7px 10px;border-radius:7px;font-size:13px;font-weight:500;color:var(--sidebar-text);text-decoration:none;}
+  .proj-links a:hover{background:rgba(255,255,255,.06);color:#fff;}
+  .proj-links a.active{background:var(--sidebar-active);color:#fff;font-weight:600;}
+  .navgroup{padding:10px 10px 3px;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--sidebar-text-dim);}
+  .navgroup:first-child{padding-top:2px;}
+  .sidebar-foot{margin-top:auto;padding:14px 10px 2px;border-top:1px solid rgba(255,255,255,.08);}
+  .sidebar-foot .line{font-size:10px;color:var(--sidebar-text-dim);line-height:1.6;}
+
+  .main{flex:1;min-width:0;display:flex;flex-direction:column;gap:12px;}
+  .header{background:var(--header-bg);border-radius:8px;padding:18px 28px;display:flex;align-items:center;justify-content:space-between;}
+  .header h1{margin:0;font-size:21px;font-weight:700;color:var(--ink);}
+  .header p{margin:3px 0 0;font-size:13px;color:var(--ink-2);}
+  .avatar{width:38px;height:38px;border-radius:50%;border:2px solid #E2E2E2;display:flex;align-items:center;justify-content:center;color:#B7BEC9;}
+  .header-right{display:flex;align-items:center;gap:12px;}
+  .role-select{font:inherit;font-size:12.5px;font-weight:600;color:var(--ink-2);background:#F3F5FA;
+    border:1px solid #E4E8F1;border-radius:20px;padding:7px 30px 7px 14px;cursor:pointer;
+    appearance:none;-webkit-appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235B6577' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 10px center;background-size:13px;}
+  .role-select:hover{border-color:var(--sidebar-active);}
+  .version-select{font:inherit;font-size:12px;font-weight:700;color:var(--ink-2);background:#F3F5FA;
+    border:1px solid #E4E8F1;border-radius:20px;padding:7px 28px 7px 14px;cursor:pointer;
+    appearance:none;-webkit-appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235B6577' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 9px center;background-size:12px;}
+  .version-select:hover{border-color:var(--sidebar-active);}
+
+  .content{background:#FFFFFF;border:1px solid var(--card-border);border-radius:11.5px;padding:26px 28px 30px;flex:1;}
+  h2.pageh{margin:0 0 4px;font-size:19px;font-weight:700;color:var(--ink);}
+  p.sub{margin:0 0 18px;font-size:13px;color:var(--ink-2);max-width:66ch;}
+  h3.section-h{font-size:12.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-2);margin:0 0 12px;}
+
+  .flowbar{background:linear-gradient(90deg,#F3EEFD,#EEF3FC);border:1px solid #E4D9FA;border-radius:10px;padding:12px 16px;margin-bottom:16px;}
+  .flowbar .ftop{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .flowbar .fic{flex:0 0 auto;font-size:15px;}
+  .flowbar .fstage{font-weight:800;font-size:12.5px;color:#4C3A7A;}
+  .flowbar .fstep{font-size:12px;color:#6B5A94;}
+  .flowbar .fnav{margin-left:auto;display:flex;gap:8px;}
+  .flowbar a.fbtn{font:inherit;font-size:12px;font-weight:700;padding:6px 12px;border-radius:7px;border:1px solid #D9C9F5;background:#fff;color:#4C3A7A;text-decoration:none;white-space:nowrap;}
+  .flowbar a.fbtn:hover{background:#7C3AED;color:#fff;}
+  .flowbar .fbar{height:4px;border-radius:2px;background:#E4D9FA;margin:9px 0 8px;overflow:hidden;}
+  .flowbar .fbar > span{display:block;height:100%;background:#7C3AED;border-radius:2px;}
+  .flowbar .fdo{font-size:12.5px;color:#4C3A7A;line-height:1.5;}
+  .flowbar .fdo b{color:#3A2A63;}
+
+  .tabbar{display:flex;gap:4px;border-bottom:1px solid #E7EAF2;margin-bottom:22px;}
+  .tabbtn{font:inherit;font-size:13.5px;font-weight:700;color:var(--ink-2);background:none;border:none;border-bottom:2.5px solid transparent;padding:11px 4px;margin-right:22px;cursor:pointer;}
+  .tabbtn:hover{color:var(--ink);}
+  .tabbtn.active{color:var(--sidebar-active);border-bottom-color:var(--sidebar-active);}
+  .tabpanel{display:none;} .tabpanel.active{display:block;}
+
+  .invite{display:flex;gap:10px;border:1px solid #E7EAF2;border-radius:12px;padding:16px 18px;margin-bottom:26px;background:#FCFDFF;align-items:flex-end;flex-wrap:wrap;}
+  .field{flex:1;min-width:160px;}
+  .field label{display:block;font-size:12px;font-weight:600;color:var(--ink-2);margin-bottom:5px;}
+  .field input,.field select{width:100%;padding:9px 11px;border:1px solid var(--card-border);border-radius:8px;font:inherit;font-size:13px;}
+  .btn-primary{font:inherit;font-size:13px;font-weight:700;padding:10px 16px;border-radius:8px;border:1px solid var(--sidebar-active);background:var(--sidebar-active);color:#fff;cursor:pointer;flex:0 0 auto;}
+  .btn-primary:hover{background:#2E63A0;}
+  .role-pill{font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:#EEF3FC;color:var(--sidebar-active);}
+
+  .rgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+  .rcard{border:1px solid #E7EAF2;border-radius:12px;padding:16px 18px;background:#FCFDFF;}
+  .rcard .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+  .rcard b{font-size:14px;}
+  .rcard ul{margin:0;padding-left:18px;font-size:12px;color:var(--ink-2);line-height:1.8;}
+
+  .twrap{border:1px solid #E7EAF2;border-radius:12px;overflow:hidden;}
+  table{border-collapse:collapse;width:100%;font-size:13.5px;}
+  th,td{text-align:left;padding:12px 16px;border-bottom:1px solid #F0F1F6;}
+  th{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-3);font-weight:700;background:#FBFCFE;}
+  tr:last-child td{border-bottom:none;}
+  tr.new-row{animation:flash 1.6s ease;}
+  @keyframes flash{0%{background:#EFF6FF;}100%{background:transparent;}}
+  tr.leaving{opacity:0;transition:opacity .25s;}
+  td.num{color:var(--ink-2);}
+  .btn-sm{font:inherit;font-size:12px;font-weight:700;padding:6px 12px;border-radius:7px;border:1px solid var(--card-border);background:#fff;color:var(--ink);cursor:pointer;}
+  .btn-sm:hover{border-color:var(--sidebar-active);}
+
+  @media (max-width:1080px){ .rgrid{grid-template-columns:1fr;} }
+  @media (max-width:760px){ .shell{flex-direction:column;} .sidebar{width:100%;flex:none;position:static;} .invite{flex-direction:column;align-items:stretch;} }
+  body[data-role="dpo"] .proj-links a:not([data-role~="dpo"]),
+  body[data-role="compliance"] .proj-links a:not([data-role~="compliance"]),
+  body[data-role="admin"] .proj-links a:not([data-role~="admin"]) { display:none; }
+  .cm-overlay{position:fixed;inset:0;background:rgba(10,14,25,.6);display:none;align-items:center;justify-content:center;z-index:999;padding:24px;}
+  .cm-overlay.open{display:flex;}
+  .cm-box{width:min(760px,94vw);height:min(780px,92vh);background:#fff;border-radius:14px;overflow:hidden;position:relative;box-shadow:0 24px 64px rgba(8,12,24,.4);display:flex;flex-direction:column;}
+  .cm-close{position:absolute;top:12px;right:12px;z-index:2;width:30px;height:30px;border-radius:50%;border:1px solid #E4E8F1;background:#fff;color:var(--ink-2);font-size:16px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+  .cm-close:hover{background:#F3F5FA;color:var(--ink);}
+  .cm-box iframe{flex:1;width:100%;border:0;}
+</style>
+
+</head>
+<body>
+<script>document.body.setAttribute("data-role", localStorage.getItem("cdd_role") || "dpo");</script>
+<div class="shell">
+
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-row">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 2l7 3v6c0 4.97-3.05 9.36-7 11-3.95-1.64-7-6.03-7-11V5l7-3z" stroke="#4EA1E8" stroke-width="1.6" stroke-linejoin="round"/></svg>
+        <span class="brand-word"><span class="data">data</span><span class="safe">safeguard</span></span>
+      </div>
+      <div class="brand-sub">Privacy<span class="sep"></span>Management</div>
+    </div>
+    <nav class="primary">
+      <div class="nav-top">
+        <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M12 3l8 3.2v5.4c0 5-3.4 8.9-8 10.4-4.6-1.5-8-5.4-8-10.4V6.2L12 3z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="12" cy="11" r="2.6" stroke="currentColor" stroke-width="1.6"/></svg>
+        <span>CDD</span>
+      </div>
+      <a class="proj-sum" href="walkthrough.html" style="--acc:#64748B"><span class="proj-name">Walkthrough</span></a>
+      <a class="proj-sum" href="journeys.html" style="--acc:#DB2777"><span class="proj-name">Journey</span></a>
+      <div class="proj active">
+        <div class="proj-sum" style="--acc:#16274F"><span class="proj-name">CDD</span></div>
+        <div class="proj-links">
+          <div class="navgroup">Overview</div>
+          <a href="index.html" data-role="dpo compliance admin">Dashboard</a>
+          <a href="ecosystem.html" data-role="dpo compliance admin">Data ecosystem</a>
+          <a href="search.html" data-role="dpo compliance admin">Search</a>
+          <div class="navgroup">Connect</div>
+          <a href="Sources/index.html" data-role="dpo admin">Sources</a>
+          <a href="ingestion-ops.html" data-role="admin">Ingestion ops</a>
+          <div class="navgroup">Watch</div>
+          <a href="Monitoring/index.html" data-role="dpo admin">Changes</a>
+          <a href="delta-ops.html" data-role="admin">Delta ops</a>
+          <div class="navgroup">Detect</div>
+          <a href="Detect/index.html" data-role="dpo compliance admin">Detection</a>
+          <a href="findings.html" data-role="dpo compliance">Findings</a>
+          <a href="elements.html" data-role="dpo compliance">Elements</a>
+          <a href="detection-infra.html" data-role="admin compliance">Detection infra</a>
+          <div class="navgroup">Trust</div>
+          <a href="Trust/index.html" data-role="dpo compliance admin">Trust</a>
+          <a href="model-ops.html" data-role="admin compliance">Model ops</a>
+          <div class="navgroup">Comply</div>
+          <a href="compliance.html" data-role="compliance">Compliance</a>
+          <a href="reports.html" data-role="dpo compliance">Reports &amp; evidence</a>
+          <div class="navgroup">Manage</div>
+          <a href="system-health.html" data-role="dpo admin">System health</a>
+          <a href="pipeline.html" data-role="admin">Pipeline</a>
+          <a href="platform-admin.html" data-role="admin">Platform admin</a>
+          <a class="active" href="admin.html" data-role="admin">Admin</a>
+        </div>
+      </div>
+    </nav>
+    <div class="sidebar-foot">
+      <div class="line">CDD® · Confidential Data Discovery</div>
+      <div class="line">ID-PRIVACY® platform</div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="header">
+      <div><h1>Admin</h1><p>Your team, what each role can see, and how long data is kept.</p></div>
+      <div class="header-right"><select class="version-select" id="versionSelect" aria-label="Prototype version"><option value="../CDD-Simple/index.html">v1.0</option><option value="../CDD-Simple-v2/index.html">v2.0</option><option value="../CDD-Simple-v3/index.html">v3.0</option><option value="../CDD-Simple-v3.1/index.html">v3.1</option><option value="" selected>v3.2</option></select>
+        <select class="role-select" id="roleSelect" aria-label="Switch role">
+          <option value="dpo">Priya N. &middot; Privacy Ops</option>
+          <option value="compliance">Marcus T. &middot; Compliance Ops</option>
+          <option value="admin">Sam R. &middot; Platform Ops</option>
+        </select>
+        <div class="avatar"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3.4" stroke="currentColor" stroke-width="1.6"/><path d="M4.5 19.5c1.6-3.4 4.4-5 7.5-5s5.9 1.6 7.5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></div>
+      </div>
+    </header>
+
+    <section class="content">
+      <h2 class="pageh">Admin</h2>
+      <p class="sub">These are the same three roles the switcher in the top-right offers everyone — this is where they actually come from.</p>
+
+      <div class="tabbar" id="tabbar">
+        <button class="tabbtn active" data-tab="team">Team</button>
+        <button class="tabbtn" data-tab="roles">Roles &amp; permissions</button>
+        <button class="tabbtn" data-tab="retention">Data retention</button>
+      </div>
+
+      <div class="tabpanel active" id="panel-team">
+        <div class="invite">
+          <div class="field"><label>Email</label><input type="text" id="inviteEmail" placeholder="name@company.com"></div>
+          <div class="field"><label>Role</label>
+            <select id="inviteRole">
+              <option value="Privacy Ops">Privacy Ops</option>
+              <option value="Compliance Ops">Compliance Ops</option>
+              <option value="Platform Ops">Platform Ops</option>
+            </select>
+          </div>
+          <button class="btn-primary" id="inviteBtn">Send invite</button>
+        </div>
+        <h3 class="section-h">Team</h3>
+        <div class="twrap">
+          <table>
+            <thead><tr><th>Name</th><th>Role</th><th>Last active</th><th></th></tr></thead>
+            <tbody id="rows">
+              <tr><td>Priya N.</td><td><span class="role-pill">Privacy Ops</span></td><td>Just now</td><td><button class="btn-sm" data-action="remove">Remove</button></td></tr>
+              <tr><td>Marcus T.</td><td><span class="role-pill">Compliance Ops</span></td><td>Yesterday</td><td><button class="btn-sm" data-action="remove">Remove</button></td></tr>
+              <tr><td>Sam R.</td><td><span class="role-pill">Platform Ops</span></td><td>3 hours ago</td><td><button class="btn-sm" data-action="remove">Remove</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="tabpanel" id="panel-roles">
+        <h3 class="section-h">What each role sees</h3>
+        <div class="rgrid" style="margin-bottom:24px;">
+          <div class="rcard"><div class="top"><b>Privacy Ops</b></div><ul><li>Connect sources, run scans</li><li>Review findings</li><li>No admin or billing access</li></ul></div>
+          <div class="rcard"><div class="top"><b>Compliance Ops</b></div><ul><li>Reports, evidence, regulation coverage</li><li>Read-only on sources</li><li>No admin or billing access</li></ul></div>
+          <div class="rcard"><div class="top"><b>Platform Ops</b></div><ul><li>System health, capacity, security settings</li><li>Manage team &amp; roles</li><li>Full access</li></ul></div>
+        </div>
+        <h3 class="section-h">Team members</h3>
+        <div class="twrap">
+          <table>
+            <thead><tr><th>Name</th><th>Email</th><th>Role</th><th></th></tr></thead>
+            <tbody id="roleRows">
+              <tr><td>Priya N.</td><td class="num">priya@acme.co</td><td><select class="role-select" data-row-role="dpo" style="width:170px;padding:5px 26px 5px 10px;"><option value="dpo" selected>Privacy Ops</option><option value="compliance">Compliance Ops</option><option value="admin">Platform Ops</option></select></td><td><button class="btn-sm" data-action="save">Save</button></td></tr>
+              <tr><td>Marcus T.</td><td class="num">marcus@acme.co</td><td><select class="role-select" data-row-role="compliance" style="width:170px;padding:5px 26px 5px 10px;"><option value="dpo">Privacy Ops</option><option value="compliance" selected>Compliance Ops</option><option value="admin">Platform Ops</option></select></td><td><button class="btn-sm" data-action="save">Save</button></td></tr>
+              <tr><td>Sam R.</td><td class="num">sam@acme.co</td><td><select class="role-select" data-row-role="admin" style="width:170px;padding:5px 26px 5px 10px;"><option value="dpo">Privacy Ops</option><option value="compliance">Compliance Ops</option><option value="admin" selected>Platform Ops</option></select></td><td><button class="btn-sm" data-action="save">Save</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="tabpanel" id="panel-retention">
+        <p class="sub" style="margin-top:-4px;">How long we keep data, by type — and why.</p>
+        <div class="twrap">
+          <table>
+            <thead><tr><th>Data type</th><th>Kept for</th><th>Why</th><th></th></tr></thead>
+            <tbody id="retRows">
+              <tr data-type="Health records"><td>Health records</td><td class="num" id="ret0">10 years</td><td>HIPAA minimum</td><td><select class="btn-sm" data-for="ret0"><option>7 years</option><option selected>10 years</option><option>Indefinite</option></select></td></tr>
+              <tr data-type="Government ID numbers"><td>Government ID numbers</td><td class="num" id="ret1">7 years</td><td>Tax &amp; audit requirements</td><td><select class="btn-sm" data-for="ret1"><option>3 years</option><option selected>7 years</option><option>10 years</option></select></td></tr>
+              <tr data-type="Credit card numbers"><td>Credit card numbers</td><td class="num" id="ret2">1 year</td><td>PCI guidance, minimize exposure</td><td><select class="btn-sm" data-for="ret2"><option selected>1 year</option><option>3 years</option><option>7 years</option></select></td></tr>
+              <tr data-type="General contact info"><td>General contact info (names, emails, phone)</td><td class="num" id="ret3">3 years</td><td>Business need, GDPR minimization</td><td><select class="btn-sm" data-for="ret3"><option>1 year</option><option selected>3 years</option><option>7 years</option></select></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <button class="btn-primary" id="saveRet" style="margin-top:16px;">Save changes</button>
+      </div>
+
+    </section>
+  </main>
+
+</div>
+
+<div id="toasts" style="position:fixed;right:20px;bottom:20px;display:flex;flex-direction:column;gap:8px;z-index:80;"></div>
+
+<script>
+function toast(msg){
+  var t = document.createElement("div");
+  t.className = "toast"; t.textContent = msg;
+  t.style.cssText = "background:#16243B;color:#fff;font-size:13px;font-weight:600;padding:10px 16px;border-radius:8px;box-shadow:0 8px 20px rgba(0,0,0,.2);opacity:0;transform:translateY(8px);transition:opacity .18s,transform .18s;";
+  document.getElementById("toasts").appendChild(t);
+  requestAnimationFrame(function () { t.style.opacity = 1; t.style.transform = "translateY(0)"; });
+  setTimeout(function () {
+    t.style.opacity = 0; t.style.transform = "translateY(8px)";
+    setTimeout(function () { t.remove(); }, 200);
+  }, 2400);
+}
+
+function showTab(name) {
+  document.querySelectorAll(".tabbtn").forEach(function (b) { b.classList.toggle("active", b.getAttribute("data-tab") === name); });
+  document.querySelectorAll(".tabpanel").forEach(function (p) { p.classList.toggle("active", p.id === "panel-" + name); });
+  try { history.replaceState(null, "", "#" + name); } catch (e) {}
+}
+document.getElementById("tabbar").addEventListener("click", function (e) {
+  var b = e.target.closest(".tabbtn"); if (b) showTab(b.getAttribute("data-tab"));
+});
+(function () { var h = location.hash.replace("#", ""); if (h && document.getElementById("panel-" + h)) showTab(h); })();
+
+/* ---- Team tab ---- */
+(function () {
+  document.getElementById("inviteBtn").addEventListener("click", function () {
+    var email = document.getElementById("inviteEmail").value.trim();
+    var role = document.getElementById("inviteRole").value;
+    if (!email) { toast("Enter an email to invite"); return; }
+    var name = email.split("@")[0].replace(/[._]/g, " ");
+    name = name.replace(/\b\w/g, function (c) { return c.toUpperCase(); });
+    var tbody = document.getElementById("rows");
+    var tr = document.createElement("tr");
+    tr.className = "new-row";
+    tr.innerHTML = "<td>" + name + " <span style=\"color:var(--ink-3);font-weight:400\">(invited)</span></td>" +
+      '<td><span class="role-pill">' + role + '</span></td><td>Invitation sent</td>' +
+      '<td><button class="btn-sm" data-action="remove">Remove</button></td>';
+    tbody.appendChild(tr);
+    document.getElementById("inviteEmail").value = "";
+    toast("Invited " + email + " as " + role);
+  });
+  document.getElementById("rows").addEventListener("click", function (e) {
+    var btn = e.target.closest('button[data-action="remove"]');
+    if (!btn) return;
+    var row = btn.closest("tr");
+    var name = row.children[0].textContent.replace(/\s*\(invited\)\s*$/, "");
+    row.classList.add("leaving");
+    setTimeout(function () { row.remove(); }, 250);
+    toast("Removed " + name);
+  });
+})();
+
+/* ---- Roles tab ---- */
+document.getElementById("roleRows").addEventListener("click", function (e) {
+  var btn = e.target.closest('button[data-action="save"]');
+  if (!btn) return;
+  var row = btn.closest("tr");
+  var sel = row.querySelector("select");
+  toast(row.querySelector("td").textContent + "'s role saved as " + sel.options[sel.selectedIndex].text);
+});
+
+/* ---- Retention tab ---- */
+document.getElementById("saveRet").addEventListener("click", function () {
+  var changed = 0;
+  document.querySelectorAll('select[data-for]').forEach(function (sel) {
+    var cell = document.getElementById(sel.getAttribute("data-for"));
+    var newVal = sel.options[sel.selectedIndex].text;
+    if (cell.textContent !== newVal) { cell.textContent = newVal; changed++; }
+  });
+  toast(changed ? ("Saved — " + changed + " retention period" + (changed > 1 ? "s" : "") + " updated") : "No changes to save");
+});
+
+(function () {
+  var sel = document.getElementById("roleSelect");
+  sel.value = document.body.getAttribute("data-role") || "dpo";
+  sel.addEventListener("change", function () {
+    document.body.setAttribute("data-role", sel.value);
+    try { localStorage.setItem("cdd_role", sel.value); } catch (e) {}
+  });
+})();
+document.getElementById("versionSelect").addEventListener("change", function () { if (this.value) window.location.href = this.value; });
+</script>
+<script>
+var CDD_STAGES = [{n:"Overview",p:["index.html","ecosystem.html","search.html"]},{n:"Connect",p:["Sources/index.html","ingestion-ops.html"]},{n:"Watch",p:["Monitoring/index.html","delta-ops.html"]},{n:"Detect",p:["Detect/index.html","findings.html","elements.html","detection-infra.html"]},{n:"Trust",p:["Trust/index.html","model-ops.html"]},{n:"Comply",p:["compliance.html","reports.html"]},{n:"Manage",p:["system-health.html","pipeline.html","platform-admin.html","admin.html"]}];
+(function () {
+  var MY_PATH = "admin.html";
+  var DEPTH = "";
+  var flat = [];
+  for (var s = 0; s < CDD_STAGES.length; s++) { for (var i = 0; i < CDD_STAGES[s].p.length; i++) { flat.push({path: CDD_STAGES[s].p[i], stageIdx: s}); } }
+  var idx = -1;
+  for (var k = 0; k < flat.length; k++) { if (flat[k].path === MY_PATH) { idx = k; break; } }
+  if (idx === -1) return;
+  var content = document.querySelector(".content");
+  if (!content) return;
+  var hiddenSteps = [];
+  try { var hRaw = JSON.parse(localStorage.getItem("cdd_journey_hidden") || "[]"); if (Array.isArray(hRaw)) hiddenSteps = hRaw; } catch (e) {}
+  var visFlat = flat.filter(function (f) { return hiddenSteps.indexOf(f.path) === -1; });
+  var vidx = -1;
+  for (var vk = 0; vk < visFlat.length; vk++) { if (visFlat[vk].path === MY_PATH) { vidx = vk; break; } }
+  var useList = vidx !== -1 ? visFlat : flat;
+  var useIdx = vidx !== -1 ? vidx : idx;
+  var stage = CDD_STAGES[useList[useIdx].stageIdx];
+  var prevHtml = useIdx > 0 ? '<a class="fbtn" href="' + DEPTH + useList[useIdx - 1].path + '">&larr; Back</a>' : "";
+  var nextHtml = useIdx < useList.length - 1
+    ? '<a class="fbtn" href="' + DEPTH + useList[useIdx + 1].path + '">Next &rarr;</a>'
+    : '<a class="fbtn" href="' + DEPTH + 'journeys.html">Flow complete ✓</a>';
+  var pct = Math.round(((useIdx + 1) / useList.length) * 100);
+  var el = document.createElement("div");
+  el.className = "flowbar";
+  el.innerHTML =
+    '<div class="ftop"><span class="fic">🧭</span><span class="fstage">' + stage.n + '</span><span class="fstep">&middot; step ' + (useIdx + 1) + ' of ' + useList.length + '</span><span class="fnav">' + prevHtml + nextHtml + '</span></div>' +
+    '<div class="fbar"><span style="width:' + pct + '%"></span></div>';
+  content.insertBefore(el, content.firstChild);
+})();
+</script>
+<div class="cm-overlay" id="cmOverlay">
+  <div class="cm-box">
+    <button class="cm-close" id="cmClose" aria-label="Close">&times;</button>
+    <iframe id="cmFrame" data-src="connect-source.html?modal=1" title="Connect a source"></iframe>
+  </div>
+</div>
+<script>
+(function () {
+  var overlay = document.getElementById("cmOverlay");
+  var frame = document.getElementById("cmFrame");
+  var closeBtn = document.getElementById("cmClose");
+  var DEPTH = "";
+  function openModal() {
+    if (!frame.src) frame.src = frame.getAttribute("data-src");
+    overlay.classList.add("open");
+    document.body.style.overflow = "hidden";
+  }
+  function closeModal() {
+    overlay.classList.remove("open");
+    document.body.style.overflow = "";
+  }
+  closeBtn.addEventListener("click", closeModal);
+  overlay.addEventListener("click", function (e) { if (e.target === overlay) closeModal(); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && overlay.classList.contains("open")) closeModal(); });
+  window.addEventListener("message", function (e) {
+    if (!e.data || typeof e.data !== "object") return;
+    if (e.data.type === "cdd-connect-done") {
+      closeModal();
+      window.location.href = DEPTH + (e.data.redirect || "Sources/index.html#scans");
+    }
+  });
+  document.querySelectorAll(".js-connect-open").forEach(function (el) {
+    el.addEventListener("click", function (e) { e.preventDefault(); openModal(); });
+  });
+})();
+</script>
+</body>
+</html>

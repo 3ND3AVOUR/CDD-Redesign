@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CDD · Sources</title>
+<!-- v3.2 consolidation — Connections, Connection health, Scans and Failed items were four separate
+     nav items for one subject: your connected sources. Folded into one page with tabs. Connect a
+     source stays separate — it's a distinct wizard flow, not a view of existing data. -->
+<style>
+  :root{
+    --shell-bg:#F0F1F6; --sidebar:#112437; --sidebar-text:#AEB9CB; --sidebar-text-dim:#7C8AA0;
+    --sidebar-active:#3979BD; --brand-blue:#4EA1E8; --header-bg:#FFFFFF; --card-border:#CBDCF6;
+    --ink:#092339; --ink-2:#64748B; --ink-3:#8A93A6;
+    --ok:#1F9D55; --ok-soft:#E8F6EE; --warn:#B45309; --warn-soft:#FEF3E2; --bad:#B42318; --bad-soft:#FEF0EE;
+    --acc2:#7C3AED; --acc2-soft:#F3EEFD;
+    --font: "Segoe UI", Inter, system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif;
+  }
+  *{box-sizing:border-box;} html,body{margin:0;padding:0;}
+  body{font-family:var(--font);background:#E7E9F0;color:var(--ink);margin:0;}
+  .shell{width:100%;min-height:100vh;background:var(--shell-bg);padding:16px;display:flex;gap:20px;align-items:flex-start;}
+  .sidebar{width:264px;flex:0 0 264px;background:var(--sidebar);border-radius:16px;padding:24px 14px;min-height:880px;display:flex;flex-direction:column;position:sticky;top:24px;}
+  .brand{padding:0 10px 20px;}
+  .brand-row{display:flex;align-items:center;gap:8px;}
+  .brand-word{font-size:21px;font-weight:700;} .brand-word .data{color:#fff;} .brand-word .safe{color:var(--brand-blue);}
+  .brand-sub{margin-top:3px;font-size:11px;font-style:italic;font-weight:600;color:var(--brand-blue);display:flex;align-items:center;gap:6px;}
+  .brand-sub .sep{width:3px;height:3px;border-radius:50%;background:var(--brand-blue);opacity:.7;}
+  nav.primary{display:flex;flex-direction:column;gap:2px;}
+  .nav-top{display:flex;align-items:center;gap:10px;padding:10px 10px 8px;color:#fff;font-weight:700;font-size:14.5px;}
+  .nav-top .ico{width:19px;height:19px;color:#fff;}
+  .proj{padding:0 6px;margin-bottom:2px;}
+  .proj-sum{display:flex;align-items:center;gap:9px;padding:9px 6px;border-radius:8px;color:#fff;text-decoration:none;}
+  .proj-sum::before{content:"";width:8px;height:8px;border-radius:2px;background:var(--acc,#3979BD);flex:0 0 auto;}
+  .proj-name{flex:1;font-size:13.5px;font-weight:700;}
+  .proj.active .proj-sum{background:rgba(255,255,255,.05);}
+  .proj-links{padding:4px 0 10px 33px;display:flex;flex-direction:column;gap:1px;}
+  .proj-links a{display:block;padding:7px 10px;border-radius:7px;font-size:13px;font-weight:500;color:var(--sidebar-text);text-decoration:none;}
+  .proj-links a:hover{background:rgba(255,255,255,.06);color:#fff;}
+  .proj-links a.active{background:var(--sidebar-active);color:#fff;font-weight:600;}
+  .navgroup{padding:10px 10px 3px;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--sidebar-text-dim);}
+  .navgroup:first-child{padding-top:2px;}
+  .sidebar-foot{margin-top:auto;padding:14px 10px 2px;border-top:1px solid rgba(255,255,255,.08);}
+  .sidebar-foot .line{font-size:10px;color:var(--sidebar-text-dim);line-height:1.6;}
+
+  .main{flex:1;min-width:0;display:flex;flex-direction:column;gap:12px;}
+  .header{background:var(--header-bg);border-radius:8px;padding:18px 28px;display:flex;align-items:center;justify-content:space-between;}
+  .header h1{margin:0;font-size:21px;font-weight:700;color:var(--ink);}
+  .header p{margin:3px 0 0;font-size:13px;color:var(--ink-2);}
+  .avatar{width:38px;height:38px;border-radius:50%;border:2px solid #E2E2E2;display:flex;align-items:center;justify-content:center;color:#B7BEC9;}
+  .header-right{display:flex;align-items:center;gap:12px;}
+  .role-select{font:inherit;font-size:12.5px;font-weight:600;color:var(--ink-2);background:#F3F5FA;
+    border:1px solid #E4E8F1;border-radius:20px;padding:7px 30px 7px 14px;cursor:pointer;
+    appearance:none;-webkit-appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235B6577' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 10px center;background-size:13px;}
+  .role-select:hover{border-color:var(--sidebar-active);}
+  .version-select{font:inherit;font-size:12px;font-weight:700;color:var(--ink-2);background:#F3F5FA;
+    border:1px solid #E4E8F1;border-radius:20px;padding:7px 28px 7px 14px;cursor:pointer;
+    appearance:none;-webkit-appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235B6577' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 9px center;background-size:12px;}
+  .version-select:hover{border-color:var(--sidebar-active);}
+
+  .content{background:#FFFFFF;border:1px solid var(--card-border);border-radius:11.5px;padding:26px 28px 30px;flex:1;}
+  h2.pageh{margin:0 0 4px;font-size:19px;font-weight:700;color:var(--ink);}
+  p.sub{margin:0 0 18px;font-size:13px;color:var(--ink-2);max-width:66ch;}
+  h3.section-h{font-size:12.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-2);margin:0 0 12px;}
+
+  .flowbar{background:linear-gradient(90deg,#F3EEFD,#EEF3FC);border:1px solid #E4D9FA;border-radius:10px;padding:12px 16px;margin-bottom:16px;}
+  .flowbar .ftop{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .flowbar .fic{flex:0 0 auto;font-size:15px;}
+  .flowbar .fstage{font-weight:800;font-size:12.5px;color:#4C3A7A;}
+  .flowbar .fstep{font-size:12px;color:#6B5A94;}
+  .flowbar .fnav{margin-left:auto;display:flex;gap:8px;}
+  .flowbar a.fbtn{font:inherit;font-size:12px;font-weight:700;padding:6px 12px;border-radius:7px;border:1px solid #D9C9F5;background:#fff;color:#4C3A7A;text-decoration:none;white-space:nowrap;}
+  .flowbar a.fbtn:hover{background:#7C3AED;color:#fff;}
+  .flowbar .fbar{height:4px;border-radius:2px;background:#E4D9FA;margin:9px 0 8px;overflow:hidden;}
+  .flowbar .fbar > span{display:block;height:100%;background:#7C3AED;border-radius:2px;}
+  .flowbar .fdo{font-size:12.5px;color:#4C3A7A;line-height:1.5;}
+  .flowbar .fdo b{color:#3A2A63;}
+
+  /* ---- tab bar (shared pattern across all v3.2 consolidated pages) ---- */
+  .tabbar{display:flex;gap:4px;border-bottom:1px solid #E7EAF2;margin-bottom:22px;}
+  .tabbtn{font:inherit;font-size:13.5px;font-weight:700;color:var(--ink-2);background:none;border:none;border-bottom:2.5px solid transparent;padding:11px 4px;margin-right:22px;cursor:pointer;display:inline-flex;align-items:center;gap:7px;}
+  .tabbtn:hover{color:var(--ink);}
+  .tabbtn.active{color:var(--sidebar-active);border-bottom-color:var(--sidebar-active);}
+  .tabbtn .tbadge{font-size:10.5px;font-weight:800;background:#F0F1F6;color:var(--ink-3);border-radius:20px;padding:1px 7px;}
+  .tabbtn.active .tbadge{background:#E7EEFC;color:var(--sidebar-active);}
+  .tabbtn .tbadge.warn{background:var(--warn-soft);color:var(--warn);}
+  .tabpanel{display:none;}
+  .tabpanel.active{display:block;}
+
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;}
+  .kpi{border:1px solid #E7EAF2;border-radius:12px;padding:15px 16px;background:#FCFDFF;}
+  .kpi .l{font-size:11px;font-weight:600;color:var(--ink-3);}
+  .kpi .v{font-size:25px;font-weight:800;color:var(--ink);margin-top:4px;}
+  .kpi .v.warn{color:var(--warn);} .kpi .v.bad{color:var(--bad);}
+  .kpi .d{font-size:11px;color:var(--ok);font-weight:600;margin-top:3px;}
+
+  .actions,.actions-row{display:flex;gap:10px;margin-bottom:22px;}
+  .histcard{border:1px solid #E7EAF2;border-radius:12px;overflow:hidden;margin-bottom:14px;}
+  .histcard-h{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 16px;background:#FAFBFD;border-bottom:1px solid #EEF1F7;flex-wrap:wrap;}
+  .histcard-h b{font-size:13.5px;color:var(--ink);}
+  .histcard-h .sub2{font-size:11px;color:var(--ink-3);margin-left:8px;font-weight:500;}
+  .histmeta{font-size:12px;color:var(--ink-2);display:flex;align-items:center;gap:8px;}
+  .histmeta .hnum{font-weight:800;color:var(--ink);}
+  .histmeta .hsep{color:var(--ink-3);}
+  .histempty{padding:14px 16px;font-size:12.5px;color:var(--ink-3);}
+  .delta{font-weight:700;}
+  .delta.up{color:var(--ok);} .delta.down{color:var(--bad);} .delta.flat{color:var(--ink-3);}
+  .histnote{font-size:11.5px;color:var(--warn);margin-top:3px;}
+  .runbadge{font-size:10.5px;font-weight:800;padding:2px 8px;border-radius:20px;background:#EEF3FC;color:var(--sidebar-active);}
+  .freq{display:flex;align-items:center;gap:5px;}
+  .freq-edit,.freq-pause{border:none;background:none;color:var(--ink-3);cursor:pointer;font-size:11px;padding:2px;line-height:1;}
+  .freq-edit:hover,.freq-pause:hover{color:var(--sidebar-active);}
+  .freq.paused .freq-text{color:var(--ink-3);text-decoration:line-through;}
+  .btn-sm.disconnect{color:var(--bad);border-color:#F3D6D2;}
+  .btn-sm.disconnect:hover{background:var(--bad-soft);}
+  .btn{font:inherit;font-size:13px;font-weight:700;padding:10px 16px;border-radius:8px;border:1px solid var(--card-border);background:#fff;color:var(--ink);cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:7px;}
+  .btn:hover{border-color:var(--sidebar-active);}
+  .btn-primary{background:var(--sidebar-active);color:#fff;border-color:var(--sidebar-active);}
+  .btn-primary:hover{background:#2E63A0;}
+  .btn-sm{font:inherit;font-size:12px;font-weight:700;padding:6px 12px;border-radius:7px;border:1px solid var(--card-border);background:#fff;color:var(--ink);cursor:pointer;text-decoration:none;display:inline-block;}
+  .actrow{display:flex;gap:6px;flex-wrap:wrap;}
+  .freq{font-size:12.5px;color:var(--ink-2);}
+  .btn-sm:hover{border-color:var(--sidebar-active);}
+  .btn-sm.fix{background:var(--bad);border-color:var(--bad);color:#fff;}
+  .btn-sm.fix:hover{background:#951E14;}
+  .btn-sm[disabled]{opacity:.6;cursor:default;}
+
+  .feed{display:flex;flex-direction:column;gap:2px;}
+  .fitem{display:flex;align-items:flex-start;gap:12px;padding:12px 4px;border-bottom:1px solid #F0F1F6;}
+  .fitem:last-child{border-bottom:none;}
+  .fitem .dot{width:8px;height:8px;border-radius:50%;margin-top:6px;flex:0 0 auto;}
+  .fitem .dot.ok{background:var(--ok);} .fitem .dot.warn{background:var(--warn);} .fitem .dot.bad{background:var(--bad);}
+  .fitem .t{font-size:13.5px;color:var(--ink);font-weight:500;}
+  .fitem .w{font-size:11.5px;color:var(--ink-3);margin-top:2px;}
+
+  .twrap{border:1px solid #E7EAF2;border-radius:12px;overflow:hidden;}
+  table{border-collapse:collapse;width:100%;font-size:13.5px;}
+  th,td{text-align:left;padding:12px 16px;border-bottom:1px solid #F0F1F6;}
+  th{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-3);font-weight:700;background:#FBFCFE;}
+  tr:last-child td{border-bottom:none;}
+  td.num{font-variant-numeric:tabular-nums;color:var(--ink-2);}
+  td.src span{display:block;font-size:11.5px;color:var(--ink-3);font-weight:500;margin-top:1px;}
+  .status{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;padding:4px 10px;border-radius:20px;}
+  .status .dot{width:7px;height:7px;border-radius:50%;}
+  .status.ok{background:var(--ok-soft);color:#177244;} .status.ok .dot{background:var(--ok);}
+  .status.warn{background:var(--warn-soft);color:#8A5A12;} .status.warn .dot{background:var(--warn);}
+  .status.bad{background:var(--bad-soft);color:#9B2C1F;} .status.bad .dot{background:var(--bad);}
+  .status.failed{background:var(--bad-soft);color:#9B2C1F;} .status.failed .dot{background:var(--bad);}
+  .status.retrying{background:#EEF3FC;color:var(--sidebar-active);} .status.retrying .dot{background:var(--sidebar-active);}
+  .status.run{background:#EEF3FC;color:var(--sidebar-active);} .status.run .dot{background:var(--sidebar-active);}
+  .status.wait{background:#F0F1F6;color:var(--ink-3);font-weight:600;}
+  .prog{width:110px;height:8px;border-radius:4px;background:#EEF0F4;overflow:hidden;}
+  .prog > span{display:block;height:100%;background:var(--sidebar-active);transition:width .3s;}
+  .empty{display:none;text-align:center;padding:26px;color:var(--ink-2);font-size:13px;}
+  .empty.show{display:block;}
+  tr.new-row{animation:flash 1.6s ease;}
+  tr.fixed{opacity:.55;}
+  @keyframes flash{0%{background:#EAF6EE;}100%{background:transparent;}}
+
+  .banner{display:none;align-items:center;gap:10px;background:var(--ok-soft);border:1px solid #BFE6CC;border-radius:10px;padding:12px 16px;margin-bottom:18px;font-size:13px;color:#177244;}
+  .banner.show{display:flex;}
+
+  @media (max-width:1080px){ .kpis{grid-template-columns:repeat(2,1fr);} }
+  @media (max-width:760px){ .shell{flex-direction:column;} .sidebar{width:100%;flex:none;position:static;} .actions{flex-wrap:wrap;} .twrap{overflow-x:auto;} table{min-width:560px;} }
+  body[data-role="dpo"] .proj-links a:not([data-role~="dpo"]),
+  body[data-role="compliance"] .proj-links a:not([data-role~="compliance"]),
+  body[data-role="admin"] .proj-links a:not([data-role~="admin"]) { display:none; }
+  .cm-overlay{position:fixed;inset:0;background:rgba(10,14,25,.6);display:none;align-items:center;justify-content:center;z-index:999;padding:24px;}
+  .cm-overlay.open{display:flex;}
+  .cm-box{width:min(760px,94vw);height:min(780px,92vh);background:#fff;border-radius:14px;overflow:hidden;position:relative;box-shadow:0 24px 64px rgba(8,12,24,.4);display:flex;flex-direction:column;}
+  .cm-close{position:absolute;top:12px;right:12px;z-index:2;width:30px;height:30px;border-radius:50%;border:1px solid #E4E8F1;background:#fff;color:var(--ink-2);font-size:16px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+  .cm-close:hover{background:#F3F5FA;color:var(--ink);}
+  .cm-box iframe{flex:1;width:100%;border:0;}
+</style>
+
+</head>
+<body>
+<script>document.body.setAttribute("data-role", localStorage.getItem("cdd_role") || "dpo");</script>
+<div class="shell">
+
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-row">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 2l7 3v6c0 4.97-3.05 9.36-7 11-3.95-1.64-7-6.03-7-11V5l7-3z" stroke="#4EA1E8" stroke-width="1.6" stroke-linejoin="round"/></svg>
+        <span class="brand-word"><span class="data">data</span><span class="safe">safeguard</span></span>
+      </div>
+      <div class="brand-sub">Privacy<span class="sep"></span>Management</div>
+    </div>
+    <nav class="primary">
+      <div class="nav-top">
+        <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M12 3l8 3.2v5.4c0 5-3.4 8.9-8 10.4-4.6-1.5-8-5.4-8-10.4V6.2L12 3z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="12" cy="11" r="2.6" stroke="currentColor" stroke-width="1.6"/></svg>
+        <span>CDD</span>
+      </div>
+      <a class="proj-sum" href="../walkthrough.html" style="--acc:#64748B"><span class="proj-name">Walkthrough</span></a>
+      <a class="proj-sum" href="../journeys.html" style="--acc:#DB2777"><span class="proj-name">Journey</span></a>
+      <div class="proj active">
+        <div class="proj-sum" style="--acc:#16274F"><span class="proj-name">CDD</span></div>
+        <div class="proj-links">
+          <div class="navgroup">Overview</div>
+          <a href="../index.html" data-role="dpo compliance admin">Dashboard</a>
+          <a href="../ecosystem.html" data-role="dpo compliance admin">Data ecosystem</a>
+          <a href="../search.html" data-role="dpo compliance admin">Search</a>
+          <div class="navgroup">Connect</div>
+          <a class="active" href="index.html" data-role="dpo admin">Sources</a>
+          <a href="../ingestion-ops.html" data-role="admin">Ingestion ops</a>
+          <div class="navgroup">Watch</div>
+          <a href="../Monitoring/index.html" data-role="dpo admin">Changes</a>
+          <a href="../delta-ops.html" data-role="admin">Delta ops</a>
+          <div class="navgroup">Detect</div>
+          <a href="../Detect/index.html" data-role="dpo compliance admin">Detection</a>
+          <a href="../findings.html" data-role="dpo compliance">Findings</a>
+          <a href="../elements.html" data-role="dpo compliance">Elements</a>
+          <a href="../detection-infra.html" data-role="admin compliance">Detection infra</a>
+          <div class="navgroup">Trust</div>
+          <a href="../Trust/index.html" data-role="dpo compliance admin">Trust</a>
+          <a href="../model-ops.html" data-role="admin compliance">Model ops</a>
+          <div class="navgroup">Comply</div>
+          <a href="../compliance.html" data-role="compliance">Compliance</a>
+          <a href="../reports.html" data-role="dpo compliance">Reports &amp; evidence</a>
+          <div class="navgroup">Manage</div>
+          <a href="../system-health.html" data-role="dpo admin">System health</a>
+          <a href="../pipeline.html" data-role="admin">Pipeline</a>
+          <a href="../platform-admin.html" data-role="admin">Platform admin</a>
+          <a href="../admin.html" data-role="admin">Admin</a>
+        </div>
+      </div>
+    </nav>
+    <div class="sidebar-foot">
+      <div class="line">CDD® · Confidential Data Discovery</div>
+      <div class="line">ID-PRIVACY® platform</div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="header">
+      <div><h1>Sources</h1><p>Where your connections live, how healthy they are, and what's still moving.</p></div>
+      <div class="header-right"><select class="version-select" id="versionSelect" aria-label="Prototype version"><option value="../../CDD-Simple/index.html">v1.0</option><option value="../../CDD-Simple-v2/index.html">v2.0</option><option value="../../CDD-Simple-v3/index.html">v3.0</option><option value="../../CDD-Simple-v3.1/index.html">v3.1</option><option value="" selected>v3.2</option></select>
+        <select class="role-select" id="roleSelect" aria-label="Switch role">
+          <option value="dpo">Priya N. · Privacy Ops</option>
+          <option value="compliance">Marcus T. · Compliance Ops</option>
+          <option value="admin">Sam R. · Platform Ops</option>
+        </select>
+        <div class="avatar"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3.4" stroke="currentColor" stroke-width="1.6"/><path d="M4.5 19.5c1.6-3.4 4.4-5 7.5-5s5.9 1.6 7.5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></div>
+      </div>
+    </header>
+
+    <section class="content">
+      <h2 class="pageh">Sources</h2>
+      <p class="sub">We keep every connection running, catch anything that changed, and hand the right work to the right place — automatically, no one has to choose.</p>
+
+      <div class="tabbar" id="tabbar">
+        <button class="tabbtn active" data-tab="overview">Overview</button>
+        <button class="tabbtn" data-tab="health">Health <span class="tbadge warn">2</span></button>
+        <button class="tabbtn" data-tab="scans">Scans</button>
+        <button class="tabbtn" data-tab="failed">Failed items <span class="tbadge warn" id="failedBadge">4</span></button>
+        <button class="tabbtn" data-tab="history">History</button>
+      </div>
+
+      <!-- ===== OVERVIEW ===== -->
+      <div class="tabpanel active" id="panel-overview">
+        <div class="kpis">
+          <div class="kpi"><div class="l">Total connections</div><div class="v">7</div><div class="d">across 3 kinds of source</div></div>
+          <div class="kpi"><div class="l">Healthy</div><div class="v">5</div><div class="d">syncing normally</div></div>
+          <div class="kpi"><div class="l">Needs attention</div><div class="v warn">2</div><div class="d" style="color:var(--warn)">1 broken, 1 delayed</div></div>
+          <div class="kpi"><div class="l">Available to add</div><div class="v">10+</div><div class="d">integrations ready to connect</div></div>
+        </div>
+        <div class="actions">
+          <a class="btn btn-primary js-connect-open" href="../connect-source.html">Connect a source</a>
+          <button class="btn" data-goto="health">View connection health</button>
+        </div>
+        <h3 class="section-h">Recent activity</h3>
+        <div class="feed">
+          <div class="fitem"><span class="dot bad"></span><div><div class="t"><b>Legacy CRM</b> lost its connection — sign-in expired</div><div class="w">3 hours ago</div></div></div>
+          <div class="fitem"><span class="dot ok"></span><div><div class="t">Reconnected <b>Billing database</b> after a routine credential refresh</div><div class="w">yesterday</div></div></div>
+          <div class="fitem"><span class="dot warn"></span><div><div class="t"><b>Sales data (Salesforce)</b> sync is running behind by about 2 hours</div><div class="w">2 hours ago</div></div></div>
+          <div class="fitem"><span class="dot ok"></span><div><div class="t">Connected <b>Marketing files (S3)</b> for the first time</div><div class="w">2 days ago</div></div></div>
+          <div class="fitem"><span class="dot ok"></span><div><div class="t"><b>HR files (SharePoint)</b> synced normally — no changes to review</div><div class="w">2 days ago</div></div></div>
+        </div>
+      </div>
+
+      <!-- ===== HEALTH ===== -->
+      <div class="tabpanel" id="panel-health">
+        <div class="twrap">
+          <table>
+            <thead><tr><th>Source</th><th>Status</th><th>Last checked</th><th>Frequency</th><th></th></tr></thead>
+            <tbody>
+              <tr><td class="src">Sales database<span>PostgreSQL</span></td><td><span class="status ok"><span class="dot"></span>Healthy</span></td><td>2 hours ago</td><td class="freq">Every hour</td><td><div class="actrow"><button class="btn-sm" data-goto="scans">View scans</button></div></td></tr>
+              <tr><td class="src">Billing database<span>Oracle</span></td><td><span class="status warn"><span class="dot"></span>Delayed &mdash; last sync 31 days ago</span></td><td>31 days ago</td><td class="freq">Daily</td><td><div class="actrow"><button class="btn-sm" data-goto="scans">View scans</button></div></td></tr>
+              <tr><td class="src">HR files (SharePoint)<span>Files &amp; storage</span></td><td><span class="status ok"><span class="dot"></span>Healthy</span></td><td>2 hours ago</td><td class="freq">Every hour</td><td><div class="actrow"><button class="btn-sm" data-goto="scans">View scans</button></div></td></tr>
+              <tr><td class="src">Sales data (Salesforce)<span>Business app</span></td><td><span class="status ok"><span class="dot"></span>Healthy</span></td><td>20 min ago</td><td class="freq">Every hour</td><td><div class="actrow"><button class="btn-sm" data-goto="scans">View scans</button></div></td></tr>
+              <tr><td class="src">Marketing files (S3)<span>Files &amp; storage</span></td><td><span class="status ok"><span class="dot"></span>Healthy</span></td><td>4 hours ago</td><td class="freq">Daily</td><td><div class="actrow"><button class="btn-sm" data-goto="scans">View scans</button></div></td></tr>
+              <tr><td class="src">Clinical database<span>PostgreSQL</span></td><td><span class="status ok"><span class="dot"></span>Healthy</span></td><td>6 hours ago</td><td class="freq">Daily</td><td><div class="actrow"><button class="btn-sm" data-goto="scans">View scans</button></div></td></tr>
+              <tr id="rowLegacy"><td class="src">Legacy CRM<span>Business app</span></td><td><span class="status bad"><span class="dot"></span>Broken &mdash; sign-in expired</span></td><td>3 hours ago</td><td class="freq">Daily</td><td><div class="actrow"><button class="btn-sm fix" id="fixBtn">Fix connection</button></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ===== SCANS ===== -->
+      <div class="tabpanel" id="panel-scans">
+        <div class="banner" id="newBanner"><span>✅</span><div><b id="newBannerText"></b> — its first check just started below.</div></div>
+        <div class="twrap">
+          <table>
+            <thead><tr><th>Source</th><th>Status</th><th>Progress</th><th>Items found</th><th>Last checked</th><th>Schedule</th><th></th></tr></thead>
+            <tbody id="scanRows">
+              <tr>
+                <td class="src">Sales database<span>PostgreSQL</span></td>
+                <td><span class="status ok"><span class="dot"></span>Done</span></td>
+                <td><div class="prog"><span style="width:100%"></span></div></td>
+                <td class="num">2,389</td><td>2 days ago</td>
+                <td class="freq">Every hour</td>
+                <td><div class="actrow"><a class="btn-sm" href="../findings.html?src=Sales%20database">View results</a><button class="btn-sm" data-action="check" data-found="2,391">Check again</button></div></td>
+              </tr>
+              <tr>
+                <td class="src">Billing database<span>Oracle</span></td>
+                <td><span class="status ok"><span class="dot"></span>Done</span></td>
+                <td><div class="prog"><span style="width:100%"></span></div></td>
+                <td class="num">1,420</td><td>31 days ago</td>
+                <td class="freq">Daily</td>
+                <td><div class="actrow"><a class="btn-sm" href="../findings.html?src=Billing%20database">View results</a><button class="btn-sm" data-action="check" data-found="1,422">Check again</button></div></td>
+              </tr>
+              <tr>
+                <td class="src">HR files (SharePoint)<span>Files &amp; cloud storage</span></td>
+                <td><span class="status ok"><span class="dot"></span>Done</span></td>
+                <td><div class="prog"><span style="width:100%"></span></div></td>
+                <td class="num">2,401</td><td>2 hours ago</td>
+                <td class="freq">Every hour</td>
+                <td><div class="actrow"><a class="btn-sm" href="../findings.html?src=HR%20files%20(SharePoint)">View results</a><button class="btn-sm" data-action="check" data-found="2,405">Check again</button></div></td>
+              </tr>
+              <tr>
+                <td class="src">Sales data (Salesforce)<span>Business app</span></td>
+                <td><span class="status run"><span class="dot"></span>Checking&hellip;</span></td>
+                <td><div class="prog"><span style="width:61%"></span></div></td>
+                <td class="num">&mdash;</td><td>started 20 min ago</td>
+                <td class="freq">Every hour</td>
+                <td><button class="btn-sm" disabled>In progress</button></td>
+              </tr>
+              <tr>
+                <td class="src">Marketing files (S3)<span>Files &amp; cloud storage</span></td>
+                <td><span class="status ok"><span class="dot"></span>Done</span></td>
+                <td><div class="prog"><span style="width:100%"></span></div></td>
+                <td class="num">1,102</td><td>yesterday</td>
+                <td class="freq">Daily</td>
+                <td><div class="actrow"><a class="btn-sm" href="../findings.html?src=Marketing%20files%20(S3)">View results</a><button class="btn-sm" data-action="check" data-found="1,101">Check again</button></div></td>
+              </tr>
+              <tr>
+                <td class="src">Clinical database<span>PostgreSQL</span></td>
+                <td><span class="status ok"><span class="dot"></span>Done</span></td>
+                <td><div class="prog"><span style="width:100%"></span></div></td>
+                <td class="num">1,644</td><td>6 days ago</td>
+                <td class="freq">Daily</td>
+                <td><div class="actrow"><a class="btn-sm" href="../findings.html?src=Clinical%20database">View results</a><button class="btn-sm" data-action="check" data-found="1,646">Check again</button></div></td>
+              </tr>
+              <tr>
+                <td class="src">Legacy CRM<span>Business app</span></td>
+                <td><span class="status wait">Not checked yet</span></td>
+                <td><div class="prog"><span style="width:0%"></span></div></td>
+                <td class="num">&mdash;</td><td>&mdash;</td>
+                <td class="freq">Daily</td>
+                <td><button class="btn-sm" data-action="check" data-found="890">Check now</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ===== FAILED ITEMS ===== -->
+      <div class="tabpanel" id="panel-failed">
+        <div class="kpis">
+          <div class="kpi"><div class="l">Failed today</div><div class="v bad" id="failCount">4</div><div class="d">across 3 sources</div></div>
+          <div class="kpi"><div class="l">Oldest failure</div><div class="v">2 days</div><div class="d">Billing database</div></div>
+          <div class="kpi"><div class="l">Retry success rate</div><div class="v">91%</div><div class="d">last 30 days</div></div>
+        </div>
+        <p class="sub" style="margin-top:-6px;">A connection can be perfectly healthy and still have individual items that didn't go through — a locked file, a record in a format we didn't expect. These are held safely and can be retried without re-checking the whole source.</p>
+        <div class="actions-row"><button class="btn" id="retryAllBtn">Retry all</button></div>
+        <div class="twrap">
+          <table>
+            <thead><tr><th>Item</th><th>Source</th><th>Why it failed</th><th>When</th><th>Status</th><th></th></tr></thead>
+            <tbody id="rows">
+              <tr data-found="true">
+                <td class="item">invoice_2026-08-12.pdf</td><td>Billing database</td>
+                <td>File was locked by another process</td><td>2 days ago</td>
+                <td><span class="status failed"><span class="dot"></span>Failed</span></td>
+                <td><button class="btn-sm" data-action="retry">Retry</button></td>
+              </tr>
+              <tr data-found="false">
+                <td class="item">contract_draft_v3.docx</td><td>HR files (SharePoint)</td>
+                <td>File format not recognized</td><td>Yesterday</td>
+                <td><span class="status failed"><span class="dot"></span>Failed</span></td>
+                <td><button class="btn-sm" data-action="retry">Retry</button></td>
+              </tr>
+              <tr data-found="true">
+                <td class="item">Batch #4471 (312 rows)</td><td>Sales data (Salesforce)</td>
+                <td>Connection timed out mid-batch</td><td>6 hours ago</td>
+                <td><span class="status failed"><span class="dot"></span>Failed</span></td>
+                <td><button class="btn-sm" data-action="retry">Retry</button></td>
+              </tr>
+              <tr data-found="false">
+                <td class="item">welcome_packet.pdf</td><td>Marketing files (S3)</td>
+                <td>File was empty (0 bytes)</td><td>3 hours ago</td>
+                <td><span class="status failed"><span class="dot"></span>Failed</span></td>
+                <td><button class="btn-sm" data-action="retry">Retry</button></td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="empty" id="empty">Nothing failed &mdash; everything's going through.</div>
+        </div>
+      </div>
+
+      <!-- ===== HISTORY ===== -->
+      <div class="tabpanel" id="panel-history">
+        <div class="kpis">
+          <div class="kpi"><div class="l">Scans run (all time)</div><div class="v">18</div><div class="d">across 6 sources</div></div>
+          <div class="kpi"><div class="l">Consolidated findings</div><div class="v">10,336</div><div class="d">unique items, deduplicated</div></div>
+          <div class="kpi"><div class="l">Sources with history</div><div class="v">6</div><div class="d">of 7 connected</div></div>
+        </div>
+        <p class="sub" style="margin-top:-6px;">Re-checking a source mostly re-finds the same sensitive items, not new ones — so "consolidated" below is the deduplicated total across every scan, not the sum of each scan's count. Each source's individual runs are underneath.</p>
+
+        <div class="histcard">
+          <div class="histcard-h">
+            <div><b>Sales database</b><span class="sub2">PostgreSQL</span></div>
+            <div class="histmeta"><span class="hnum">4</span> scans<span class="hsep">·</span><span class="hnum">2,389</span> consolidated unique</div>
+          </div>
+          <div class="twrap">
+            <table>
+              <thead><tr><th>When</th><th>Trigger</th><th>Items found</th><th>Change</th><th></th></tr></thead>
+              <tbody>
+                <tr><td>2 days ago</td><td>Scheduled</td><td class="num">2,389</td><td class="delta up">+8</td><td><a class="btn-sm" href="../findings.html?src=Sales%20database">View results</a></td></tr>
+                <tr><td>1 week ago</td><td>Scheduled</td><td class="num">2,381</td><td class="delta up">+26</td><td></td></tr>
+                <tr><td>3 weeks ago</td><td>Manual</td><td class="num">2,355</td><td class="delta up">+54</td><td></td></tr>
+                <tr><td>6 weeks ago</td><td><span class="runbadge">First scan</span></td><td class="num">2,301</td><td class="delta flat">&mdash;</td><td></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="histcard">
+          <div class="histcard-h">
+            <div><b>Billing database</b><span class="sub2">Oracle</span></div>
+            <div class="histmeta"><span class="hnum">3</span> scans<span class="hsep">·</span><span class="hnum">1,420</span> consolidated unique</div>
+          </div>
+          <div class="twrap">
+            <table>
+              <thead><tr><th>When</th><th>Trigger</th><th>Items found</th><th>Change</th><th></th></tr></thead>
+              <tbody>
+                <tr><td>31 days ago</td><td>Scheduled</td><td class="num">1,420</td><td class="delta up">+2</td><td><a class="btn-sm" href="../findings.html?src=Billing%20database">View results</a></td></tr>
+                <tr><td>61 days ago</td><td>Scheduled</td><td class="num">1,418</td><td class="delta up">+16</td><td></td></tr>
+                <tr><td>91 days ago</td><td><span class="runbadge">First scan</span></td><td class="num">1,402</td><td class="delta flat">&mdash;</td><td></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="histcard">
+          <div class="histcard-h">
+            <div><b>HR files (SharePoint)</b><span class="sub2">Files &amp; cloud storage</span></div>
+            <div class="histmeta"><span class="hnum">4</span> scans<span class="hsep">·</span><span class="hnum">2,401</span> consolidated unique</div>
+          </div>
+          <div class="twrap">
+            <table>
+              <thead><tr><th>When</th><th>Trigger</th><th>Items found</th><th>Change</th><th></th></tr></thead>
+              <tbody>
+                <tr><td>2 hours ago</td><td>Scheduled</td><td class="num">2,401</td><td class="delta flat">&mdash;</td><td><a class="btn-sm" href="../findings.html?src=HR%20files%20(SharePoint)">View results</a></td></tr>
+                <tr><td>1 day ago</td><td>Scheduled</td><td class="num">2,401</td><td class="delta up">+3</td><td></td></tr>
+                <tr><td>3 days ago</td><td>Scheduled</td><td class="num">2,398</td><td class="delta up">+48</td><td></td></tr>
+                <tr><td>10 days ago</td><td><span class="runbadge">First scan</span></td><td class="num">2,350</td><td class="delta flat">&mdash;</td><td></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="histcard">
+          <div class="histcard-h">
+            <div><b>Sales data (Salesforce)</b><span class="sub2">Business app</span></div>
+            <div class="histmeta"><span class="hnum">1</span> scan<span class="hsep">·</span><span class="hnum">1,380</span> consolidated unique</div>
+          </div>
+          <div class="histnote" style="padding:0 16px 8px;">A new scan is running now (61% complete, started 20 min ago) — the table below is what the last completed scan found.</div>
+          <div class="twrap">
+            <table>
+              <thead><tr><th>When</th><th>Trigger</th><th>Items found</th><th>Change</th><th></th></tr></thead>
+              <tbody>
+                <tr><td>3 days ago</td><td><span class="runbadge">First scan</span></td><td class="num">1,380</td><td class="delta flat">&mdash;</td><td><a class="btn-sm" href="../findings.html?src=Sales%20data%20(Salesforce)">View results</a></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="histcard">
+          <div class="histcard-h">
+            <div><b>Marketing files (S3)</b><span class="sub2">Files &amp; cloud storage</span></div>
+            <div class="histmeta"><span class="hnum">3</span> scans<span class="hsep">·</span><span class="hnum">1,102</span> consolidated unique</div>
+          </div>
+          <div class="twrap">
+            <table>
+              <thead><tr><th>When</th><th>Trigger</th><th>Items found</th><th>Change</th><th></th></tr></thead>
+              <tbody>
+                <tr><td>Yesterday</td><td>Scheduled</td><td class="num">1,102</td><td class="delta up">+7</td><td><a class="btn-sm" href="../findings.html?src=Marketing%20files%20(S3)">View results</a></td></tr>
+                <tr><td>8 days ago</td><td>Scheduled</td><td class="num">1,095</td><td class="delta up">+45</td><td></td></tr>
+                <tr><td>15 days ago</td><td><span class="runbadge">First scan</span></td><td class="num">1,050</td><td class="delta flat">&mdash;</td><td></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="histcard">
+          <div class="histcard-h">
+            <div><b>Clinical database</b><span class="sub2">PostgreSQL</span></div>
+            <div class="histmeta"><span class="hnum">3</span> scans<span class="hsep">·</span><span class="hnum">1,644</span> consolidated unique</div>
+          </div>
+          <div class="twrap">
+            <table>
+              <thead><tr><th>When</th><th>Trigger</th><th>Items found</th><th>Change</th><th></th></tr></thead>
+              <tbody>
+                <tr><td>6 days ago</td><td>Scheduled</td><td class="num">1,644</td><td class="delta down">&minus;7</td><td><a class="btn-sm" href="../findings.html?src=Clinical%20database">View results</a></td></tr>
+                <tr><td>13 days ago</td><td>Scheduled</td><td class="num">1,651</td><td class="delta up">+51</td><td></td></tr>
+                <tr><td>20 days ago</td><td><span class="runbadge">First scan</span></td><td class="num">1,600</td><td class="delta flat">&mdash;</td><td></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="histnote" style="padding:0 16px 10px;">⚠ The most recent scan found 7 fewer items than the one before it — worth a look: could mean data was cleaned up, or the scan didn't finish reading everything.</div>
+        </div>
+
+        <div class="histcard">
+          <div class="histcard-h">
+            <div><b>Legacy CRM</b><span class="sub2">Business app</span></div>
+            <div class="histmeta">No scans yet</div>
+          </div>
+          <div class="histempty">This source hasn't completed a check yet — its connection needs to be fixed first. <a href="#health" onclick="showTab('health')">Go to Health &rarr;</a></div>
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+</div>
+
+<div id="toasts" style="position:fixed;right:20px;bottom:20px;display:flex;flex-direction:column;gap:8px;z-index:80;"></div>
+
+<script>
+function toast(msg){
+  var t = document.createElement("div");
+  t.className = "toast"; t.textContent = msg;
+  t.style.cssText = "background:#16243B;color:#fff;font-size:13px;font-weight:600;padding:10px 16px;border-radius:8px;box-shadow:0 8px 20px rgba(0,0,0,.2);opacity:0;transform:translateY(8px);transition:opacity .18s,transform .18s;";
+  document.getElementById("toasts").appendChild(t);
+  requestAnimationFrame(function () { t.style.opacity = 1; t.style.transform = "translateY(0)"; });
+  setTimeout(function () {
+    t.style.opacity = 0; t.style.transform = "translateY(8px)";
+    setTimeout(function () { t.remove(); }, 200);
+  }, 2400);
+}
+
+/* ---- tabs ---- */
+function showTab(name) {
+  document.querySelectorAll(".tabbtn").forEach(function (b) { b.classList.toggle("active", b.getAttribute("data-tab") === name); });
+  document.querySelectorAll(".tabpanel").forEach(function (p) { p.classList.toggle("active", p.id === "panel-" + name); });
+  try { history.replaceState(null, "", "#" + name); } catch (e) {}
+}
+document.getElementById("tabbar").addEventListener("click", function (e) {
+  var b = e.target.closest(".tabbtn");
+  if (b) showTab(b.getAttribute("data-tab"));
+});
+document.addEventListener("click", function (e) {
+  var g = e.target.closest("[data-goto]");
+  if (g) showTab(g.getAttribute("data-goto"));
+});
+(function () {
+  var h = location.hash.replace("#", "");
+  if (h && document.getElementById("panel-" + h)) showTab(h);
+})();
+
+/* ---- Health tab: fix connection ---- */
+(function () {
+  var fixBtn = document.getElementById("fixBtn");
+  if (fixBtn) {
+    fixBtn.addEventListener("click", function () {
+      fixBtn.disabled = true;
+      fixBtn.textContent = "Reconnecting…";
+      setTimeout(function () {
+        var row = document.getElementById("rowLegacy");
+        row.classList.add("new-row");
+        row.querySelector(".status").className = "status ok";
+        row.querySelector(".status").innerHTML = '<span class="dot"></span>Healthy';
+        row.children[2].textContent = "just now";
+        row.querySelector("td:last-child").innerHTML = '<button class="btn-sm" data-goto="scans">View scans</button>';
+        toast("Legacy CRM is reconnected and healthy");
+      }, 1100);
+    });
+  }
+})();
+
+/* ---- Scans tab ---- */
+(function () {
+  function srcNameOf(row) {
+    var cell = row.cells[0];
+    return (cell.childNodes[0] ? cell.childNodes[0].textContent : cell.textContent).trim();
+  }
+
+  // F-7: write this source's latest count somewhere other pages can read on load.
+  function saveSourceCount(name, count) {
+    try {
+      var map = JSON.parse(localStorage.getItem("cdd_source_counts") || "{}");
+      map[name] = parseInt(String(count).replace(/,/g, ""), 10);
+      localStorage.setItem("cdd_source_counts", JSON.stringify(map));
+    } catch (e) {}
+  }
+
+  // F-5 / F-6: keep the History tab in sync with every scan, including a source's very first one.
+  function updateHistory(name, foundCount) {
+    var panel = document.getElementById("panel-history");
+    if (!panel) return;
+    var card = Array.from(panel.querySelectorAll(".histcard")).find(function (c) {
+      var b = c.querySelector(".histcard-h b");
+      return b && b.textContent.trim() === name;
+    });
+    if (!card) {
+      card = document.createElement("div");
+      card.className = "histcard new-row";
+      card.innerHTML =
+        '<div class="histcard-h"><div><b>' + name + '</b></div>' +
+        '<div class="histmeta"><span class="hnum">0</span> scans<span class="hsep">&middot;</span><span class="hnum">0</span> consolidated unique</div></div>' +
+        '<div class="twrap"><table><thead><tr><th>When</th><th>Trigger</th><th>Items found</th><th>Change</th><th></th></tr></thead><tbody></tbody></table></div>';
+      var legacyB = Array.from(panel.querySelectorAll(".histcard-h b")).find(function (b) { return b.textContent.trim() === "Legacy CRM"; });
+      if (legacyB) panel.insertBefore(card, legacyB.closest(".histcard")); else panel.appendChild(card);
+    }
+    var tbody = card.querySelector("tbody");
+    var prevCell = tbody.querySelector("td.num");
+    var prevCount = prevCell ? parseInt(prevCell.textContent.replace(/,/g, ""), 10) : null;
+    var newCount = parseInt(String(foundCount).replace(/,/g, ""), 10);
+    var deltaHtml = '<span class="delta flat">&mdash;</span>';
+    if (prevCount !== null) {
+      var d = newCount - prevCount;
+      if (d > 0) deltaHtml = '<span class="delta up">+' + d + '</span>';
+      else if (d < 0) deltaHtml = '<span class="delta down">&minus;' + Math.abs(d) + '</span>';
+    }
+    var isFirst = tbody.children.length === 0;
+    var tr = document.createElement("tr");
+    tr.className = "new-row";
+    tr.innerHTML =
+      '<td>just now</td><td>' + (isFirst ? '<span class="runbadge">First scan</span>' : 'Manual') + '</td>' +
+      '<td class="num">' + foundCount + '</td><td>' + deltaHtml + '</td>' +
+      '<td><a class="btn-sm" href="../findings.html?src=' + encodeURIComponent(name) + '">View results</a></td>';
+    tbody.insertBefore(tr, tbody.firstChild);
+    var scanCount = tbody.children.length;
+    card.querySelector(".histmeta").innerHTML =
+      '<span class="hnum">' + scanCount + '</span> scan' + (scanCount === 1 ? "" : "s") +
+      '<span class="hsep">&middot;</span><span class="hnum">' + foundCount + '</span> consolidated unique';
+  }
+
+  function runCheck(row, foundCount, opts) {
+    opts = opts || {};
+    var statusEl = row.querySelector(".status");
+    var progEl = row.querySelector(".prog > span");
+    var foundEl = row.querySelector(".num");
+    var lastEl = row.children[4];
+    var actionEl = row.querySelector("td:last-child");
+    var name = srcNameOf(row);
+
+    statusEl.className = "status run";
+    statusEl.innerHTML = '<span class="dot"></span>Checking&hellip;';
+    actionEl.innerHTML = '<button class="btn-sm" disabled>In progress</button>';
+    var pct = opts.startPct || 4;
+    progEl.style.width = pct + "%";
+    if (!opts.silent) toast("Checking " + name);
+
+    var timer = setInterval(function () {
+      pct += 9 + Math.random() * 10;
+      if (pct >= 100) {
+        pct = 100;
+        progEl.style.width = "100%";
+        clearInterval(timer);
+        statusEl.className = "status ok";
+        statusEl.innerHTML = '<span class="dot"></span>Done';
+        foundEl.textContent = foundCount;
+        lastEl.textContent = "just now";
+        actionEl.innerHTML = '<div class="actrow"><a class="btn-sm" href="../findings.html?src=' + encodeURIComponent(name) + '">View results</a><button class="btn-sm" data-action="check" data-found="' + foundCount + '">Check again</button></div>';
+        updateHistory(name, foundCount);
+        saveSourceCount(name, foundCount);
+        toast("Finished checking — found " + foundCount + " sensitive items");
+        return;
+      }
+      progEl.style.width = pct + "%";
+    }, 380);
+  }
+
+  document.getElementById("scanRows").addEventListener("click", function (e) {
+    var btn = e.target.closest('button[data-action="check"]');
+    if (!btn) return;
+    var row = btn.closest("tr");
+    runCheck(row, btn.getAttribute("data-found"));
+  });
+
+  var pending = null;
+  try { pending = JSON.parse(localStorage.getItem("cdd_new_source") || "null"); } catch (e) { pending = null; }
+  if (pending && pending.name) {
+    localStorage.removeItem("cdd_new_source");
+    var tbody = document.getElementById("scanRows");
+    var tr = document.createElement("tr");
+    tr.className = "new-row";
+    tr.innerHTML =
+      '<td class="src">' + pending.name + '<span>' + pending.type + '</span></td>' +
+      '<td><span class="status run"><span class="dot"></span>Checking&hellip;</span></td>' +
+      '<td><div class="prog"><span style="width:4%"></span></div></td>' +
+      '<td class="num">&mdash;</td>' +
+      '<td>started just now</td>' +
+      '<td class="freq">' + (pending.schedule || "Daily") + '</td>' +
+      '<td><button class="btn-sm" disabled>In progress</button></td>';
+    tbody.insertBefore(tr, tbody.firstChild);
+    document.getElementById("newBannerText").textContent = "Connected “" + pending.name + "”";
+    document.getElementById("newBanner").classList.add("show");
+    showTab("scans");
+    runCheck(tr, String(80 + Math.floor(Math.random() * 400)), { startPct: 4, silent: true });
+  }
+})();
+
+/* ---- F-1 pause / F-3 disconnect / F-4 edit schedule ---- */
+(function () {
+  function rowName(row) {
+    var cell = row.cells[0];
+    return (cell.childNodes[0] ? cell.childNodes[0].textContent : cell.textContent).trim();
+  }
+  function allFreqCellsFor(name) {
+    var cells = [];
+    document.querySelectorAll("#panel-health tbody tr, #scanRows tr").forEach(function (row) {
+      if (rowName(row) === name) {
+        var c = row.querySelector(".freq");
+        if (c) cells.push(c);
+      }
+    });
+    return cells;
+  }
+  function enhanceFreqCell(cell) {
+    if (cell.querySelector(".freq-edit")) return;
+    var row = cell.closest("tr");
+    var name = rowName(row);
+    var text = document.createElement("span");
+    text.className = "freq-text";
+    text.textContent = cell.textContent.trim();
+    var editBtn = document.createElement("button");
+    editBtn.type = "button"; editBtn.className = "freq-edit"; editBtn.title = "Edit schedule"; editBtn.textContent = "✎";
+    var pauseBtn = document.createElement("button");
+    pauseBtn.type = "button"; pauseBtn.className = "freq-pause"; pauseBtn.title = "Pause this schedule"; pauseBtn.textContent = "⏸";
+    cell.innerHTML = "";
+    cell.appendChild(text); cell.appendChild(editBtn); cell.appendChild(pauseBtn);
+
+    editBtn.addEventListener("click", function () {
+      var val = prompt("Set the check schedule for “" + name + "” (e.g. Every hour, Daily, Weekly · Mon, Monthly · 15th):", text.textContent);
+      if (val === null || !val.trim()) return;
+      allFreqCellsFor(name).forEach(function (c) {
+        var t = c.querySelector(".freq-text");
+        if (t) t.textContent = val.trim();
+        c.classList.remove("paused");
+        var p = c.querySelector(".freq-pause");
+        if (p) { p.textContent = "⏸"; p.title = "Pause this schedule"; }
+      });
+      toast("Schedule for “" + name + "” updated to " + val.trim());
+    });
+    pauseBtn.addEventListener("click", function () {
+      var isPaused = cell.classList.contains("paused");
+      allFreqCellsFor(name).forEach(function (c) {
+        c.classList.toggle("paused", !isPaused);
+        var p = c.querySelector(".freq-pause");
+        if (p) { p.textContent = !isPaused ? "▶" : "⏸"; p.title = !isPaused ? "Resume this schedule" : "Pause this schedule"; }
+      });
+      toast(!isPaused
+        ? "Paused the schedule for “" + name + "” — you can still check it manually any time"
+        : "Resumed the schedule for “" + name + "”");
+    });
+  }
+  document.querySelectorAll(".freq").forEach(enhanceFreqCell);
+
+  document.querySelectorAll("#panel-health tbody tr").forEach(function (row) {
+    var name = rowName(row);
+    var cell = row.querySelector("td:last-child .actrow") || row.querySelector("td:last-child");
+    var btn = document.createElement("button");
+    btn.type = "button"; btn.className = "btn-sm disconnect"; btn.textContent = "Disconnect";
+    btn.addEventListener("click", function () {
+      if (!confirm("Disconnect “" + name + "”? This removes it from Sources. You can reconnect it later from Connect a source.")) return;
+      row.remove();
+      document.querySelectorAll("#scanRows tr").forEach(function (r) { if (rowName(r) === name) r.remove(); });
+      document.querySelectorAll("#panel-history .histcard").forEach(function (c) {
+        var b = c.querySelector(".histcard-h b");
+        if (b && b.textContent.trim() === name) c.remove();
+      });
+      document.querySelectorAll("#panel-failed tbody tr").forEach(function (r) {
+        if (r.children[1] && r.children[1].textContent.trim() === name) r.remove();
+      });
+      toast("Disconnected “" + name + "”");
+    });
+    cell.appendChild(btn);
+  });
+})();
+
+/* ---- Failed items tab ---- */
+(function () {
+  function updateCount() {
+    var remaining = document.querySelectorAll('#rows tr .status.failed').length;
+    document.getElementById("failCount").textContent = remaining;
+    document.getElementById("failedBadge").textContent = remaining;
+    document.getElementById("failedBadge").style.display = remaining ? "" : "none";
+    document.getElementById("empty").classList.toggle("show", remaining === 0);
+  }
+  function retryRow(row) {
+    if (row.querySelector(".status").classList.contains("retrying")) return;
+    var item = row.querySelector(".item").textContent;
+    row.querySelector(".status").className = "status retrying";
+    row.querySelector(".status").innerHTML = '<span class="dot"></span>Retrying&hellip;';
+    row.querySelector('button[data-action="retry"]').setAttribute("disabled", "disabled");
+    var found = row.getAttribute("data-found") === "true";
+    setTimeout(function () {
+      if (found) {
+        row.classList.add("fixed");
+        row.querySelector(".status").className = "status ok";
+        row.querySelector(".status").innerHTML = '<span class="dot"></span>Processed';
+        row.querySelector("td:last-child").innerHTML = "";
+        toast('"' + item + '" processed successfully');
+      } else {
+        row.querySelector(".status").className = "status failed";
+        row.querySelector(".status").innerHTML = '<span class="dot"></span>Failed';
+        row.querySelector('button[data-action="retry"]').removeAttribute("disabled");
+        toast('"' + item + '" failed again — same reason');
+      }
+      updateCount();
+    }, 900);
+  }
+  document.getElementById("rows").addEventListener("click", function (e) {
+    var btn = e.target.closest('button[data-action="retry"]');
+    if (!btn) return;
+    retryRow(btn.closest("tr"));
+  });
+  document.getElementById("retryAllBtn").addEventListener("click", function () {
+    var btns = document.querySelectorAll('#rows button[data-action="retry"]:not([disabled])');
+    toast("Retrying " + btns.length + " item" + (btns.length === 1 ? "" : "s") + "…");
+    btns.forEach(function (b) { retryRow(b.closest("tr")); });
+  });
+  updateCount();
+})();
+
+(function () {
+  var sel = document.getElementById("roleSelect");
+  var GREET = { dpo: "Priya", compliance: "Marcus", admin: "Sam" };
+  sel.value = document.body.getAttribute("data-role") || "dpo";
+  var h1 = document.querySelector(".header h1");
+  if (h1 && /^Welcome back, /.test(h1.textContent)) { h1.textContent = "Welcome back, " + GREET[sel.value]; }
+  sel.addEventListener("change", function () {
+    document.body.setAttribute("data-role", sel.value);
+    try { localStorage.setItem("cdd_role", sel.value); } catch (e) {}
+  });
+})();
+document.getElementById("versionSelect").addEventListener("change", function () { if (this.value) window.location.href = this.value; });
+</script>
+
+<script>
+var CDD_STAGES = [{n:"Overview",p:["index.html","ecosystem.html","search.html"]},{n:"Connect",p:["Sources/index.html","ingestion-ops.html"]},{n:"Watch",p:["Monitoring/index.html","delta-ops.html"]},{n:"Detect",p:["Detect/index.html","findings.html","elements.html","detection-infra.html"]},{n:"Trust",p:["Trust/index.html","model-ops.html"]},{n:"Comply",p:["compliance.html","reports.html"]},{n:"Manage",p:["system-health.html","pipeline.html","platform-admin.html","admin.html"]}];
+(function () {
+  var MY_PATH = "Sources/index.html";
+  var DEPTH = "../";
+  var flat = [];
+  for (var s = 0; s < CDD_STAGES.length; s++) {
+    for (var i = 0; i < CDD_STAGES[s].p.length; i++) { flat.push({path: CDD_STAGES[s].p[i], stageIdx: s}); }
+  }
+  var idx = -1;
+  for (var k = 0; k < flat.length; k++) { if (flat[k].path === MY_PATH) { idx = k; break; } }
+  if (idx === -1) return;
+  var content = document.querySelector(".content");
+  if (!content) return;
+  var hiddenSteps = [];
+  try { var hRaw = JSON.parse(localStorage.getItem("cdd_journey_hidden") || "[]"); if (Array.isArray(hRaw)) hiddenSteps = hRaw; } catch (e) {}
+  var visFlat = flat.filter(function (f) { return hiddenSteps.indexOf(f.path) === -1; });
+  var vidx = -1;
+  for (var vk = 0; vk < visFlat.length; vk++) { if (visFlat[vk].path === MY_PATH) { vidx = vk; break; } }
+  var useList = vidx !== -1 ? visFlat : flat;
+  var useIdx = vidx !== -1 ? vidx : idx;
+  var stage = CDD_STAGES[useList[useIdx].stageIdx];
+  var prevHtml = useIdx > 0 ? '<a class="fbtn" href="' + DEPTH + useList[useIdx - 1].path + '">&larr; Back</a>' : "";
+  var nextHtml = useIdx < useList.length - 1
+    ? '<a class="fbtn" href="' + DEPTH + useList[useIdx + 1].path + '">Next &rarr;</a>'
+    : '<a class="fbtn" href="' + DEPTH + 'journeys.html">Flow complete ✓</a>';
+  var pct = Math.round(((useIdx + 1) / useList.length) * 100);
+  var el = document.createElement("div");
+  el.className = "flowbar";
+  el.innerHTML =
+    '<div class="ftop">' +
+      '<span class="fic">🧭</span>' +
+      '<span class="fstage">' + stage.n + '</span>' +
+      '<span class="fstep">&middot; step ' + (useIdx + 1) + ' of ' + useList.length + '</span>' +
+      '<span class="fnav">' + prevHtml + nextHtml + '</span>' +
+    '</div>' +
+    '<div class="fbar"><span style="width:' + pct + '%"></span></div>';
+  content.insertBefore(el, content.firstChild);
+})();
+</script>
+<div class="cm-overlay" id="cmOverlay">
+  <div class="cm-box">
+    <button class="cm-close" id="cmClose" aria-label="Close">&times;</button>
+    <iframe id="cmFrame" data-src="../connect-source.html?modal=1" title="Connect a source"></iframe>
+  </div>
+</div>
+<script>
+(function () {
+  var overlay = document.getElementById("cmOverlay");
+  var frame = document.getElementById("cmFrame");
+  var closeBtn = document.getElementById("cmClose");
+  var DEPTH = "../";
+  function openModal() {
+    if (!frame.src) frame.src = frame.getAttribute("data-src");
+    overlay.classList.add("open");
+    document.body.style.overflow = "hidden";
+  }
+  function closeModal() {
+    overlay.classList.remove("open");
+    document.body.style.overflow = "";
+  }
+  closeBtn.addEventListener("click", closeModal);
+  overlay.addEventListener("click", function (e) { if (e.target === overlay) closeModal(); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && overlay.classList.contains("open")) closeModal(); });
+  window.addEventListener("message", function (e) {
+    if (!e.data || typeof e.data !== "object") return;
+    if (e.data.type === "cdd-connect-done") {
+      closeModal();
+      window.location.href = DEPTH + (e.data.redirect || "Sources/index.html#scans");
+    }
+  });
+  document.querySelectorAll(".js-connect-open").forEach(function (el) {
+    el.addEventListener("click", function (e) { e.preventDefault(); openModal(); });
+  });
+})();
+</script>
+</body>
+</html>

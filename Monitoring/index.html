@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CDD · Changes</title>
+<!-- v3.2 consolidation — Changes and Why wasn't this checked? folded into one page, two tabs:
+     the feed of what happened, and the lookup tool for why any one change was or wasn't sent
+     for checking. -->
+<style>
+  :root{
+    --shell-bg:#F0F1F6; --sidebar:#112437; --sidebar-text:#AEB9CB; --sidebar-text-dim:#7C8AA0;
+    --sidebar-active:#3979BD; --brand-blue:#4EA1E8; --header-bg:#FFFFFF; --card-border:#CBDCF6;
+    --ink:#092339; --ink-2:#64748B; --ink-3:#8A93A6;
+    --ok:#1F9D55; --ok-soft:#E8F6EE; --warn:#B45309; --warn-soft:#FEF3E2;
+    --acc2:#7C3AED;
+    --font: "Segoe UI", Inter, system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif;
+  }
+  *{box-sizing:border-box;} html,body{margin:0;padding:0;}
+  body{font-family:var(--font);background:#E7E9F0;color:var(--ink);margin:0;}
+  .shell{width:100%;min-height:100vh;background:var(--shell-bg);padding:16px;display:flex;gap:20px;align-items:flex-start;}
+  .sidebar{width:264px;flex:0 0 264px;background:var(--sidebar);border-radius:16px;padding:24px 14px;min-height:880px;display:flex;flex-direction:column;position:sticky;top:24px;}
+  .brand{padding:0 10px 20px;}
+  .brand-row{display:flex;align-items:center;gap:8px;}
+  .brand-word{font-size:21px;font-weight:700;} .brand-word .data{color:#fff;} .brand-word .safe{color:var(--brand-blue);}
+  .brand-sub{margin-top:3px;font-size:11px;font-style:italic;font-weight:600;color:var(--brand-blue);display:flex;align-items:center;gap:6px;}
+  .brand-sub .sep{width:3px;height:3px;border-radius:50%;background:var(--brand-blue);opacity:.7;}
+  nav.primary{display:flex;flex-direction:column;gap:2px;}
+  .nav-top{display:flex;align-items:center;gap:10px;padding:10px 10px 8px;color:#fff;font-weight:700;font-size:14.5px;}
+  .nav-top .ico{width:19px;height:19px;color:#fff;}
+  .proj{padding:0 6px;margin-bottom:2px;}
+  .proj-sum{display:flex;align-items:center;gap:9px;padding:9px 6px;border-radius:8px;color:#fff;text-decoration:none;}
+  .proj-sum::before{content:"";width:8px;height:8px;border-radius:2px;background:var(--acc,#3979BD);flex:0 0 auto;}
+  .proj-name{flex:1;font-size:13.5px;font-weight:700;}
+  .proj.active .proj-sum{background:rgba(255,255,255,.05);}
+  .proj-links{padding:4px 0 10px 33px;display:flex;flex-direction:column;gap:1px;}
+  .proj-links a{display:block;padding:7px 10px;border-radius:7px;font-size:13px;font-weight:500;color:var(--sidebar-text);text-decoration:none;}
+  .proj-links a:hover{background:rgba(255,255,255,.06);color:#fff;}
+  .proj-links a.active{background:var(--sidebar-active);color:#fff;font-weight:600;}
+  .navgroup{padding:10px 10px 3px;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--sidebar-text-dim);}
+  .navgroup:first-child{padding-top:2px;}
+  .sidebar-foot{margin-top:auto;padding:14px 10px 2px;border-top:1px solid rgba(255,255,255,.08);}
+  .sidebar-foot .line{font-size:10px;color:var(--sidebar-text-dim);line-height:1.6;}
+
+  .main{flex:1;min-width:0;display:flex;flex-direction:column;gap:12px;}
+  .header{background:var(--header-bg);border-radius:8px;padding:18px 28px;display:flex;align-items:center;justify-content:space-between;}
+  .header h1{margin:0;font-size:21px;font-weight:700;color:var(--ink);}
+  .header p{margin:3px 0 0;font-size:13px;color:var(--ink-2);}
+  .avatar{width:38px;height:38px;border-radius:50%;border:2px solid #E2E2E2;display:flex;align-items:center;justify-content:center;color:#B7BEC9;}
+  .header-right{display:flex;align-items:center;gap:12px;}
+  .role-select{font:inherit;font-size:12.5px;font-weight:600;color:var(--ink-2);background:#F3F5FA;
+    border:1px solid #E4E8F1;border-radius:20px;padding:7px 30px 7px 14px;cursor:pointer;
+    appearance:none;-webkit-appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235B6577' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 10px center;background-size:13px;}
+  .role-select:hover{border-color:var(--sidebar-active);}
+  .version-select{font:inherit;font-size:12px;font-weight:700;color:var(--ink-2);background:#F3F5FA;
+    border:1px solid #E4E8F1;border-radius:20px;padding:7px 28px 7px 14px;cursor:pointer;
+    appearance:none;-webkit-appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235B6577' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 9px center;background-size:12px;}
+  .version-select:hover{border-color:var(--sidebar-active);}
+
+  .content{background:#FFFFFF;border:1px solid var(--card-border);border-radius:11.5px;padding:26px 28px 30px;flex:1;}
+  h2.pageh{margin:0 0 4px;font-size:19px;font-weight:700;color:var(--ink);}
+  p.sub{margin:0 0 18px;font-size:13px;color:var(--ink-2);max-width:66ch;}
+  h3.section-h{font-size:12.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-2);margin:0 0 12px;}
+
+  .flowbar{background:linear-gradient(90deg,#F3EEFD,#EEF3FC);border:1px solid #E4D9FA;border-radius:10px;padding:12px 16px;margin-bottom:16px;}
+  .flowbar .ftop{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .flowbar .fic{flex:0 0 auto;font-size:15px;}
+  .flowbar .fstage{font-weight:800;font-size:12.5px;color:#4C3A7A;}
+  .flowbar .fstep{font-size:12px;color:#6B5A94;}
+  .flowbar .fnav{margin-left:auto;display:flex;gap:8px;}
+  .flowbar a.fbtn{font:inherit;font-size:12px;font-weight:700;padding:6px 12px;border-radius:7px;border:1px solid #D9C9F5;background:#fff;color:#4C3A7A;text-decoration:none;white-space:nowrap;}
+  .flowbar a.fbtn:hover{background:#7C3AED;color:#fff;}
+  .flowbar .fbar{height:4px;border-radius:2px;background:#E4D9FA;margin:9px 0 8px;overflow:hidden;}
+  .flowbar .fbar > span{display:block;height:100%;background:#7C3AED;border-radius:2px;}
+  .flowbar .fdo{font-size:12.5px;color:#4C3A7A;line-height:1.5;}
+  .flowbar .fdo b{color:#3A2A63;}
+
+  .tabbar{display:flex;gap:4px;border-bottom:1px solid #E7EAF2;margin-bottom:22px;}
+  .tabbtn{font:inherit;font-size:13.5px;font-weight:700;color:var(--ink-2);background:none;border:none;border-bottom:2.5px solid transparent;padding:11px 4px;margin-right:22px;cursor:pointer;}
+  .tabbtn:hover{color:var(--ink);}
+  .tabbtn.active{color:var(--sidebar-active);border-bottom-color:var(--sidebar-active);}
+  .tabpanel{display:none;} .tabpanel.active{display:block;}
+
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px;}
+  .kpi{border:1px solid #E7EAF2;border-radius:12px;padding:15px 16px;background:#FCFDFF;}
+  .kpi .l{font-size:11px;font-weight:600;color:var(--ink-3);}
+  .kpi .v{font-size:25px;font-weight:800;color:var(--ink);margin-top:4px;}
+  .kpi .d{font-size:11px;color:var(--ok);font-weight:600;margin-top:3px;}
+
+  .actions{display:flex;gap:10px;margin-bottom:22px;}
+  .btn{font:inherit;font-size:13px;font-weight:700;padding:10px 16px;border-radius:8px;border:1px solid var(--card-border);background:#fff;color:var(--ink);cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:7px;}
+  .btn:hover{border-color:var(--sidebar-active);}
+  .btn-primary{background:var(--sidebar-active);color:#fff;border-color:var(--sidebar-active);}
+  .btn-primary:hover{background:#2E63A0;}
+
+  .feed{display:flex;flex-direction:column;gap:2px;}
+  .fitem{display:flex;align-items:flex-start;gap:12px;padding:12px 4px;border-bottom:1px solid #F0F1F6;}
+  .fitem:last-child{border-bottom:none;}
+  .fitem .dot{width:8px;height:8px;border-radius:50%;margin-top:6px;flex:0 0 auto;}
+  .fitem .dot.ok{background:var(--ok);} .fitem .dot.skip{background:#8A93A6;}
+  .fitem .t{font-size:13.5px;color:var(--ink);font-weight:500;}
+  .fitem .w{font-size:11.5px;color:var(--ink-3);margin-top:2px;}
+
+  .field{margin-bottom:22px;max-width:520px;}
+  .field label{display:block;font-size:12.5px;font-weight:600;color:var(--ink-2);margin-bottom:6px;}
+  .field select{width:100%;padding:11px 12px;border:1px solid var(--card-border);border-radius:8px;font:inherit;font-size:13.5px;color:var(--ink);background:#fff;}
+  .answer{border-radius:12px;padding:18px 20px;border:1px solid #E7EAF2;}
+  .answer.checked{background:var(--ok-soft);border-color:#BFE6D2;}
+  .answer.skipped{background:#F5F6F9;border-color:#E2E5EC;}
+  .answer .verdict{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:700;padding:4px 10px;border-radius:20px;margin-bottom:10px;}
+  .verdict.checked{background:var(--ok);color:#fff;}
+  .verdict.skipped{background:var(--ink-3);color:#fff;}
+  .answer h3{margin:0 0 6px;font-size:15px;}
+  .answer p{margin:0;font-size:13.5px;color:var(--ink-2);line-height:1.6;}
+  .answer .trail{margin-top:14px;padding-top:14px;border-top:1px solid rgba(0,0,0,.06);display:flex;flex-direction:column;gap:6px;}
+  .answer .trail .step{font-size:12.5px;color:var(--ink-2);display:flex;gap:8px;}
+  .answer .trail .step b{color:var(--ink);min-width:110px;flex:0 0 auto;}
+
+  @media (max-width:1080px){ .kpis{grid-template-columns:repeat(2,1fr);} }
+  @media (max-width:760px){ .shell{flex-direction:column;} .sidebar{width:100%;flex:none;position:static;} .actions{flex-wrap:wrap;} }
+  body[data-role="dpo"] .proj-links a:not([data-role~="dpo"]),
+  body[data-role="compliance"] .proj-links a:not([data-role~="compliance"]),
+  body[data-role="admin"] .proj-links a:not([data-role~="admin"]) { display:none; }
+  .cm-overlay{position:fixed;inset:0;background:rgba(10,14,25,.6);display:none;align-items:center;justify-content:center;z-index:999;padding:24px;}
+  .cm-overlay.open{display:flex;}
+  .cm-box{width:min(760px,94vw);height:min(780px,92vh);background:#fff;border-radius:14px;overflow:hidden;position:relative;box-shadow:0 24px 64px rgba(8,12,24,.4);display:flex;flex-direction:column;}
+  .cm-close{position:absolute;top:12px;right:12px;z-index:2;width:30px;height:30px;border-radius:50%;border:1px solid #E4E8F1;background:#fff;color:var(--ink-2);font-size:16px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+  .cm-close:hover{background:#F3F5FA;color:var(--ink);}
+  .cm-box iframe{flex:1;width:100%;border:0;}
+</style>
+
+</head>
+<body>
+<script>document.body.setAttribute("data-role", localStorage.getItem("cdd_role") || "dpo");</script>
+<div class="shell">
+
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-row">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 2l7 3v6c0 4.97-3.05 9.36-7 11-3.95-1.64-7-6.03-7-11V5l7-3z" stroke="#4EA1E8" stroke-width="1.6" stroke-linejoin="round"/></svg>
+        <span class="brand-word"><span class="data">data</span><span class="safe">safeguard</span></span>
+      </div>
+      <div class="brand-sub">Privacy<span class="sep"></span>Management</div>
+    </div>
+    <nav class="primary">
+      <div class="nav-top">
+        <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M12 3l8 3.2v5.4c0 5-3.4 8.9-8 10.4-4.6-1.5-8-5.4-8-10.4V6.2L12 3z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="12" cy="11" r="2.6" stroke="currentColor" stroke-width="1.6"/></svg>
+        <span>CDD</span>
+      </div>
+      <a class="proj-sum" href="../walkthrough.html" style="--acc:#64748B"><span class="proj-name">Walkthrough</span></a>
+      <a class="proj-sum" href="../journeys.html" style="--acc:#DB2777"><span class="proj-name">Journey</span></a>
+      <div class="proj active">
+        <div class="proj-sum" style="--acc:#16274F"><span class="proj-name">CDD</span></div>
+        <div class="proj-links">
+          <div class="navgroup">Overview</div>
+          <a href="../index.html" data-role="dpo compliance admin">Dashboard</a>
+          <a href="../ecosystem.html" data-role="dpo compliance admin">Data ecosystem</a>
+          <a href="../search.html" data-role="dpo compliance admin">Search</a>
+          <div class="navgroup">Connect</div>
+          <a href="../Sources/index.html" data-role="dpo admin">Sources</a>
+          <a href="../ingestion-ops.html" data-role="admin">Ingestion ops</a>
+          <div class="navgroup">Watch</div>
+          <a class="active" href="index.html" data-role="dpo admin">Changes</a>
+          <a href="../delta-ops.html" data-role="admin">Delta ops</a>
+          <div class="navgroup">Detect</div>
+          <a href="../Detect/index.html" data-role="dpo compliance admin">Detection</a>
+          <a href="../findings.html" data-role="dpo compliance">Findings</a>
+          <a href="../elements.html" data-role="dpo compliance">Elements</a>
+          <a href="../detection-infra.html" data-role="admin compliance">Detection infra</a>
+          <div class="navgroup">Trust</div>
+          <a href="../Trust/index.html" data-role="dpo compliance admin">Trust</a>
+          <a href="../model-ops.html" data-role="admin compliance">Model ops</a>
+          <div class="navgroup">Comply</div>
+          <a href="../compliance.html" data-role="compliance">Compliance</a>
+          <a href="../reports.html" data-role="dpo compliance">Reports &amp; evidence</a>
+          <div class="navgroup">Manage</div>
+          <a href="../system-health.html" data-role="dpo admin">System health</a>
+          <a href="../pipeline.html" data-role="admin">Pipeline</a>
+          <a href="../platform-admin.html" data-role="admin">Platform admin</a>
+          <a href="../admin.html" data-role="admin">Admin</a>
+        </div>
+      </div>
+    </nav>
+    <div class="sidebar-foot">
+      <div class="line">CDD® · Confidential Data Discovery</div>
+      <div class="line">ID-PRIVACY® platform</div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="header">
+      <div><h1>Changes</h1><p>What changed since the last check, and — for any one of them — exactly why it was or wasn't checked.</p></div>
+      <div class="header-right"><select class="version-select" id="versionSelect" aria-label="Prototype version"><option value="../../CDD-Simple/index.html">v1.0</option><option value="../../CDD-Simple-v2/index.html">v2.0</option><option value="../../CDD-Simple-v3/index.html">v3.0</option><option value="../../CDD-Simple-v3.1/index.html">v3.1</option><option value="" selected>v3.2</option></select>
+        <select class="role-select" id="roleSelect" aria-label="Switch role">
+          <option value="dpo">Priya N. · Privacy Ops</option>
+          <option value="compliance">Marcus T. · Compliance Ops</option>
+          <option value="admin">Sam R. · Platform Ops</option>
+        </select>
+        <div class="avatar"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3.4" stroke="currentColor" stroke-width="1.6"/><path d="M4.5 19.5c1.6-3.4 4.4-5 7.5-5s5.9 1.6 7.5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></div>
+      </div>
+    </header>
+
+    <section class="content">
+      <h2 class="pageh">Changes</h2>
+      <p class="sub">Instead of re-checking everything every time, we watch for what's new or different — and only look closely at changes that could contain sensitive information.</p>
+
+      <div class="tabbar" id="tabbar">
+        <button class="tabbtn active" data-tab="feed">Changes</button>
+        <button class="tabbtn" data-tab="why">Why wasn&rsquo;t this checked?</button>
+      </div>
+
+      <div class="tabpanel active" id="panel-feed">
+        <div class="kpis">
+          <div class="kpi"><div class="l">Changes this week</div><div class="v">1,842</div><div class="d">across 6 sources</div></div>
+          <div class="kpi"><div class="l">Needed a closer look</div><div class="v">61%</div><div class="d">1,123 changes</div></div>
+          <div class="kpi"><div class="l">Safely skipped</div><div class="v">39%</div><div class="d">719 changes — not sensitive</div></div>
+          <div class="kpi"><div class="l">Estimated savings</div><div class="v">71%</div><div class="d">less checking than a full rescan</div></div>
+        </div>
+        <div class="actions">
+          <button class="btn btn-primary" data-goto="why">Why wasn&rsquo;t this checked?</button>
+          <a class="btn" href="../Detect/index.html">See what was found</a>
+        </div>
+        <h3 class="section-h">Recent activity</h3>
+        <div class="feed">
+          <div class="fitem"><span class="dot ok"></span><div><div class="t">Sales database — <b>42 rows added</b>, flagged for a closer look</div><div class="w">12 minutes ago</div></div></div>
+          <div class="fitem"><span class="dot skip"></span><div><div class="t">Billing database — <b>timestamp field updated</b> on 310 rows, safely skipped</div><div class="w">40 minutes ago</div></div></div>
+          <div class="fitem"><span class="dot ok"></span><div><div class="t">HR files (SharePoint) — <b>3 files modified</b>, flagged for a closer look</div><div class="w">1 hour ago</div></div></div>
+          <div class="fitem"><span class="dot skip"></span><div><div class="t">Sales data (Salesforce) — <b>record re-saved with no field changes</b>, safely skipped</div><div class="w">2 hours ago</div></div></div>
+          <div class="fitem"><span class="dot ok"></span><div><div class="t">Marketing files (S3) — <b>1 new file uploaded</b>, flagged for a closer look</div><div class="w">3 hours ago</div></div></div>
+        </div>
+      </div>
+
+      <div class="tabpanel" id="panel-why">
+        <p class="sub">Pick a change and we'll show exactly why it did — or didn't — get checked. Nothing here is a guess: every decision is recorded.</p>
+        <div class="field">
+          <label>Change</label>
+          <select id="pick">
+            <option value="a">Sales database — 42 rows added (12 minutes ago)</option>
+            <option value="b">Billing database — 310 rows, timestamp only (40 minutes ago)</option>
+            <option value="c">HR files (SharePoint) — 3 files modified (1 hour ago)</option>
+            <option value="d">Sales data (Salesforce) — record re-saved, no changes (2 hours ago)</option>
+            <option value="e">Clinical database — 1,640 rows, internal reindex (5 hours ago)</option>
+          </select>
+        </div>
+        <div id="answer"></div>
+      </div>
+    </section>
+  </main>
+
+</div>
+
+<script>
+function showTab(name) {
+  document.querySelectorAll(".tabbtn").forEach(function (b) { b.classList.toggle("active", b.getAttribute("data-tab") === name); });
+  document.querySelectorAll(".tabpanel").forEach(function (p) { p.classList.toggle("active", p.id === "panel-" + name); });
+  try { history.replaceState(null, "", "#" + name); } catch (e) {}
+}
+document.getElementById("tabbar").addEventListener("click", function (e) {
+  var b = e.target.closest(".tabbtn"); if (b) showTab(b.getAttribute("data-tab"));
+});
+document.addEventListener("click", function (e) {
+  var g = e.target.closest("[data-goto]"); if (g) showTab(g.getAttribute("data-goto"));
+});
+(function () { var h = location.hash.replace("#", ""); if (h && document.getElementById("panel-" + h)) showTab(h); })();
+
+(function () {
+  var DATA = {
+    a: { verdict: "checked", title: "Sent for checking",
+      why: "This change added 42 new rows, including new customer contact fields we haven't seen before on this table. Any new field is treated as unknown until proven otherwise, so it was sent for checking rather than assumed safe.",
+      trail: [["Detected", "42 rows added, 12 minutes ago"], ["Decision", "New fields present → uncertain → check"], ["Result", "Sent to Findings — 1 item flagged so far"]] },
+    b: { verdict: "skipped", title: "Safely skipped",
+      why: "Only a system 'last_updated' timestamp changed on these 310 rows — the actual customer data was untouched. A timestamp-only change carries no new information to check.",
+      trail: [["Detected", "310 rows changed, 40 minutes ago"], ["Decision", "Only a timestamp field changed → not sensitive → skip"], ["Recorded", "Skip logged for audit — nothing was hidden, just not checked"]] },
+    c: { verdict: "checked", title: "Sent for checking",
+      why: "These 3 files live in a folder that has previously contained employee records. Even though we can't always tell from the change alone, the location's history is enough to route it for a closer look.",
+      trail: [["Detected", "3 files modified, 1 hour ago"], ["Decision", "Folder history includes sensitive records → check"], ["Result", "Sent to Findings — awaiting review"]] },
+    d: { verdict: "skipped", title: "Safely skipped",
+      why: "This record was re-saved by an automated sync job, but every field's value was identical to before. No content actually changed, so there was nothing new to check.",
+      trail: [["Detected", "1 record re-saved, 2 hours ago"], ["Decision", "No field values changed → skip"], ["Recorded", "Skip logged for audit"]] },
+    e: { verdict: "skipped", title: "Safely skipped",
+      why: "A nightly maintenance job rebuilt the internal row index across the table. Internal IDs changed, but no patient or clinical fields were touched.",
+      trail: [["Detected", "1,640 rows reindexed, 5 hours ago"], ["Decision", "Only internal IDs changed, no clinical fields → skip"], ["Recorded", "Skip logged for audit"]] }
+  };
+  function render(key) {
+    var d = DATA[key];
+    var box = document.getElementById("answer");
+    var verdictLabel = d.verdict === "checked" ? "Needed checking" : "Skipped — not sensitive";
+    box.innerHTML =
+      '<div class="answer ' + d.verdict + '">' +
+        '<span class="verdict ' + d.verdict + '">' + verdictLabel + '</span>' +
+        '<h3>' + d.title + '</h3>' +
+        '<p>' + d.why + '</p>' +
+        '<div class="trail">' +
+          d.trail.map(function (s) { return '<div class="step"><b>' + s[0] + '</b><span>' + s[1] + '</span></div>'; }).join("") +
+        '</div>' +
+      '</div>';
+  }
+  var pick = document.getElementById("pick");
+  pick.addEventListener("change", function () { render(pick.value); });
+  render(pick.value);
+})();
+
+(function () {
+  var sel = document.getElementById("roleSelect");
+  var GREET = { dpo: "Priya", compliance: "Marcus", admin: "Sam" };
+  sel.value = document.body.getAttribute("data-role") || "dpo";
+  var h1 = document.querySelector(".header h1");
+  if (h1 && /^Welcome back, /.test(h1.textContent)) { h1.textContent = "Welcome back, " + GREET[sel.value]; }
+  sel.addEventListener("change", function () {
+    document.body.setAttribute("data-role", sel.value);
+    try { localStorage.setItem("cdd_role", sel.value); } catch (e) {}
+  });
+})();
+document.getElementById("versionSelect").addEventListener("change", function () { if (this.value) window.location.href = this.value; });
+</script>
+<script>
+var CDD_STAGES = [{n:"Overview",p:["index.html","ecosystem.html","search.html"]},{n:"Connect",p:["Sources/index.html","ingestion-ops.html"]},{n:"Watch",p:["Monitoring/index.html","delta-ops.html"]},{n:"Detect",p:["Detect/index.html","findings.html","elements.html","detection-infra.html"]},{n:"Trust",p:["Trust/index.html","model-ops.html"]},{n:"Comply",p:["compliance.html","reports.html"]},{n:"Manage",p:["system-health.html","pipeline.html","platform-admin.html","admin.html"]}];
+(function () {
+  var MY_PATH = "Monitoring/index.html";
+  var DEPTH = "../";
+  var flat = [];
+  for (var s = 0; s < CDD_STAGES.length; s++) { for (var i = 0; i < CDD_STAGES[s].p.length; i++) { flat.push({path: CDD_STAGES[s].p[i], stageIdx: s}); } }
+  var idx = -1;
+  for (var k = 0; k < flat.length; k++) { if (flat[k].path === MY_PATH) { idx = k; break; } }
+  if (idx === -1) return;
+  var content = document.querySelector(".content");
+  if (!content) return;
+  var hiddenSteps = [];
+  try { var hRaw = JSON.parse(localStorage.getItem("cdd_journey_hidden") || "[]"); if (Array.isArray(hRaw)) hiddenSteps = hRaw; } catch (e) {}
+  var visFlat = flat.filter(function (f) { return hiddenSteps.indexOf(f.path) === -1; });
+  var vidx = -1;
+  for (var vk = 0; vk < visFlat.length; vk++) { if (visFlat[vk].path === MY_PATH) { vidx = vk; break; } }
+  var useList = vidx !== -1 ? visFlat : flat;
+  var useIdx = vidx !== -1 ? vidx : idx;
+  var stage = CDD_STAGES[useList[useIdx].stageIdx];
+  var prevHtml = useIdx > 0 ? '<a class="fbtn" href="' + DEPTH + useList[useIdx - 1].path + '">&larr; Back</a>' : "";
+  var nextHtml = useIdx < useList.length - 1
+    ? '<a class="fbtn" href="' + DEPTH + useList[useIdx + 1].path + '">Next &rarr;</a>'
+    : '<a class="fbtn" href="' + DEPTH + 'journeys.html">Flow complete ✓</a>';
+  var pct = Math.round(((useIdx + 1) / useList.length) * 100);
+  var el = document.createElement("div");
+  el.className = "flowbar";
+  el.innerHTML =
+    '<div class="ftop"><span class="fic">🧭</span><span class="fstage">' + stage.n + '</span><span class="fstep">&middot; step ' + (useIdx + 1) + ' of ' + useList.length + '</span><span class="fnav">' + prevHtml + nextHtml + '</span></div>' +
+    '<div class="fbar"><span style="width:' + pct + '%"></span></div>';
+  content.insertBefore(el, content.firstChild);
+})();
+</script>
+<div class="cm-overlay" id="cmOverlay">
+  <div class="cm-box">
+    <button class="cm-close" id="cmClose" aria-label="Close">&times;</button>
+    <iframe id="cmFrame" data-src="../connect-source.html?modal=1" title="Connect a source"></iframe>
+  </div>
+</div>
+<script>
+(function () {
+  var overlay = document.getElementById("cmOverlay");
+  var frame = document.getElementById("cmFrame");
+  var closeBtn = document.getElementById("cmClose");
+  var DEPTH = "../";
+  function openModal() {
+    if (!frame.src) frame.src = frame.getAttribute("data-src");
+    overlay.classList.add("open");
+    document.body.style.overflow = "hidden";
+  }
+  function closeModal() {
+    overlay.classList.remove("open");
+    document.body.style.overflow = "";
+  }
+  closeBtn.addEventListener("click", closeModal);
+  overlay.addEventListener("click", function (e) { if (e.target === overlay) closeModal(); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && overlay.classList.contains("open")) closeModal(); });
+  window.addEventListener("message", function (e) {
+    if (!e.data || typeof e.data !== "object") return;
+    if (e.data.type === "cdd-connect-done") {
+      closeModal();
+      window.location.href = DEPTH + (e.data.redirect || "Sources/index.html#scans");
+    }
+  });
+  document.querySelectorAll(".js-connect-open").forEach(function (el) {
+    el.addEventListener("click", function (e) { e.preventDefault(); openModal(); });
+  });
+})();
+</script>
+</body>
+</html>

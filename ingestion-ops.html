@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CDD · Ingestion ops</title>
+<style>
+  :root{
+    --shell-bg:#F0F1F6; --sidebar:#112437; --sidebar-text:#AEB9CB; --sidebar-text-dim:#7C8AA0;
+    --sidebar-active:#3979BD; --brand-blue:#4EA1E8; --header-bg:#FFFFFF; --card-border:#CBDCF6;
+    --ink:#092339; --ink-2:#64748B; --ink-3:#8A93A6;
+    --ok:#1F9D55; --ok-soft:#E8F6EE; --warn:#B45309; --warn-soft:#FEF3E2; --bad:#B42318; --bad-soft:#FEF0EE;
+    --acc2:#7C3AED; --acc2-soft:#F3EEFD;
+    --font: "Segoe UI", Inter, system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif;
+  }
+  *{box-sizing:border-box;} html,body{margin:0;padding:0;}
+  body{font-family:var(--font);background:#E7E9F0;color:var(--ink);margin:0;}
+  .shell{width:100%;min-height:100vh;background:var(--shell-bg);padding:16px;display:flex;gap:20px;align-items:flex-start;}
+  .sidebar{width:264px;flex:0 0 264px;background:var(--sidebar);border-radius:16px;padding:24px 14px;min-height:880px;display:flex;flex-direction:column;position:sticky;top:24px;}
+  .brand{padding:0 10px 20px;}
+  .brand-row{display:flex;align-items:center;gap:8px;}
+  .brand-word{font-size:21px;font-weight:700;} .brand-word .data{color:#fff;} .brand-word .safe{color:var(--brand-blue);}
+  .brand-sub{margin-top:3px;font-size:11px;font-style:italic;font-weight:600;color:var(--brand-blue);display:flex;align-items:center;gap:6px;}
+  .brand-sub .sep{width:3px;height:3px;border-radius:50%;background:var(--brand-blue);opacity:.7;}
+  nav.primary{display:flex;flex-direction:column;gap:2px;}
+  .nav-top{display:flex;align-items:center;gap:10px;padding:10px 10px 8px;color:#fff;font-weight:700;font-size:14.5px;}
+  .nav-top .ico{width:19px;height:19px;color:#fff;}
+  .proj{padding:0 6px;margin-bottom:2px;}
+  .proj-sum{display:flex;align-items:center;gap:9px;padding:9px 6px;border-radius:8px;color:#fff;text-decoration:none;}
+  .proj-sum::before{content:"";width:8px;height:8px;border-radius:2px;background:var(--acc,#3979BD);flex:0 0 auto;}
+  .proj-name{flex:1;font-size:13.5px;font-weight:700;}
+  .proj.active .proj-sum{background:rgba(255,255,255,.05);}
+  .proj-links{padding:4px 0 10px 33px;display:flex;flex-direction:column;gap:1px;}
+  .proj-links a{display:block;padding:7px 10px;border-radius:7px;font-size:13px;font-weight:500;color:var(--sidebar-text);text-decoration:none;}
+  .proj-links a:hover{background:rgba(255,255,255,.06);color:#fff;}
+  .proj-links a.active{background:var(--sidebar-active);color:#fff;font-weight:600;}
+  .navgroup{padding:10px 10px 3px;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--sidebar-text-dim);}
+  .navgroup:first-child{padding-top:2px;}
+  .sidebar-foot{margin-top:auto;padding:14px 10px 2px;border-top:1px solid rgba(255,255,255,.08);}
+  .sidebar-foot .line{font-size:10px;color:var(--sidebar-text-dim);line-height:1.6;}
+
+  .main{flex:1;min-width:0;display:flex;flex-direction:column;gap:12px;}
+  .header{background:var(--header-bg);border-radius:8px;padding:18px 28px;display:flex;align-items:center;justify-content:space-between;}
+  .header h1{margin:0;font-size:21px;font-weight:700;color:var(--ink);}
+  .header p{margin:3px 0 0;font-size:13px;color:var(--ink-2);}
+  .avatar{width:38px;height:38px;border-radius:50%;border:2px solid #E2E2E2;display:flex;align-items:center;justify-content:center;color:#B7BEC9;}
+  .header-right{display:flex;align-items:center;gap:12px;}
+  .role-select{font:inherit;font-size:12.5px;font-weight:600;color:var(--ink-2);background:#F3F5FA;
+    border:1px solid #E4E8F1;border-radius:20px;padding:7px 30px 7px 14px;cursor:pointer;
+    appearance:none;-webkit-appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235B6577' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 10px center;background-size:13px;}
+  .role-select:hover{border-color:var(--sidebar-active);}
+  .version-select{font:inherit;font-size:12px;font-weight:700;color:var(--ink-2);background:#F3F5FA;
+    border:1px solid #E4E8F1;border-radius:20px;padding:7px 28px 7px 14px;cursor:pointer;
+    appearance:none;-webkit-appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235B6577' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 9px center;background-size:12px;}
+  .version-select:hover{border-color:var(--sidebar-active);}
+  body[data-role="dpo"] .proj-links a:not([data-role~="dpo"]),
+  body[data-role="compliance"] .proj-links a:not([data-role~="compliance"]),
+  body[data-role="admin"] .proj-links a:not([data-role~="admin"]) { display:none; }
+
+  .content{background:#FFFFFF;border:1px solid var(--card-border);border-radius:11.5px;padding:26px 28px 30px;flex:1;}
+  h2.pageh{margin:0 0 4px;font-size:19px;font-weight:700;color:var(--ink);}
+  p.sub{margin:0 0 18px;font-size:13px;color:var(--ink-2);max-width:74ch;}
+
+  .flowbar{background:linear-gradient(90deg,#F3EEFD,#EEF3FC);border:1px solid #E4D9FA;border-radius:10px;padding:12px 16px;margin-bottom:16px;}
+  .flowbar .ftop{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .flowbar .fic{flex:0 0 auto;font-size:15px;}
+  .flowbar .fstage{font-weight:800;font-size:12.5px;color:#4C3A7A;}
+  .flowbar .fstep{font-size:12px;color:#6B5A94;}
+  .flowbar .fnav{margin-left:auto;display:flex;gap:8px;}
+  .flowbar a.fbtn{font:inherit;font-size:12px;font-weight:700;padding:6px 12px;border-radius:7px;border:1px solid #D9C9F5;background:#fff;color:#4C3A7A;text-decoration:none;white-space:nowrap;}
+  .flowbar a.fbtn:hover{background:#7C3AED;color:#fff;}
+  .flowbar .fbar{height:4px;border-radius:2px;background:#E4D9FA;margin:9px 0 8px;overflow:hidden;}
+  .flowbar .fbar > span{display:block;height:100%;background:#7C3AED;border-radius:2px;}
+
+  .tabbar{display:flex;gap:4px;border-bottom:1px solid #E7EAF2;margin-bottom:22px;flex-wrap:wrap;}
+  .tabbtn{font:inherit;font-size:13.5px;font-weight:700;color:var(--ink-2);background:none;border:none;border-bottom:2.5px solid transparent;padding:11px 4px;margin-right:22px;cursor:pointer;}
+  .tabbtn:hover{color:var(--ink);}
+  .tabbtn.active{color:var(--sidebar-active);border-bottom-color:var(--sidebar-active);}
+  .tabpanel{display:none;}
+  .tabpanel.active{display:block;}
+
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px;}
+  .kpi{border:1px solid #E7EAF2;border-radius:12px;padding:15px 16px;background:#FCFDFF;}
+  .kpi .l{font-size:11px;font-weight:600;color:var(--ink-3);}
+  .kpi .v{font-size:24px;font-weight:800;color:var(--ink);margin-top:4px;font-variant-numeric:tabular-nums;}
+  .kpi .v.warn{color:var(--warn);} .kpi .v.bad{color:var(--bad);} .kpi .v.ok{color:var(--ok);}
+  .kpi .d{font-size:11px;color:var(--ink-2);font-weight:600;margin-top:3px;}
+
+  .twrap{border:1px solid #E7EAF2;border-radius:12px;overflow-x:auto;margin-bottom:18px;}
+  table{border-collapse:collapse;width:100%;font-size:13px;}
+  th,td{text-align:left;padding:11px 15px;border-bottom:1px solid #F0F1F6;white-space:nowrap;}
+  th{font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-3);font-weight:700;background:#FBFCFE;}
+  tr:last-child td{border-bottom:none;}
+  td.num{font-variant-numeric:tabular-nums;font-weight:600;}
+  .status{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;}
+  .status .dot{width:7px;height:7px;border-radius:50%;}
+  .status.ok{color:var(--ok);} .status.ok .dot{background:var(--ok);}
+  .status.warn{color:var(--warn);} .status.warn .dot{background:var(--warn);}
+  .status.bad{color:var(--bad);} .status.bad .dot{background:var(--bad);}
+  .btn-sm{font:inherit;font-size:12px;font-weight:700;padding:6px 12px;border-radius:7px;border:1px solid var(--card-border);background:#fff;color:var(--ink);cursor:pointer;text-decoration:none;}
+  .btn-sm:hover{border-color:var(--sidebar-active);}
+  .btn{font:inherit;font-size:13px;font-weight:700;padding:9px 15px;border-radius:8px;border:1px solid var(--card-border);background:#fff;color:var(--ink);cursor:pointer;}
+  .btn-primary{background:var(--sidebar-active);color:#fff;border-color:var(--sidebar-active);}
+
+  .note{border:1px solid #EEF1F7;background:#FAFBFD;border-radius:10px;padding:12px 16px;margin-bottom:18px;font-size:12.5px;color:var(--ink-2);line-height:1.6;}
+  .note b{color:var(--ink);}
+  h3.tabh{font-size:15px;font-weight:700;margin:0 0 4px;}
+  p.tabd{font-size:13px;color:var(--ink-2);margin:0 0 16px;max-width:70ch;}
+
+  .bars{display:flex;align-items:flex-end;gap:14px;height:110px;padding:0 4px;margin-bottom:6px;}
+  .bcol{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;}
+  .bcol .bar{width:100%;max-width:36px;background:linear-gradient(180deg,#4EA1E8,var(--sidebar-active));border-radius:4px 4px 0 0;}
+  .bcol .val{font-size:10.5px;font-weight:700;color:var(--ink);margin-bottom:4px;}
+  .bcol .lbl{font-size:10.5px;color:var(--ink-3);margin-top:6px;}
+
+  .toggle-sw{position:relative;width:36px;height:20px;display:inline-block;}
+  .toggle-sw input{opacity:0;width:0;height:0;}
+  .toggle-sw .tk{position:absolute;inset:0;background:#D9DEE7;border-radius:20px;cursor:pointer;transition:.15s;}
+  .toggle-sw .tk::before{content:"";position:absolute;width:14px;height:14px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.15s;}
+  .toggle-sw input:checked + .tk{background:var(--ok);}
+  .toggle-sw input:checked + .tk::before{transform:translateX(16px);}
+
+  .glossary{border:1px solid #EEF1F7;background:#FAFBFD;border-radius:10px;padding:12px 16px;margin-bottom:18px;font-size:12px;color:var(--ink-2);line-height:1.7;}
+  .glossary b{color:var(--ink);}
+
+  #toasts{position:fixed;right:20px;bottom:20px;display:flex;flex-direction:column;gap:8px;z-index:80;}
+  .toast{background:var(--ink);color:#fff;font-size:13px;font-weight:600;padding:10px 16px;border-radius:8px;box-shadow:0 8px 20px rgba(0,0,0,.2);opacity:0;transform:translateY(8px);transition:opacity .18s,transform .18s;}
+  .toast.show{opacity:1;transform:translateY(0);}
+
+  @media (max-width:1080px){ .kpis{grid-template-columns:repeat(2,1fr);} }
+  @media (max-width:760px){ .shell{flex-direction:column;} .sidebar{width:100%;flex:none;position:static;} }
+</style>
+</head>
+<body>
+<script>document.body.setAttribute("data-role", localStorage.getItem("cdd_role") || "dpo");</script>
+<div class="shell">
+
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-row">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 2l7 3v6c0 4.97-3.05 9.36-7 11-3.95-1.64-7-6.03-7-11V5l7-3z" stroke="#4EA1E8" stroke-width="1.6" stroke-linejoin="round"/></svg>
+        <span class="brand-word"><span class="data">data</span><span class="safe">safeguard</span></span>
+      </div>
+      <div class="brand-sub">Privacy<span class="sep"></span>Management</div>
+    </div>
+    <nav class="primary">
+      <div class="nav-top">
+        <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M12 3l8 3.2v5.4c0 5-3.4 8.9-8 10.4-4.6-1.5-8-5.4-8-10.4V6.2L12 3z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="12" cy="11" r="2.6" stroke="currentColor" stroke-width="1.6"/></svg>
+        <span>CDD</span>
+      </div>
+      <a class="proj-sum" href="walkthrough.html" style="--acc:#64748B"><span class="proj-name">Walkthrough</span></a>
+      <a class="proj-sum" href="journeys.html" style="--acc:#DB2777"><span class="proj-name">Journey</span></a>
+      <div class="proj active">
+        <div class="proj-sum" style="--acc:#16274F"><span class="proj-name">CDD</span></div>
+        <div class="proj-links">
+          <div class="navgroup">Overview</div>
+          <a href="index.html" data-role="dpo compliance admin">Dashboard</a>
+          <a href="ecosystem.html" data-role="dpo compliance admin">Data ecosystem</a>
+          <a href="search.html" data-role="dpo compliance admin">Search</a>
+          <div class="navgroup">Connect</div>
+          <a href="Sources/index.html" data-role="dpo admin">Sources</a>
+          <a class="active" href="ingestion-ops.html" data-role="admin">Ingestion ops</a>
+          <div class="navgroup">Watch</div>
+          <a href="Monitoring/index.html" data-role="dpo admin">Changes</a>
+          <a href="delta-ops.html" data-role="admin">Delta ops</a>
+          <div class="navgroup">Detect</div>
+          <a href="Detect/index.html" data-role="dpo compliance admin">Detection</a>
+          <a href="findings.html" data-role="dpo compliance">Findings</a>
+          <a href="elements.html" data-role="dpo compliance">Elements</a>
+          <a href="detection-infra.html" data-role="admin compliance">Detection infra</a>
+          <div class="navgroup">Trust</div>
+          <a href="Trust/index.html" data-role="dpo compliance admin">Trust</a>
+          <a href="model-ops.html" data-role="admin compliance">Model ops</a>
+          <div class="navgroup">Comply</div>
+          <a href="compliance.html" data-role="compliance">Compliance</a>
+          <a href="reports.html" data-role="dpo compliance">Reports & evidence</a>
+          <div class="navgroup">Manage</div>
+          <a href="system-health.html" data-role="dpo admin">System health</a>
+          <a href="pipeline.html" data-role="admin">Pipeline</a>
+          <a href="platform-admin.html" data-role="admin">Platform admin</a>
+          <a href="admin.html" data-role="admin">Admin</a>
+        </div>
+      </div>
+    </nav>
+    <div class="sidebar-foot">
+      <div class="line">CDD® · Confidential Data Discovery</div>
+      <div class="line">ID-PRIVACY® platform</div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="header">
+      <div><h1>Ingestion ops</h1><p>The connector layer's SRE view &mdash; routing, job overrides, partitions, and dead letters.</p></div>
+      <div class="header-right"><select class="version-select" id="versionSelect" aria-label="Prototype version"><option value="../CDD-Simple/index.html">v1.0</option><option value="../CDD-Simple-v2/index.html">v2.0</option><option value="../CDD-Simple-v3/index.html">v3.0</option><option value="../CDD-Simple-v3.1/index.html">v3.1</option><option value="" selected>v3.2</option></select>
+        <select class="role-select" id="roleSelect" aria-label="Switch role">
+          <option value="dpo">Priya N. · Privacy Ops</option>
+          <option value="compliance">Marcus T. · Compliance Ops</option>
+          <option value="admin">Sam R. · Platform Ops</option>
+        </select>
+        <div class="avatar"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3.4" stroke="currentColor" stroke-width="1.6"/><path d="M4.5 19.5c1.6-3.4 4.4-5 7.5-5s5.9 1.6 7.5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></div>
+      </div>
+    </header>
+
+    <section class="content">
+      <h2 class="pageh">Ingestion ops</h2>
+      <p class="sub">The deep pair of Sources &mdash; how records actually move once a connection is live.</p>
+      <div class="tabbar">
+        <button class="tabbtn active" data-tab="routing">Routing</button>
+        <button class="tabbtn" data-tab="jobdetail">Job detail</button>
+        <button class="tabbtn" data-tab="partitions">Partitions</button>
+        <button class="tabbtn" data-tab="dlq">DLQ & replay <span class="tbadge">2</span></button>
+      </div>
+      <div class="tabpanel active" id="panel-routing">
+        <h3 class="tabh">Routing &amp; throughput</h3>
+        <p class="tabd">How ingested records are routed to the right lane, and how fast.</p>
+        <div class="kpis">
+          <div class="kpi"><div class="l">Messages routed / hr</div><div class="v">1.2M</div><div class="d">across 7 sources</div></div>
+          <div class="kpi"><div class="l">Avg routing latency</div><div class="v">340 ms</div><div class="d">p50</div></div>
+          <div class="kpi"><div class="l">Error rate</div><div class="v ok">0.02%</div><div class="d">last hour</div></div>
+        </div>
+        <div class="twrap"><table>
+          <thead><tr><th>Source</th><th>Lane</th><th>Rate</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td>Sales database</td><td>Type-1 (structured)</td><td class="num">240K/hr</td><td><span class="status ok"><span class="dot"></span>OK</span></td></tr>
+            <tr><td>HR files (SharePoint)</td><td>Type-2 (unstructured)</td><td class="num">180K/hr</td><td><span class="status ok"><span class="dot"></span>OK</span></td></tr>
+            <tr><td>Sales data (Salesforce)</td><td>Type-1 (structured)</td><td class="num">96K/hr</td><td><span class="status ok"><span class="dot"></span>OK</span></td></tr>
+            <tr><td>Legacy CRM</td><td>Type-1 (structured)</td><td class="num">&mdash;</td><td><span class="status bad"><span class="dot"></span>Blocked &mdash; source disconnected</span></td></tr>
+          </tbody>
+        </table></div>
+      </div>
+      <div class="tabpanel" id="panel-jobdetail">
+        <h3 class="tabh">Ingestion job &mdash; ops view</h3>
+        <p class="tabd">Engine overrides and lane hints for the currently running ingestion job.</p>
+        <div class="twrap"><table>
+          <tbody>
+            <tr><td>Job</td><td class="num">ing-job-20260824-0300</td></tr>
+            <tr><td>Source</td><td>HR files (SharePoint)</td></tr>
+            <tr><td>Engine override</td><td>Type-2 lane, batch size 500</td></tr>
+            <tr><td>Lane hint</td><td>Unstructured &mdash; OCR pre-pass enabled</td></tr>
+            <tr><td>Retry policy</td><td>3 attempts, exponential backoff</td></tr>
+            <tr><td>Status</td><td><span class="status ok"><span class="dot"></span>Running &mdash; 61% complete</span></td></tr>
+          </tbody>
+        </table></div>
+      </div>
+      <div class="tabpanel" id="panel-partitions">
+        <h3 class="tabh">Partitions &amp; back-pressure</h3>
+        <p class="tabd">Per-partition lag on the ingestion topic.</p>
+        <div class="twrap"><table>
+          <thead><tr><th>Partition</th><th>Lag</th><th>Back-pressure</th></tr></thead>
+          <tbody>
+            <tr><td>0</td><td class="num">1,204</td><td><span class="status ok"><span class="dot"></span>None</span></td></tr>
+            <tr><td>1</td><td class="num">980</td><td><span class="status ok"><span class="dot"></span>None</span></td></tr>
+            <tr><td>2</td><td class="num">4,610</td><td><span class="status warn"><span class="dot"></span>Moderate</span></td></tr>
+            <tr><td>3</td><td class="num">1,102</td><td><span class="status ok"><span class="dot"></span>None</span></td></tr>
+          </tbody>
+        </table></div>
+      </div>
+      <div class="tabpanel" id="panel-dlq">
+        <h3 class="tabh">Dead-letter queue &amp; replay</h3>
+        <p class="tabd">Messages that failed ingestion and can be replayed once the underlying issue is fixed.</p>
+        <div class="twrap"><table>
+          <thead><tr><th>Message</th><th>Source</th><th>Reason</th><th>Age</th><th></th></tr></thead>
+          <tbody id="dlqRows">
+            <tr><td>batch-4471-row-0192</td><td>Legacy CRM</td><td>Connection refused</td><td>3 hours ago</td><td><button class="btn-sm" data-action="replay">Replay</button></td></tr>
+            <tr><td>batch-4471-row-0193</td><td>Legacy CRM</td><td>Connection refused</td><td>3 hours ago</td><td><button class="btn-sm" data-action="replay">Replay</button></td></tr>
+          </tbody>
+        </table></div>
+        <script>
+        document.getElementById("dlqRows").addEventListener("click", function (e) {
+          var btn = e.target.closest('button[data-action="replay"]');
+          if (!btn) return;
+          var row = btn.closest("tr");
+          btn.textContent = "Replaying\u2026"; btn.disabled = true;
+          setTimeout(function () {
+            row.style.opacity = "0.4";
+            btn.textContent = "Replayed";
+            toast("Message replayed \u2014 will retry on next ingestion cycle");
+          }, 900);
+        });
+        </script>
+      </div>
+    </section>
+  </main>
+
+</div>
+
+<div id="toasts"></div>
+
+
+<script>
+function toast(msg){
+  var t = document.createElement("div");
+  t.className = "toast"; t.textContent = msg;
+  document.getElementById("toasts").appendChild(t);
+  requestAnimationFrame(function () { t.classList.add("show"); });
+  setTimeout(function () {
+    t.classList.remove("show");
+    setTimeout(function () { t.remove(); }, 200);
+  }, 2200);
+}
+function showTab(name) {
+  document.querySelectorAll(".tabbtn").forEach(function (b) { b.classList.toggle("active", b.getAttribute("data-tab") === name); });
+  document.querySelectorAll(".tabpanel").forEach(function (p) { p.classList.toggle("active", p.id === "panel-" + name); });
+  try { history.replaceState(null, "", "#" + name); } catch (e) {}
+}
+document.querySelectorAll(".tabbtn").forEach(function (b) {
+  b.addEventListener("click", function () { showTab(b.getAttribute("data-tab")); });
+});
+(function () {
+  var h = location.hash.replace("#", "");
+  if (h && document.getElementById("panel-" + h)) showTab(h);
+})();
+(function () {
+  var sel = document.getElementById("roleSelect");
+  sel.value = document.body.getAttribute("data-role") || "dpo";
+  sel.addEventListener("change", function () {
+    document.body.setAttribute("data-role", sel.value);
+    try { localStorage.setItem("cdd_role", sel.value); } catch (e) {}
+  });
+})();
+document.getElementById("versionSelect").addEventListener("change", function () { if (this.value) window.location.href = this.value; });
+</script>
+<script>
+var CDD_STAGES = [{n:"Overview",p:["index.html","ecosystem.html","search.html"]},{n:"Connect",p:["Sources/index.html","ingestion-ops.html"]},{n:"Watch",p:["Monitoring/index.html","delta-ops.html"]},{n:"Detect",p:["Detect/index.html","findings.html","elements.html","detection-infra.html"]},{n:"Trust",p:["Trust/index.html","model-ops.html"]},{n:"Comply",p:["compliance.html","reports.html"]},{n:"Manage",p:["system-health.html","pipeline.html","platform-admin.html","admin.html"]}];
+(function () {
+  var MY_PATH = "ingestion-ops.html";
+  var DEPTH = "";
+  var flat = [];
+  for (var s = 0; s < CDD_STAGES.length; s++) {
+    for (var i = 0; i < CDD_STAGES[s].p.length; i++) { flat.push({path: CDD_STAGES[s].p[i], stageIdx: s}); }
+  }
+  var idx = -1;
+  for (var k = 0; k < flat.length; k++) { if (flat[k].path === MY_PATH) { idx = k; break; } }
+  if (idx === -1) return;
+  var content = document.querySelector(".content");
+  if (!content) return;
+  var hiddenSteps = [];
+  try { var hRaw = JSON.parse(localStorage.getItem("cdd_journey_hidden") || "[]"); if (Array.isArray(hRaw)) hiddenSteps = hRaw; } catch (e) {}
+  var visFlat = flat.filter(function (f) { return hiddenSteps.indexOf(f.path) === -1; });
+  var vidx = -1;
+  for (var vk = 0; vk < visFlat.length; vk++) { if (visFlat[vk].path === MY_PATH) { vidx = vk; break; } }
+  var useList = vidx !== -1 ? visFlat : flat;
+  var useIdx = vidx !== -1 ? vidx : idx;
+  var stage = CDD_STAGES[useList[useIdx].stageIdx];
+  var prevHtml = useIdx > 0 ? '<a class="fbtn" href="' + DEPTH + useList[useIdx - 1].path + '">&larr; Back</a>' : "";
+  var nextHtml = useIdx < useList.length - 1
+    ? '<a class="fbtn" href="' + DEPTH + useList[useIdx + 1].path + '">Next &rarr;</a>'
+    : '<a class="fbtn" href="' + DEPTH + 'journeys.html">Flow complete ✓</a>';
+  var pct = Math.round(((useIdx + 1) / useList.length) * 100);
+  var el = document.createElement("div");
+  el.className = "flowbar";
+  el.innerHTML =
+    '<div class="ftop">' +
+      '<span class="fic">🧭</span>' +
+      '<span class="fstage">' + stage.n + '</span>' +
+      '<span class="fstep">&middot; step ' + (useIdx + 1) + ' of ' + useList.length + '</span>' +
+      '<span class="fnav">' + prevHtml + nextHtml + '</span>' +
+    '</div>' +
+    '<div class="fbar"><span style="width:' + pct + '%"></span></div>';
+  content.insertBefore(el, content.firstChild);
+})();
+</script>
+</body>
+</html>

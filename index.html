@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CDD · Dashboard</title>
+<!-- v3.2 redesign — Home becomes a real dashboard: a customizable tile grid (show/hide, reorder,
+     persisted per browser) instead of one fixed KPI row, each tile with a trend sparkline, not
+     just a number. Sits on top of the same shell/nav/journey system as every other v3.2 page. -->
+<style>
+  :root{
+    --shell-bg:#F0F1F6; --sidebar:#112437; --sidebar-text:#AEB9CB; --sidebar-text-dim:#7C8AA0;
+    --sidebar-active:#3979BD; --brand-blue:#4EA1E8; --header-bg:#FFFFFF; --card-border:#CBDCF6;
+    --ink:#092339; --ink-2:#64748B; --ink-3:#8A93A6;
+    --ok:#1F9D55; --ok-soft:#E8F6EE; --warn:#B45309; --warn-soft:#FEF3E2; --bad:#B42318; --bad-soft:#FEF0EE;
+    --acc2:#7C3AED; --acc2-soft:#F3EEFD;
+    --sev-high:#DC2626; --sev-med:#D97706; --sev-low:#2563EB;
+    --font: "Segoe UI", Inter, system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif;
+  }
+  *{box-sizing:border-box;} html,body{margin:0;padding:0;}
+  body{font-family:var(--font);background:#E7E9F0;color:var(--ink);margin:0;}
+  .shell{width:100%;min-height:100vh;background:var(--shell-bg);padding:16px;display:flex;gap:20px;align-items:flex-start;}
+
+  .sidebar{width:264px;flex:0 0 264px;background:var(--sidebar);border-radius:16px;padding:24px 14px;min-height:880px;display:flex;flex-direction:column;position:sticky;top:24px;}
+  .brand{padding:0 10px 20px;}
+  .brand-row{display:flex;align-items:center;gap:8px;}
+  .brand-word{font-size:21px;font-weight:700;} .brand-word .data{color:#fff;} .brand-word .safe{color:var(--brand-blue);}
+  .brand-sub{margin-top:3px;font-size:11px;font-style:italic;font-weight:600;color:var(--brand-blue);display:flex;align-items:center;gap:6px;}
+  .brand-sub .sep{width:3px;height:3px;border-radius:50%;background:var(--brand-blue);opacity:.7;}
+  nav.primary{display:flex;flex-direction:column;gap:2px;}
+  .nav-top{display:flex;align-items:center;gap:10px;padding:10px 10px 8px;color:#fff;font-weight:700;font-size:14.5px;}
+  .nav-top .ico{width:19px;height:19px;color:#fff;}
+  .proj{padding:0 6px;margin-bottom:2px;}
+  .proj-sum{display:flex;align-items:center;gap:9px;padding:9px 6px;border-radius:8px;color:#fff;text-decoration:none;}
+  .proj-sum::before{content:"";width:8px;height:8px;border-radius:2px;background:var(--acc,#3979BD);flex:0 0 auto;}
+  .proj-name{flex:1;font-size:13.5px;font-weight:700;}
+  .proj.active .proj-sum{background:rgba(255,255,255,.05);}
+  .proj-links{padding:4px 0 10px 33px;display:flex;flex-direction:column;gap:1px;}
+  .proj-links a{display:block;padding:7px 10px;border-radius:7px;font-size:13px;font-weight:500;color:var(--sidebar-text);text-decoration:none;}
+  .proj-links a:hover{background:rgba(255,255,255,.06);color:#fff;}
+  .proj-links a.active{background:var(--sidebar-active);color:#fff;font-weight:600;}
+  .navgroup{padding:10px 10px 3px;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--sidebar-text-dim);}
+  .navgroup:first-child{padding-top:2px;}
+  .sidebar-foot{margin-top:auto;padding:14px 10px 2px;border-top:1px solid rgba(255,255,255,.08);}
+  .sidebar-foot .line{font-size:10px;color:var(--sidebar-text-dim);line-height:1.6;}
+
+  .main{flex:1;min-width:0;display:flex;flex-direction:column;gap:12px;}
+  .header{background:var(--header-bg);border-radius:8px;padding:18px 28px;display:flex;align-items:center;justify-content:space-between;}
+  .header h1{margin:0;font-size:21px;font-weight:700;color:var(--ink);}
+  .header p{margin:3px 0 0;font-size:13px;color:var(--ink-2);}
+  .avatar{width:38px;height:38px;border-radius:50%;border:2px solid #E2E2E2;display:flex;align-items:center;justify-content:center;color:#B7BEC9;}
+  .header-right{display:flex;align-items:center;gap:12px;}
+  .role-select{font:inherit;font-size:12.5px;font-weight:600;color:var(--ink-2);background:#F3F5FA;
+    border:1px solid #E4E8F1;border-radius:20px;padding:7px 30px 7px 14px;cursor:pointer;
+    appearance:none;-webkit-appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235B6577' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 10px center;background-size:13px;}
+  .role-select:hover{border-color:var(--sidebar-active);}
+  .version-select{font:inherit;font-size:12px;font-weight:700;color:var(--ink-2);background:#F3F5FA;
+    border:1px solid #E4E8F1;border-radius:20px;padding:7px 28px 7px 14px;cursor:pointer;
+    appearance:none;-webkit-appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235B6577' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 9px center;background-size:12px;}
+  .version-select:hover{border-color:var(--sidebar-active);}
+
+  .content{background:#FFFFFF;border:1px solid var(--card-border);border-radius:11.5px;padding:26px 28px 30px;flex:1;}
+  h2.pageh{margin:0 0 4px;font-size:19px;font-weight:700;color:var(--ink);}
+  p.sub{margin:0 0 22px;font-size:13px;color:var(--ink-2);max-width:64ch;}
+  h3.section-h{font-size:12.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-2);margin:0 0 12px;}
+
+  .flowbar{background:linear-gradient(90deg,#F3EEFD,#EEF3FC);border:1px solid #E4D9FA;border-radius:10px;padding:12px 16px;margin-bottom:16px;}
+  .flowbar .ftop{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .flowbar .fic{flex:0 0 auto;font-size:15px;}
+  .flowbar .fstage{font-weight:800;font-size:12.5px;color:#4C3A7A;}
+  .flowbar .fstep{font-size:12px;color:#6B5A94;}
+  .flowbar .fnav{margin-left:auto;display:flex;gap:8px;}
+  .flowbar a.fbtn{font:inherit;font-size:12px;font-weight:700;padding:6px 12px;border-radius:7px;border:1px solid #D9C9F5;background:#fff;color:#4C3A7A;text-decoration:none;white-space:nowrap;}
+  .flowbar a.fbtn:hover{background:#7C3AED;color:#fff;}
+  .flowbar .fbar{height:4px;border-radius:2px;background:#E4D9FA;margin:9px 0 8px;overflow:hidden;}
+  .flowbar .fbar > span{display:block;height:100%;background:#7C3AED;border-radius:2px;}
+  .flowbar .fdo{font-size:12.5px;color:#4C3A7A;line-height:1.5;}
+  .flowbar .fdo b{color:#3A2A63;}
+
+  /* ---- dashboard toolbar ---- */
+  .dtoolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px;}
+  .dtoolbar .actions{display:flex;gap:10px;flex-wrap:wrap;}
+  .btn{font:inherit;font-size:13px;font-weight:700;padding:9px 15px;border-radius:8px;border:1px solid var(--card-border);background:#fff;color:var(--ink);cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:7px;}
+  .btn:hover{border-color:var(--sidebar-active);}
+  .btn-primary{background:var(--sidebar-active);color:#fff;border-color:var(--sidebar-active);}
+  .btn-primary:hover{background:#2E63A0;}
+  .btn-customize{background:var(--acc2-soft);border-color:#E4D9FA;color:#4C3A7A;}
+  .btn-customize:hover{background:#E9DBFB;border-color:#D9C9F5;}
+  .btn-customize.on{background:var(--acc2);border-color:var(--acc2);color:#fff;}
+
+  /* ---- tile grid ---- */
+  .tgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:8px;}
+  .tile{position:relative;border:1px solid #E7EAF2;border-radius:14px;padding:16px 17px 14px;background:linear-gradient(180deg,#FFFFFF,#FCFDFF);box-shadow:0 1px 2px rgba(16,24,40,.04);transition:box-shadow .15s,transform .15s;}
+  .tile:hover{box-shadow:0 6px 18px rgba(16,24,40,.08);}
+  .tile .thead{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;}
+  .tile .ticon{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex:0 0 auto;background:var(--tint,#EEF3FC);color:var(--tintc,#3979BD);}
+  .tile .tlabel{font-size:11.5px;font-weight:700;color:var(--ink-3);text-transform:uppercase;letter-spacing:.03em;margin-top:9px;}
+  .tile .tval{font-size:27px;font-weight:800;color:var(--ink);margin-top:4px;letter-spacing:-.01em;font-variant-numeric:tabular-nums;}
+  .tile .ttrend{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:700;margin-top:4px;}
+  .tile .ttrend.up{color:var(--ok);} .tile .ttrend.down{color:var(--bad);} .tile .ttrend.flat{color:var(--ink-3);}
+  .tile .tspark{margin-top:10px;display:block;}
+  .tile .tfoot{margin-top:10px;}
+  .tile .tfoot a{font-size:11.5px;font-weight:700;color:var(--sidebar-active);text-decoration:none;}
+  .tile .tfoot a:hover{text-decoration:underline;}
+  .tile.attn{border-color:#F3D6B8;}
+  .tile.attn .ticon{background:var(--warn-soft);color:var(--warn);}
+
+  /* customize mode chrome */
+  .tile .tctl{position:absolute;top:10px;right:10px;display:none;gap:4px;}
+  body.customizing .tile .tctl{display:flex;}
+  body.customizing .tile{outline:1.5px dashed #D9C9F5;outline-offset:2px;}
+  .tctl button{width:22px;height:22px;border-radius:6px;border:1px solid var(--card-border);background:#fff;color:var(--ink-2);font-size:11px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+  .tctl button:hover{border-color:var(--sidebar-active);color:var(--sidebar-active);}
+  .tctl button.rm:hover{border-color:var(--bad);color:var(--bad);}
+
+  .addpool{display:none;border:1.5px dashed #D6DAE4;border-radius:14px;padding:14px 16px;margin:6px 0 24px;background:#FAFBFD;}
+  body.customizing .addpool{display:block;}
+  .addpool h4{margin:0 0 10px;font-size:12px;font-weight:800;color:var(--ink-2);text-transform:uppercase;letter-spacing:.04em;}
+  .apool-list{display:flex;flex-wrap:wrap;gap:8px;}
+  .apchip{font:inherit;font-size:12.5px;font-weight:600;color:var(--ink-2);background:#fff;border:1px solid var(--card-border);border-radius:20px;padding:7px 13px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;}
+  .apchip:hover{border-color:var(--sidebar-active);color:var(--sidebar-active);}
+  .apchip::before{content:"+";font-weight:800;}
+  .apool-empty{font-size:12.5px;color:var(--ink-3);}
+
+  /* ---- big trend chart ---- */
+  .trendcard{border:1px solid #E7EAF2;border-radius:14px;padding:20px 22px 16px;margin-bottom:26px;}
+  .trendcard .thead2{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;}
+  .trendcard .thead2 b{font-size:14px;color:var(--ink);}
+  .trendcard .thead2 span{font-size:12px;color:var(--ink-3);}
+  .bars{display:flex;align-items:flex-end;gap:16px;height:130px;padding:0 4px;}
+  .bcol{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;}
+  .bcol .bar{width:100%;max-width:44px;background:linear-gradient(180deg,#4EA1E8,var(--sidebar-active));border-radius:5px 5px 0 0;}
+  .bcol .val{font-size:11px;font-weight:700;color:var(--ink);margin-bottom:4px;}
+  .bcol .lbl{font-size:11px;color:var(--ink-3);margin-top:8px;}
+
+  /* ---- data ecosystem ---- */
+  .ecopanel{border:1px solid #E7EAF2;border-radius:14px;padding:20px 22px 22px;margin-bottom:26px;}
+  .ecohead{margin-bottom:16px;}
+  .ecosub{margin:2px 0 0;font-size:12.5px;color:var(--ink-2);max-width:70ch;}
+  .ecogrid{display:grid;grid-template-columns:1.3fr 1fr;gap:22px;align-items:start;}
+  .ecocol{display:flex;flex-direction:column;gap:14px;}
+  .ecogroup{border:1px solid #EEF1F7;border-radius:11px;overflow:hidden;}
+  .ecogroup-h{display:flex;align-items:center;gap:9px;padding:10px 14px;background:#FAFBFD;border-bottom:1px solid #EEF1F7;}
+  .ecogroup-h b{font-size:13px;color:var(--ink);}
+  .ecogroup-h span{font-size:11px;color:var(--ink-3);margin-left:auto;}
+  .ecoicon{width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;background:var(--tint);color:var(--tintc);flex:0 0 auto;}
+  .econodes{display:flex;flex-direction:column;}
+  .econode{display:flex;align-items:center;gap:10px;padding:9px 14px;text-decoration:none;border-bottom:1px solid #F5F6F9;}
+  .econode:last-child{border-bottom:none;}
+  .econode:hover{background:#FAFBFD;}
+  .econode .dot{width:8px;height:8px;border-radius:50%;flex:0 0 auto;}
+  .econode .dot.ok{background:var(--ok);} .econode .dot.warn{background:var(--warn);} .econode .dot.run{background:var(--sidebar-active);} .econode .dot.bad{background:var(--bad);}
+  .econode .nm{flex:1;font-size:12.5px;font-weight:600;color:var(--ink);display:flex;flex-direction:column;min-width:0;}
+  .econode .nm em{font-style:normal;font-weight:500;font-size:10.5px;color:var(--ink-3);}
+  .econode .ct{font-size:12px;font-weight:700;color:var(--ink-2);font-variant-numeric:tabular-nums;white-space:nowrap;}
+  .elechart{border:1px solid #EEF1F7;border-radius:11px;padding:14px 16px 16px;}
+  .elrows{display:flex;flex-direction:column;gap:11px;margin-top:10px;}
+  .elrow{display:grid;grid-template-columns:128px 1fr 46px;align-items:center;gap:10px;text-decoration:none;}
+  .elrow .ellbl{font-size:12px;font-weight:600;color:var(--ink);}
+  .elbar{height:8px;border-radius:4px;background:#EEF1F7;overflow:hidden;}
+  .elbar > span{display:block;height:100%;border-radius:4px;}
+  .elrow .elct{font-size:12px;font-weight:700;color:var(--ink-2);text-align:right;font-variant-numeric:tabular-nums;}
+  .ellegend{display:flex;gap:16px;margin-top:14px;padding-top:12px;border-top:1px solid #F0F1F6;}
+  .ellegend span{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--ink-2);}
+  .ellegend i{width:8px;height:8px;border-radius:50%;display:inline-block;}
+  .ecoplaceholder{display:none;flex-direction:column;align-items:flex-start;gap:8px;border:1px dashed #D6DAE4;border-radius:11px;padding:22px 20px;background:#FAFBFD;height:100%;min-height:180px;box-sizing:border-box;}
+  .ecoplaceholder .lockicon{width:30px;height:30px;border-radius:9px;background:#EEF1F7;color:var(--ink-3);display:flex;align-items:center;justify-content:center;}
+  .ecoplaceholder b{font-size:13px;color:var(--ink);}
+  .ecoplaceholder span{font-size:12px;color:var(--ink-2);line-height:1.5;}
+  .elechart{display:flex;flex-direction:column;}
+  .elechart .ecoplaceholder{border:none;background:none;padding:4px 2px;min-height:auto;}
+  @media (max-width:980px){ .ecogrid{grid-template-columns:1fr;} }
+  @media (max-width:760px){ .elrow{grid-template-columns:96px 1fr 40px;} }
+
+  /* activity feed */
+  .feed{display:flex;flex-direction:column;gap:2px;}
+  .fitem{display:flex;align-items:flex-start;gap:12px;padding:12px 4px;border-bottom:1px solid #F0F1F6;}
+  .fitem:last-child{border-bottom:none;}
+  .fitem .dot{width:8px;height:8px;border-radius:50%;margin-top:6px;flex:0 0 auto;}
+  .fitem .dot.ok{background:var(--ok);} .fitem .dot.run{background:var(--sidebar-active);} .fitem .dot.warn{background:var(--warn);}
+  .fitem .t{font-size:13.5px;color:var(--ink);font-weight:500;}
+  .fitem .w{font-size:11.5px;color:var(--ink-3);margin-top:2px;}
+
+  @media (max-width:1200px){ .tgrid{grid-template-columns:repeat(3,1fr);} }
+  @media (max-width:900px){ .tgrid{grid-template-columns:repeat(2,1fr);} }
+  @media (max-width:760px){ .shell{flex-direction:column;} .sidebar{width:100%;flex:none;position:static;} .tgrid{grid-template-columns:1fr;} }
+  body[data-role="dpo"] .proj-links a:not([data-role~="dpo"]),
+  body[data-role="compliance"] .proj-links a:not([data-role~="compliance"]),
+  body[data-role="admin"] .proj-links a:not([data-role~="admin"]) { display:none; }
+  body[data-role="dpo"] .role-gate:not([data-role~="dpo"]),
+  body[data-role="compliance"] .role-gate:not([data-role~="compliance"]),
+  body[data-role="admin"] .role-gate:not([data-role~="admin"]) { display:none; }
+  .cm-overlay{position:fixed;inset:0;background:rgba(10,14,25,.6);display:none;align-items:center;justify-content:center;z-index:999;padding:24px;}
+  .cm-overlay.open{display:flex;}
+  .cm-box{width:min(760px,94vw);height:min(780px,92vh);background:#fff;border-radius:14px;overflow:hidden;position:relative;box-shadow:0 24px 64px rgba(8,12,24,.4);display:flex;flex-direction:column;}
+  .cm-close{position:absolute;top:12px;right:12px;z-index:2;width:30px;height:30px;border-radius:50%;border:1px solid #E4E8F1;background:#fff;color:var(--ink-2);font-size:16px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+  .cm-close:hover{background:#F3F5FA;color:var(--ink);}
+  .cm-box iframe{flex:1;width:100%;border:0;}
+</style>
+
+</head>
+<body>
+<script>document.body.setAttribute("data-role", localStorage.getItem("cdd_role") || "dpo");</script>
+<div class="shell">
+
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-row">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 2l7 3v6c0 4.97-3.05 9.36-7 11-3.95-1.64-7-6.03-7-11V5l7-3z" stroke="#4EA1E8" stroke-width="1.6" stroke-linejoin="round"/></svg>
+        <span class="brand-word"><span class="data">data</span><span class="safe">safeguard</span></span>
+      </div>
+      <div class="brand-sub">Privacy<span class="sep"></span>Management</div>
+    </div>
+    <nav class="primary">
+      <div class="nav-top">
+        <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M12 3l8 3.2v5.4c0 5-3.4 8.9-8 10.4-4.6-1.5-8-5.4-8-10.4V6.2L12 3z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="12" cy="11" r="2.6" stroke="currentColor" stroke-width="1.6"/></svg>
+        <span>CDD</span>
+      </div>
+      <a class="proj-sum" href="walkthrough.html" style="--acc:#64748B"><span class="proj-name">Walkthrough</span></a>
+      <a class="proj-sum" href="journeys.html" style="--acc:#DB2777"><span class="proj-name">Journey</span></a>
+      <div class="proj active">
+        <div class="proj-sum" style="--acc:#16274F"><span class="proj-name">CDD</span></div>
+        <div class="proj-links" id="mainNav">
+          <div class="navgroup">Overview</div>
+          <a class="active" href="index.html" data-role="dpo compliance admin">Dashboard</a>
+          <a href="ecosystem.html" data-role="dpo compliance admin">Data ecosystem</a>
+          <a href="search.html" data-role="dpo compliance admin">Search</a>
+          <div class="navgroup">Connect</div>
+          <a href="Sources/index.html" data-role="dpo admin">Sources</a>
+          <a href="ingestion-ops.html" data-role="admin">Ingestion ops</a>
+          <div class="navgroup">Watch</div>
+          <a href="Monitoring/index.html" data-role="dpo admin">Changes</a>
+          <a href="delta-ops.html" data-role="admin">Delta ops</a>
+          <div class="navgroup">Detect</div>
+          <a href="Detect/index.html" data-role="dpo compliance admin">Detection</a>
+          <a href="findings.html" data-role="dpo compliance">Findings</a>
+          <a href="elements.html" data-role="dpo compliance">Elements</a>
+          <a href="detection-infra.html" data-role="admin compliance">Detection infra</a>
+          <div class="navgroup">Trust</div>
+          <a href="Trust/index.html" data-role="dpo compliance admin">Trust</a>
+          <a href="model-ops.html" data-role="admin compliance">Model ops</a>
+          <div class="navgroup">Comply</div>
+          <a href="compliance.html" data-role="compliance">Compliance</a>
+          <a href="reports.html" data-role="dpo compliance">Reports &amp; evidence</a>
+          <div class="navgroup">Manage</div>
+          <a href="system-health.html" data-role="dpo admin">System health</a>
+          <a href="pipeline.html" data-role="admin">Pipeline</a>
+          <a href="platform-admin.html" data-role="admin">Platform admin</a>
+          <a href="admin.html" data-role="admin">Admin</a>
+        </div>
+      </div>
+    </nav>
+    <div class="sidebar-foot">
+      <div class="line">CDD® · Confidential Data Discovery</div>
+      <div class="line">ID-PRIVACY® platform</div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="header">
+      <div><h1>Welcome back, Priya</h1><p>Your dashboard — customize it to show what matters to you.</p></div>
+      <div class="header-right"><select class="version-select" id="versionSelect" aria-label="Prototype version"><option value="../CDD-Simple/index.html">v1.0</option><option value="../CDD-Simple-v2/index.html">v2.0</option><option value="../CDD-Simple-v3/index.html">v3.0</option><option value="../CDD-Simple-v3.1/index.html">v3.1</option><option value="" selected>v3.2</option></select>
+        <select class="role-select" id="roleSelect" aria-label="Switch role">
+          <option value="dpo">Priya N. · Privacy Ops</option>
+          <option value="compliance">Marcus T. · Compliance Ops</option>
+          <option value="admin">Sam R. · Platform Ops</option>
+        </select>
+        <div class="avatar"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3.4" stroke="currentColor" stroke-width="1.6"/><path d="M4.5 19.5c1.6-3.4 4.4-5 7.5-5s5.9 1.6 7.5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></div>
+      </div>
+    </header>
+
+    <section class="content">
+      <h2 class="pageh">Dashboard</h2>
+      <p class="sub">Every tile below is optional — hide what you don't need, add what you do, and put your most-watched numbers first. Your layout is saved to this browser.</p>
+
+      <div class="dtoolbar">
+        <div class="actions">
+          <a class="btn btn-primary js-connect-open role-gate" data-role="dpo admin" href="connect-source.html">+ Connect a source</a>
+          <a class="btn role-gate" data-role="dpo compliance" href="findings.html">View findings</a>
+          <a class="btn role-gate" data-role="dpo compliance" href="reports.html">Download a report</a>
+        </div>
+        <button class="btn btn-customize" id="customizeBtn">✎ Customize tiles</button>
+      </div>
+
+      <div class="tgrid" id="tileGrid"></div>
+
+      <div class="addpool" id="addPool">
+        <h4>Add a tile</h4>
+        <div class="apool-list" id="apoolList"></div>
+      </div>
+
+      <div class="trendcard">
+        <div class="thead2"><b>Estate coverage over time</b><span>% of connected data checked, by week</span></div>
+        <div class="bars" id="trendBars"></div>
+      </div>
+
+      <div class="ecopanel">
+        <div class="ecohead" style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+          <h3 class="section-h" style="margin-bottom:2px;">Data ecosystem</h3>
+          <a href="ecosystem.html" style="font-size:12px;font-weight:700;color:var(--sidebar-active);text-decoration:none;">View full ecosystem &rarr;</a>
+          <p class="ecosub" style="flex-basis:100%;">Every connected source, grouped by type, and what's actually inside them — the same numbers Sources and Findings report, in one place.</p>
+        </div>
+        <div class="ecogrid">
+          <div class="ecocol">
+          <div class="ecoplaceholder" id="ecoLockedSources">
+            <div class="lockicon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="5" y="10" width="14" height="10" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M8 10V7a4 4 0 018 0v3" stroke="currentColor" stroke-width="1.6"/></svg></div>
+            <b>Source map isn't part of your role</b>
+            <span>The source-by-source view lives under Sources, which Privacy Ops and Platform Ops have access to. Switch role to see it.</span>
+          </div>
+          <div class="ecocol-body">
+            <div class="ecogroup">
+              <div class="ecogroup-h"><span class="ecoicon" style="--tint:#EEF3FC;--tintc:#2563EB;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M4 6c0-1.1 3.6-2 8-2s8 .9 8 2-3.6 2-8 2-8-.9-8-2z" stroke="currentColor" stroke-width="1.7"/><path d="M4 6v12c0 1.1 3.6 2 8 2s8-.9 8-2V6" stroke="currentColor" stroke-width="1.7"/><path d="M4 12c0 1.1 3.6 2 8 2s8-.9 8-2" stroke="currentColor" stroke-width="1.7"/></svg></span><b>Databases</b><span>3 sources</span></div>
+              <div class="econodes">
+                <a class="econode" data-src="Sales database" href="Sources/index.html#scans"><span class="dot ok"></span><span class="nm">Sales database<em>PostgreSQL &middot; healthy</em></span><span class="ct">2,389</span></a>
+                <a class="econode" data-src="Billing database" href="Sources/index.html#health"><span class="dot warn"></span><span class="nm">Billing database<em>Oracle &middot; delayed</em></span><span class="ct">1,420</span></a>
+                <a class="econode" data-src="Clinical database" href="Sources/index.html#scans"><span class="dot ok"></span><span class="nm">Clinical database<em>PostgreSQL &middot; healthy</em></span><span class="ct">1,644</span></a>
+              </div>
+            </div>
+            <div class="ecogroup">
+              <div class="ecogroup-h"><span class="ecoicon" style="--tint:#E8F6EE;--tintc:#1F9D55;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M4 7a3 3 0 013-3h3l2 2h5a3 3 0 013 3v7a3 3 0 01-3 3H7a3 3 0 01-3-3V7z" stroke="currentColor" stroke-width="1.6"/></svg></span><b>Files &amp; storage</b><span>2 sources</span></div>
+              <div class="econodes">
+                <a class="econode" data-src="HR files (SharePoint)" href="Sources/index.html#scans"><span class="dot ok"></span><span class="nm">HR files (SharePoint)<em>Files &amp; cloud storage &middot; healthy</em></span><span class="ct">2,401</span></a>
+                <a class="econode" data-src="Marketing files (S3)" href="Sources/index.html#scans"><span class="dot ok"></span><span class="nm">Marketing files (S3)<em>Files &amp; cloud storage &middot; healthy</em></span><span class="ct">1,102</span></a>
+              </div>
+            </div>
+            <div class="ecogroup">
+              <div class="ecogroup-h"><span class="ecoicon" style="--tint:#F3EEFD;--tintc:#7C3AED;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="4" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.6"/><rect x="13" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.6"/><rect x="4" y="13" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.6"/><rect x="13" y="13" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.6"/></svg></span><b>Business apps</b><span>2 sources</span></div>
+              <div class="econodes">
+                <a class="econode" data-src="Sales data (Salesforce)" href="Sources/index.html#scans"><span class="dot run"></span><span class="nm">Sales data (Salesforce)<em>Business app &middot; checking, 61%</em></span><span class="ct">&mdash;</span></a>
+                <a class="econode" data-src="Legacy CRM" href="Sources/index.html#health"><span class="dot bad"></span><span class="nm">Legacy CRM<em>Business app &middot; broken</em></span><span class="ct">not checked</span></a>
+              </div>
+            </div>
+          </div>
+          </div>
+          <div class="elechart">
+          <div class="ecoplaceholder" id="ecoLockedElements">
+            <div class="lockicon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="5" y="10" width="14" height="10" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M8 10V7a4 4 0 018 0v3" stroke="currentColor" stroke-width="1.6"/></svg></div>
+            <b>Element chart isn't part of your role</b>
+            <span>This breaks down findings by data type, which lives under Findings — Privacy Ops and Compliance Ops have access. Switch role to see it.</span>
+          </div>
+          <div class="elechart-body">
+            <div class="ecogroup-h" style="border:none;background:none;padding:0;"><b>Sensitive data elements found</b><span id="elechartTotal">10,336 total</span></div>
+            <a href="elements.html" style="display:inline-block;margin-top:2px;font-size:12px;font-weight:700;color:var(--sidebar-active);text-decoration:none;">View full breakdown by PII / PI / PFI &rarr;</a>
+            <div class="elrows">
+              <a class="elrow" data-src="Sales database" href="findings.html"><span class="ellbl">Government ID numbers</span><div class="elbar"><span style="width:99%;background:var(--sev-high)"></span></div><span class="elct">2,389</span></a>
+              <a class="elrow" data-src="HR files (SharePoint)" href="findings.html"><span class="ellbl">People's names</span><div class="elbar"><span style="width:100%;background:var(--sev-med)"></span></div><span class="elct">2,401</span></a>
+              <a class="elrow" data-src="Clinical database" href="findings.html"><span class="ellbl">Health records</span><div class="elbar"><span style="width:68%;background:var(--sev-high)"></span></div><span class="elct">1,644</span></a>
+              <a class="elrow" data-src="Billing database" href="findings.html"><span class="ellbl">Credit card numbers</span><div class="elbar"><span style="width:59%;background:var(--sev-high)"></span></div><span class="elct">1,420</span></a>
+              <a class="elrow" data-src="Sales data (Salesforce)" href="findings.html"><span class="ellbl">Email addresses</span><div class="elbar"><span style="width:57%;background:var(--sev-med)"></span></div><span class="elct">1,380</span></a>
+              <a class="elrow" data-src="Marketing files (S3)" href="findings.html"><span class="ellbl">Phone numbers</span><div class="elbar"><span style="width:46%;background:var(--sev-low)"></span></div><span class="elct">1,102</span></a>
+            </div>
+            <div class="ellegend">
+              <span><i style="background:var(--sev-high)"></i>High</span>
+              <span><i style="background:var(--sev-med)"></i>Medium</span>
+              <span><i style="background:var(--sev-low)"></i>Low</span>
+            </div>
+          </div>
+          </div>
+        </div>
+      </div>
+
+      <h3 class="section-h">Recent activity</h3>
+      <div class="feed">
+        <div class="fitem"><span class="dot ok"></span><div><div class="t">Finished checking <b>HR files (SharePoint)</b> — found 42 sensitive items</div><div class="w">2 hours ago</div></div></div>
+        <div class="fitem"><span class="dot run"></span><div><div class="t">Checking <b>Salesforce data</b> — 61% complete</div><div class="w">started 20 minutes ago</div></div></div>
+        <div class="fitem"><span class="dot warn"></span><div><div class="t"><b>Billing database</b> hasn't been checked in 30 days</div><div class="w">needs attention</div></div></div>
+        <div class="fitem"><span class="dot ok"></span><div><div class="t">Connected a new source: <b>Marketing files (S3)</b></div><div class="w">yesterday</div></div></div>
+        <div class="fitem"><span class="dot ok"></span><div><div class="t">Finished checking <b>Sales database</b> — found 2,389 sensitive items</div><div class="w">2 days ago</div></div></div>
+      </div>
+    </section>
+  </main>
+
+</div>
+
+<div id="toasts" style="position:fixed;right:20px;bottom:20px;display:flex;flex-direction:column;gap:8px;z-index:80;"></div>
+
+<script>
+function toast(msg){
+  var t = document.createElement("div");
+  t.className = "toast"; t.textContent = msg;
+  t.style.cssText = "background:#16243B;color:#fff;font-size:13px;font-weight:600;padding:10px 16px;border-radius:8px;box-shadow:0 8px 20px rgba(0,0,0,.2);opacity:0;transform:translateY(8px);transition:opacity .18s,transform .18s;";
+  document.getElementById("toasts").appendChild(t);
+  requestAnimationFrame(function () { t.style.opacity = 1; t.style.transform = "translateY(0)"; });
+  setTimeout(function () {
+    t.style.opacity = 0; t.style.transform = "translateY(8px)";
+    setTimeout(function () { t.remove(); }, 200);
+  }, 2200);
+}
+
+/* ---- tile catalog: every KPI available on the dashboard ---- */
+var TILES = {
+  sources:   { label:"Sources connected", val:"7", trend:"up",   trendv:"+1 this week",        tint:"#EEF3FC", tintc:"#2563EB", spark:[4,5,5,6,6,7,7], href:"Sources/index.html", ic:"src", roles:["dpo","admin"] },
+  coverage:  { label:"Data checked",      val:"87%", trend:"up",  trendv:"+5 pts this quarter", tint:"#E8F6EE", tintc:"#1F9D55", spark:[74,77,79,82,84,85,87], href:"Detect/index.html", ic:"chk", roles:["dpo","compliance","admin"] },
+  findings:  { label:"Sensitive items found", val:"10,336", trend:"up", trendv:"+842 this week", tint:"#FEF3E2", tintc:"#B45309", spark:[8100,8600,9000,9400,9800,10100,10336], href:"findings.html", ic:"find", roles:["dpo","compliance"] },
+  attention: { label:"Needs your attention", val:"3", trend:"down", trendv:"−2 vs last week",   tint:"#FEF3E2", tintc:"#B45309", spark:[6,6,5,5,4,4,3], href:"Sources/index.html", ic:"warn", attn:true, roles:["dpo","admin"] },
+  accuracy:  { label:"Detection accuracy", val:"97.2%", trend:"up", trendv:"+0.7 pts", tint:"#F3EEFD", tintc:"#7C3AED", spark:[95.8,96.5,96.8,96.9,97.0,97.1,97.2], href:"Trust/index.html", ic:"acc", roles:["dpo","compliance","admin"] },
+  compliance:{ label:"Regulation coverage", val:"87%", trend:"up", trendv:"avg across 3 regs",  tint:"#FCE7F0", tintc:"#DB2777", spark:[78,80,82,83,85,86,87], href:"compliance.html", ic:"comp", roles:["compliance"] },
+  alerts:    { label:"Active alerts", val:"3", trend:"flat", trendv:"1 high severity", tint:"#FEF0EE", tintc:"#B42318", spark:[4,3,5,4,4,3,3], href:"system-health.html", ic:"bell", roles:["dpo","admin"] },
+  capacity:  { label:"Capacity used", val:"83%", trend:"up", trendv:"up from 61% last week", tint:"#FEF0EE", tintc:"#B42318", spark:[58,61,64,70,75,80,83], href:"system-health.html", ic:"cap", roles:["dpo","admin"] },
+  evidence:  { label:"Evidence packs (quarter)", val:"4", trend:"flat", trendv:"same as last quarter", tint:"#E8F6EE", tintc:"#1F9D55", spark:[3,4,3,4,4,4,4], href:"reports.html", ic:"ev", roles:["dpo","compliance"] },
+  team:      { label:"Team members", val:"3", trend:"flat", trendv:"no changes", tint:"#EEF3FC", tintc:"#2563EB", spark:[3,3,3,3,3,3,3], href:"admin.html", ic:"team", roles:["admin"] },
+  failed:    { label:"Failed items today", val:"4", trend:"down", trendv:"−1 vs yesterday", tint:"#FEF0EE", tintc:"#B42318", spark:[6,5,7,5,6,5,4], href:"Sources/index.html", ic:"fail", roles:["dpo","admin"] },
+  changes:   { label:"Changes this week", val:"1,842", trend:"up", trendv:"across 6 sources", tint:"#EEF3FC", tintc:"#2563EB", spark:[1200,1400,1500,1650,1700,1800,1842], href:"Monitoring/index.html", ic:"chg", roles:["dpo","admin"] },
+  savings:   { label:"Checking time saved", val:"71%", trend:"flat", trendv:"vs a full rescan", tint:"#E8F6EE", tintc:"#1F9D55", spark:[68,69,70,70,71,71,71], href:"Monitoring/index.html", ic:"sav", roles:["dpo","admin"] },
+  retention: { label:"Retention policies set", val:"4", trend:"flat", trendv:"of 4 data types", tint:"#F3EEFD", tintc:"#7C3AED", spark:[4,4,4,4,4,4,4], href:"admin.html", ic:"ret", roles:["admin"] }
+};
+var DEFAULT_LAYOUT = ["sources","coverage","findings","attention","accuracy","compliance","alerts","capacity"];
+function currentRole() { return document.body.getAttribute("data-role") || "dpo"; }
+var ICONS = {
+  src:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M4 6c0-1.1 3.6-2 8-2s8 .9 8 2-3.6 2-8 2-8-.9-8-2z" stroke="currentColor" stroke-width="1.7"/><path d="M4 6v12c0 1.1 3.6 2 8 2s8-.9 8-2V6" stroke="currentColor" stroke-width="1.7"/><path d="M4 12c0 1.1 3.6 2 8 2s8-.9 8-2" stroke="currentColor" stroke-width="1.7"/></svg>',
+  chk:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  find:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.7"/><path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>',
+  warn:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 3l9 16H3l9-16z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M12 10v4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor"/></svg>',
+  acc:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 3l8 3.2v5.4c0 5-3.4 8.9-8 10.4-4.6-1.5-8-5.4-8-10.4V6.2L12 3z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>',
+  comp:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="5" y="4" width="14" height="17" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M9 9h6M9 13h6M9 17h3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>',
+  bell:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M13.7 21a2 2 0 01-3.4 0" stroke="currentColor" stroke-width="1.7"/></svg>',
+  cap:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="4" y="10" width="4" height="10" rx="1" stroke="currentColor" stroke-width="1.7"/><rect x="10" y="6" width="4" height="14" rx="1" stroke="currentColor" stroke-width="1.7"/><rect x="16" y="3" width="4" height="17" rx="1" stroke="currentColor" stroke-width="1.7"/></svg>',
+  ev:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M6 2h9l5 5v15H6z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M15 2v5h5" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>',
+  team:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3.2" stroke="currentColor" stroke-width="1.7"/><path d="M3 20c1.4-3.4 3.6-5 6-5s4.6 1.6 6 5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><circle cx="17.5" cy="9" r="2.4" stroke="currentColor" stroke-width="1.5"/><path d="M15.5 20c.8-2.4 2-3.7 3.7-4.2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
+  fail:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.7"/><path d="M9 9l6 6M15 9l-6 6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>',
+  chg:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M4 12a8 8 0 0113.7-5.7L20 8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M20 4v4h-4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 12a8 8 0 01-13.7 5.7L4 16" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M4 20v-4h4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  sav:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 3v18M5 8l7-5 7 5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  ret:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.7"/><path d="M12 7v5l3.5 2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+};
+
+function sparkSVG(data, color) {
+  var w = 100, h = 30, pad = 2;
+  var min = Math.min.apply(null, data), max = Math.max.apply(null, data);
+  var range = (max - min) || 1;
+  var step = (w - pad * 2) / (data.length - 1);
+  var pts = data.map(function (d, i) {
+    var x = pad + i * step;
+    var y = h - pad - ((d - min) / range) * (h - pad * 2);
+    return x.toFixed(1) + "," + y.toFixed(1);
+  }).join(" ");
+  var lastX = (pad + (data.length - 1) * step).toFixed(1);
+  var lastY = (h - pad - ((data[data.length - 1] - min) / range) * (h - pad * 2)).toFixed(1);
+  return '<svg class="tspark" width="100%" height="30" viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="none">' +
+    '<polyline points="' + pts + '" fill="none" stroke="' + color + '" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>' +
+    '<circle cx="' + lastX + '" cy="' + lastY + '" r="2.2" fill="' + color + '"/>' +
+    '</svg>';
+}
+
+function trendArrow(trend) {
+  if (trend === "up") return "&#9650;";
+  if (trend === "down") return "&#9660;";
+  return "&#9679;";
+}
+
+function loadLayout() {
+  try {
+    var raw = localStorage.getItem("cdd_dashboard_tiles");
+    if (raw) {
+      var arr = JSON.parse(raw);
+      if (Array.isArray(arr) && arr.length) return arr.filter(function (id) { return TILES[id]; });
+    }
+  } catch (e) {}
+  return DEFAULT_LAYOUT.slice();
+}
+function saveLayout(layout) {
+  try { localStorage.setItem("cdd_dashboard_tiles", JSON.stringify(layout)); } catch (e) {}
+}
+
+// F-7 (partial): rescanning a source on Sources used to leave every other page showing the old
+// number. This picks up whatever was last written there and applies it here on load.
+(function applySourceCountOverrides() {
+  var overrides = {};
+  try { overrides = JSON.parse(localStorage.getItem("cdd_source_counts") || "{}"); } catch (e) {}
+  if (!Object.keys(overrides).length) return;
+
+  document.querySelectorAll(".econode[data-src]").forEach(function (a) {
+    var src = a.getAttribute("data-src");
+    if (src in overrides) a.querySelector(".ct").textContent = overrides[src].toLocaleString();
+  });
+
+  var elrows = Array.prototype.slice.call(document.querySelectorAll(".elrow[data-src]"));
+  if (elrows.length) {
+    var values = elrows.map(function (a) {
+      var src = a.getAttribute("data-src");
+      var v = src in overrides ? overrides[src] : parseInt(a.querySelector(".elct").textContent.replace(/,/g, ""), 10);
+      return { el: a, v: v };
+    });
+    var max = Math.max.apply(null, values.map(function (x) { return x.v; }));
+    var total = values.reduce(function (s, x) { return s + x.v; }, 0);
+    values.forEach(function (x) {
+      x.el.querySelector(".elct").textContent = x.v.toLocaleString();
+      x.el.querySelector(".elbar span").style.width = Math.round((x.v / max) * 100) + "%";
+    });
+    var totalEl = document.getElementById("elechartTotal");
+    if (totalEl) totalEl.textContent = total.toLocaleString() + " total";
+    if (TILES.findings) {
+      TILES.findings.val = total.toLocaleString();
+      TILES.findings.spark[TILES.findings.spark.length - 1] = total;
+    }
+  }
+})();
+
+var layout = loadLayout();
+
+function visibleLayout() {
+  var role = currentRole();
+  return layout.filter(function (id) { return TILES[id] && TILES[id].roles.indexOf(role) !== -1; });
+}
+
+function updateEcoVisibility() {
+  var role = currentRole();
+  [
+    { body: ".ecocol-body", ph: "#ecoLockedSources", roles: ["dpo", "admin"] },
+    { body: ".elechart-body", ph: "#ecoLockedElements", roles: ["dpo", "compliance"] }
+  ].forEach(function (p) {
+    var show = p.roles.indexOf(role) !== -1;
+    var body = document.querySelector(p.body), ph = document.querySelector(p.ph);
+    if (body) body.style.display = show ? "" : "none";
+    if (ph) ph.style.display = show ? "none" : "flex";
+  });
+}
+updateEcoVisibility();
+
+function renderTiles() {
+  var grid = document.getElementById("tileGrid");
+  grid.innerHTML = "";
+  var visible = visibleLayout();
+  visible.forEach(function (id, i) {
+    var t = TILES[id];
+    var el = document.createElement("div");
+    el.className = "tile" + (t.attn ? " attn" : "");
+    el.setAttribute("data-id", id);
+    el.innerHTML =
+      '<div class="tctl">' +
+        (i > 0 ? '<button class="mv" data-dir="-1" title="Move left/up">&larr;</button>' : '') +
+        (i < visible.length - 1 ? '<button class="mv" data-dir="1" title="Move right/down">&rarr;</button>' : '') +
+        '<button class="rm" title="Remove tile">&times;</button>' +
+      '</div>' +
+      '<div class="thead"><div class="ticon" style="--tint:' + t.tint + ';--tintc:' + t.tintc + '">' + ICONS[t.ic] + '</div></div>' +
+      '<div class="tlabel">' + t.label + '</div>' +
+      '<div class="tval">' + t.val + '</div>' +
+      '<div class="ttrend ' + t.trend + '">' + trendArrow(t.trend) + ' ' + t.trendv + '</div>' +
+      sparkSVG(t.spark, t.tintc) +
+      '<div class="tfoot"><a href="' + t.href + '">View &rarr;</a></div>';
+    grid.appendChild(el);
+  });
+  renderPool();
+}
+
+function renderPool() {
+  var pool = document.getElementById("apoolList");
+  var role = currentRole();
+  var hidden = Object.keys(TILES).filter(function (id) {
+    return layout.indexOf(id) === -1 && TILES[id].roles.indexOf(role) !== -1;
+  });
+  if (!hidden.length) {
+    pool.innerHTML = '<span class="apool-empty">Every tile available to your role is already on your dashboard.</span>';
+    return;
+  }
+  pool.innerHTML = hidden.map(function (id) {
+    return '<button class="apchip" data-id="' + id + '">' + TILES[id].label + '</button>';
+  }).join("");
+}
+
+document.getElementById("tileGrid").addEventListener("click", function (e) {
+  var tile = e.target.closest(".tile");
+  if (!tile) return;
+  var id = tile.getAttribute("data-id");
+  var idx = layout.indexOf(id);
+  if (e.target.closest(".rm")) {
+    layout.splice(idx, 1);
+    saveLayout(layout);
+    renderTiles();
+    toast(TILES[id].label + " removed — add it back any time");
+  } else if (e.target.closest(".mv")) {
+    var dir = parseInt(e.target.closest(".mv").getAttribute("data-dir"), 10);
+    var visible = visibleLayout();
+    var vi = visible.indexOf(id);
+    var neighbor = visible[vi + dir];
+    if (neighbor) {
+      var ni = layout.indexOf(neighbor);
+      layout[idx] = neighbor; layout[ni] = id;
+      saveLayout(layout);
+      renderTiles();
+    }
+  } else if (!document.body.classList.contains("customizing")) {
+    var link = tile.querySelector(".tfoot a");
+    if (link && !e.target.closest("a")) window.location.href = link.getAttribute("href");
+  }
+});
+
+document.getElementById("apoolList").addEventListener("click", function (e) {
+  var chip = e.target.closest(".apchip");
+  if (!chip) return;
+  var id = chip.getAttribute("data-id");
+  layout.push(id);
+  saveLayout(layout);
+  renderTiles();
+  toast(TILES[id].label + " added to your dashboard");
+});
+
+document.getElementById("customizeBtn").addEventListener("click", function () {
+  var on = document.body.classList.toggle("customizing");
+  this.classList.toggle("on", on);
+  this.textContent = on ? "✓ Done customizing" : "✎ Customize tiles";
+});
+
+renderTiles();
+
+/* ---- trend chart ---- */
+(function () {
+  var WEEKS = [ { w: "W35", v: 74 }, { w: "W36", v: 77 }, { w: "W37", v: 79 }, { w: "W38", v: 82 }, { w: "W39", v: 84 }, { w: "W40", v: 85 }, { w: "W41", v: 87 } ];
+  var bars = document.getElementById("trendBars");
+  WEEKS.forEach(function (d) {
+    var col = document.createElement("div");
+    col.className = "bcol";
+    var h = Math.round((d.v / 100) * 110);
+    col.innerHTML = '<div class="val">' + d.v + '%</div><div class="bar" style="height:' + h + 'px"></div><div class="lbl">' + d.w + '</div>';
+    bars.appendChild(col);
+  });
+})();
+</script>
+
+<script>
+(function () {
+  var sel = document.getElementById("roleSelect");
+  var GREET = { dpo: "Priya", compliance: "Marcus", admin: "Sam" };
+  sel.value = document.body.getAttribute("data-role") || "dpo";
+  var h1 = document.querySelector(".header h1");
+  if (h1 && /^Welcome back, /.test(h1.textContent)) {
+    h1.textContent = "Welcome back, " + GREET[sel.value];
+  }
+  sel.addEventListener("change", function () {
+    document.body.setAttribute("data-role", sel.value);
+    try { localStorage.setItem("cdd_role", sel.value); } catch (e) {}
+    if (h1 && /^Welcome back, /.test(h1.textContent)) {
+      h1.textContent = "Welcome back, " + GREET[sel.value];
+    }
+    if (typeof renderTiles === "function") renderTiles();
+    if (typeof updateEcoVisibility === "function") updateEcoVisibility();
+  });
+})();
+</script>
+<script>document.getElementById("versionSelect").addEventListener("change", function () { if (this.value) window.location.href = this.value; });</script>
+<script>
+var CDD_STAGES = [{n:"Overview",p:["index.html","ecosystem.html","search.html"]},{n:"Connect",p:["Sources/index.html","ingestion-ops.html"]},{n:"Watch",p:["Monitoring/index.html","delta-ops.html"]},{n:"Detect",p:["Detect/index.html","findings.html","elements.html","detection-infra.html"]},{n:"Trust",p:["Trust/index.html","model-ops.html"]},{n:"Comply",p:["compliance.html","reports.html"]},{n:"Manage",p:["system-health.html","pipeline.html","platform-admin.html","admin.html"]}];
+(function () {
+  var MY_PATH = "index.html";
+  var DEPTH = "";
+  var flat = [];
+  for (var s = 0; s < CDD_STAGES.length; s++) {
+    for (var i = 0; i < CDD_STAGES[s].p.length; i++) { flat.push({path: CDD_STAGES[s].p[i], stageIdx: s}); }
+  }
+  var idx = -1;
+  for (var k = 0; k < flat.length; k++) { if (flat[k].path === MY_PATH) { idx = k; break; } }
+  if (idx === -1) return;
+  var content = document.querySelector(".content");
+  if (!content) return;
+  var hiddenSteps = [];
+  try { var hRaw = JSON.parse(localStorage.getItem("cdd_journey_hidden") || "[]"); if (Array.isArray(hRaw)) hiddenSteps = hRaw; } catch (e) {}
+  var visFlat = flat.filter(function (f) { return hiddenSteps.indexOf(f.path) === -1; });
+  var vidx = -1;
+  for (var vk = 0; vk < visFlat.length; vk++) { if (visFlat[vk].path === MY_PATH) { vidx = vk; break; } }
+  var useList = vidx !== -1 ? visFlat : flat;
+  var useIdx = vidx !== -1 ? vidx : idx;
+  var stage = CDD_STAGES[useList[useIdx].stageIdx];
+  var prevHtml = useIdx > 0 ? '<a class="fbtn" href="' + DEPTH + useList[useIdx - 1].path + '">&larr; Back</a>' : "";
+  var nextHtml = useIdx < useList.length - 1
+    ? '<a class="fbtn" href="' + DEPTH + useList[useIdx + 1].path + '">Next &rarr;</a>'
+    : '<a class="fbtn" href="' + DEPTH + 'journeys.html">Flow complete ✓</a>';
+  var pct = Math.round(((useIdx + 1) / useList.length) * 100);
+  var el = document.createElement("div");
+  el.className = "flowbar";
+  el.innerHTML =
+    '<div class="ftop">' +
+      '<span class="fic">🧭</span>' +
+      '<span class="fstage">' + stage.n + '</span>' +
+      '<span class="fstep">&middot; step ' + (useIdx + 1) + ' of ' + useList.length + '</span>' +
+      '<span class="fnav">' + prevHtml + nextHtml + '</span>' +
+    '</div>' +
+    '<div class="fbar"><span style="width:' + pct + '%"></span></div>';
+  content.insertBefore(el, content.firstChild);
+})();
+</script>
+<div class="cm-overlay" id="cmOverlay">
+  <div class="cm-box">
+    <button class="cm-close" id="cmClose" aria-label="Close">&times;</button>
+    <iframe id="cmFrame" data-src="connect-source.html?modal=1" title="Connect a source"></iframe>
+  </div>
+</div>
+<script>
+(function () {
+  var overlay = document.getElementById("cmOverlay");
+  var frame = document.getElementById("cmFrame");
+  var closeBtn = document.getElementById("cmClose");
+  var DEPTH = "";
+  function openModal() {
+    if (!frame.src) frame.src = frame.getAttribute("data-src");
+    overlay.classList.add("open");
+    document.body.style.overflow = "hidden";
+  }
+  function closeModal() {
+    overlay.classList.remove("open");
+    document.body.style.overflow = "";
+  }
+  closeBtn.addEventListener("click", closeModal);
+  overlay.addEventListener("click", function (e) { if (e.target === overlay) closeModal(); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && overlay.classList.contains("open")) closeModal(); });
+  window.addEventListener("message", function (e) {
+    if (!e.data || typeof e.data !== "object") return;
+    if (e.data.type === "cdd-connect-done") {
+      closeModal();
+      window.location.href = DEPTH + (e.data.redirect || "Sources/index.html#scans");
+    }
+  });
+  document.querySelectorAll(".js-connect-open").forEach(function (el) {
+    el.addEventListener("click", function (e) { e.preventDefault(); openModal(); });
+  });
+})();
+</script>
+</body>
+</html>

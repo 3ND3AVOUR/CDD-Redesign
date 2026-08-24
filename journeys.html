@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CDD · The Journey</title>
+<!-- v3.2 — the tile dashboard and tab consolidation fold dozens of underlying screens into
+     19 main pages (each with tabs for its "inside" views), so the flow is 19 steps across
+     7 stages. Connect a source is no longer its own page — it's a button on Sources that opens
+     a modal. Every step still lands on real, working content — tabs included. -->
+<style>
+  :root{
+    --shell-bg:#F0F1F6; --sidebar:#112437; --sidebar-text:#AEB9CB; --sidebar-text-dim:#7C8AA0;
+    --sidebar-active:#3979BD; --brand-blue:#4EA1E8; --header-bg:#FFFFFF; --card-border:#CBDCF6;
+    --ink:#092339; --ink-2:#64748B; --ink-3:#8A93A6;
+    --ok:#1F9D55; --ok-soft:#E8F6EE; --acc2:#7C3AED;
+    --font: "Segoe UI", Inter, system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif;
+  }
+  *{box-sizing:border-box;} html,body{margin:0;padding:0;}
+  body{font-family:var(--font);background:#E7E9F0;color:var(--ink);margin:0;}
+  .shell{width:100%;min-height:100vh;background:var(--shell-bg);padding:16px;display:flex;gap:20px;align-items:flex-start;}
+  .sidebar{width:264px;flex:0 0 264px;background:var(--sidebar);border-radius:16px;padding:24px 14px;min-height:880px;display:flex;flex-direction:column;position:sticky;top:24px;}
+  .brand{padding:0 10px 20px;}
+  .brand-row{display:flex;align-items:center;gap:8px;}
+  .brand-word{font-size:21px;font-weight:700;} .brand-word .data{color:#fff;} .brand-word .safe{color:var(--brand-blue);}
+  .brand-sub{margin-top:3px;font-size:11px;font-style:italic;font-weight:600;color:var(--brand-blue);display:flex;align-items:center;gap:6px;}
+  .brand-sub .sep{width:3px;height:3px;border-radius:50%;background:var(--brand-blue);opacity:.7;}
+  nav.primary{display:flex;flex-direction:column;gap:2px;}
+  .nav-top{display:flex;align-items:center;gap:10px;padding:10px 10px 8px;color:#fff;font-weight:700;font-size:14.5px;}
+  .nav-top .ico{width:19px;height:19px;color:#fff;}
+  .proj-sum{display:flex;align-items:center;gap:9px;padding:9px 6px;border-radius:8px;color:#fff;text-decoration:none;}
+  .proj-sum::before{content:"";width:8px;height:8px;border-radius:2px;background:var(--acc,#3979BD);flex:0 0 auto;}
+  .proj-name{flex:1;font-size:13.5px;font-weight:700;}
+  .proj{padding:0 6px;margin-bottom:2px;}
+  .proj.active .proj-sum{background:rgba(255,255,255,.05);}
+  .proj-links{padding:4px 0 10px 33px;display:flex;flex-direction:column;gap:1px;}
+  .proj-links a{display:block;padding:7px 10px;border-radius:7px;font-size:13px;font-weight:500;color:var(--sidebar-text);text-decoration:none;}
+  .proj-links a:hover{background:rgba(255,255,255,.06);color:#fff;}
+  .navgroup{padding:10px 10px 3px;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--sidebar-text-dim);}
+  .navgroup:first-child{padding-top:2px;}
+  .sidebar-foot{margin-top:auto;padding:14px 10px 2px;border-top:1px solid rgba(255,255,255,.08);}
+  .sidebar-foot .line{font-size:10px;color:var(--sidebar-text-dim);line-height:1.6;}
+
+  .main{flex:1;min-width:0;display:flex;flex-direction:column;gap:12px;}
+  .header{background:var(--header-bg);border-radius:8px;padding:18px 28px;display:flex;align-items:center;justify-content:space-between;}
+  .header h1{margin:0;font-size:21px;font-weight:700;color:var(--ink);}
+  .header p{margin:3px 0 0;font-size:13px;color:var(--ink-2);}
+  .avatar{width:38px;height:38px;border-radius:50%;border:2px solid #E2E2E2;display:flex;align-items:center;justify-content:center;color:#B7BEC9;}
+  .header-right{display:flex;align-items:center;gap:12px;}
+  .role-select{font:inherit;font-size:12.5px;font-weight:600;color:var(--ink-2);background:#F3F5FA;
+    border:1px solid #E4E8F1;border-radius:20px;padding:7px 30px 7px 14px;cursor:pointer;
+    appearance:none;-webkit-appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235B6577' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 10px center;background-size:13px;}
+  .role-select:hover{border-color:var(--sidebar-active);}
+  .version-select{font:inherit;font-size:12px;font-weight:700;color:var(--ink-2);background:#F3F5FA;
+    border:1px solid #E4E8F1;border-radius:20px;padding:7px 28px 7px 14px;cursor:pointer;
+    appearance:none;-webkit-appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235B6577' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 9px center;background-size:12px;}
+  .version-select:hover{border-color:var(--sidebar-active);}
+
+  .content{background:#FFFFFF;border:1px solid var(--card-border);border-radius:11.5px;padding:26px 28px 30px;flex:1;}
+  h2.pageh{margin:0 0 4px;font-size:19px;font-weight:700;color:var(--ink);}
+  p.sub{margin:0 0 8px;font-size:13px;color:var(--ink-2);max-width:74ch;}
+
+  .hero{display:flex;align-items:center;justify-content:space-between;gap:20px;background:linear-gradient(90deg,#F3EEFD,#EEF3FC);border:1px solid #E4D9FA;border-radius:12px;padding:18px 22px;margin:18px 0 26px;flex-wrap:wrap;}
+  .hero .stat{font-size:12.5px;color:#4C3A7A;}
+  .hero .stat b{display:block;font-size:22px;color:#3A2A63;}
+  .hero-actions{display:flex;align-items:center;gap:10px;}
+  .hero-start{font:inherit;font-size:14px;font-weight:800;padding:12px 22px;border-radius:9px;border:1px solid var(--acc2);background:var(--acc2);color:#fff;cursor:pointer;text-decoration:none;display:inline-block;white-space:nowrap;}
+  .hero-start:hover{background:#651FBF;}
+  .hero-customize{font:inherit;font-size:13px;font-weight:700;padding:11px 18px;border-radius:9px;border:1px solid #D9C9F5;background:#fff;color:#4C3A7A;cursor:pointer;white-space:nowrap;}
+  .hero-customize:hover{background:#F3EEFD;}
+  .hero-customize.on{background:var(--acc2);border-color:var(--acc2);color:#fff;}
+
+  .stagelist{display:flex;flex-direction:column;gap:10px;}
+  .stage{border:1px solid #E7EAF2;border-radius:12px;overflow:hidden;}
+  .stage.all-hidden{opacity:.55;}
+  .stage-h{display:flex;align-items:center;gap:12px;padding:13px 18px;background:#FAFBFD;border-bottom:1px solid #EEF1F7;}
+  .stage-n{flex:0 0 auto;width:26px;height:26px;border-radius:50%;background:var(--acc2);color:#fff;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;}
+  .stage-h b{font-size:14.5px;color:var(--ink);}
+  .stage-h span{font-size:12px;color:var(--ink-3);margin-left:auto;}
+  .stage-h em{font-style:normal;font-size:12px;color:var(--ink-2);font-weight:600;margin-left:12px;}
+  .stage-steps{display:flex;flex-wrap:wrap;gap:6px;padding:12px 18px 14px;}
+  .sstep{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--ink-2);background:#F0F1F6;border-radius:20px;padding:5px 12px;text-decoration:none;position:relative;}
+  .sstep:hover{background:#E4D9FA;color:#4C3A7A;}
+  .sstep .idx{color:var(--ink-3);font-weight:700;}
+  .sstep .tabs{color:var(--ink-3);font-weight:500;}
+  .sstep.hidden-step{background:#F5F6F9;color:var(--ink-3);text-decoration:line-through;opacity:.65;}
+  .sstep .toggle{margin-left:2px;width:16px;height:16px;border-radius:50%;border:1px solid #D9C9F5;background:#fff;color:#7C3AED;font-size:10px;line-height:1;display:none;align-items:center;justify-content:center;cursor:pointer;padding:0;}
+  body.customizing-journey .sstep .toggle{display:inline-flex;}
+  body.customizing-journey .sstep{cursor:default;pointer-events:none;}
+  body.customizing-journey .sstep .toggle{pointer-events:auto;}
+  .sstep .toggle:hover{background:#7C3AED;color:#fff;}
+  .journeynote{font-size:12px;color:var(--ink-3);margin:-2px 0 14px;display:none;}
+  body.customizing-journey .journeynote{display:block;}
+
+  @media (max-width:1080px){ .hero{flex-direction:column;align-items:flex-start;} }
+  @media (max-width:760px){ .shell{flex-direction:column;} .sidebar{width:100%;flex:none;position:static;} }
+  body[data-role="dpo"] .proj-links a:not([data-role~="dpo"]),
+  body[data-role="compliance"] .proj-links a:not([data-role~="compliance"]),
+  body[data-role="admin"] .proj-links a:not([data-role~="admin"]) { display:none; }
+  .cm-overlay{position:fixed;inset:0;background:rgba(10,14,25,.6);display:none;align-items:center;justify-content:center;z-index:999;padding:24px;}
+  .cm-overlay.open{display:flex;}
+  .cm-box{width:min(760px,94vw);height:min(780px,92vh);background:#fff;border-radius:14px;overflow:hidden;position:relative;box-shadow:0 24px 64px rgba(8,12,24,.4);display:flex;flex-direction:column;}
+  .cm-close{position:absolute;top:12px;right:12px;z-index:2;width:30px;height:30px;border-radius:50%;border:1px solid #E4E8F1;background:#fff;color:var(--ink-2);font-size:16px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+  .cm-close:hover{background:#F3F5FA;color:var(--ink);}
+  .cm-box iframe{flex:1;width:100%;border:0;}
+</style>
+
+</head>
+<body>
+<script>document.body.setAttribute("data-role", localStorage.getItem("cdd_role") || "dpo");</script>
+<div class="shell">
+
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-row">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 2l7 3v6c0 4.97-3.05 9.36-7 11-3.95-1.64-7-6.03-7-11V5l7-3z" stroke="#4EA1E8" stroke-width="1.6" stroke-linejoin="round"/></svg>
+        <span class="brand-word"><span class="data">data</span><span class="safe">safeguard</span></span>
+      </div>
+      <div class="brand-sub">Privacy<span class="sep"></span>Management</div>
+    </div>
+    <nav class="primary">
+      <div class="nav-top">
+        <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M12 3l8 3.2v5.4c0 5-3.4 8.9-8 10.4-4.6-1.5-8-5.4-8-10.4V6.2L12 3z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="12" cy="11" r="2.6" stroke="currentColor" stroke-width="1.6"/></svg>
+        <span>CDD</span>
+      </div>
+      <a class="proj-sum" href="walkthrough.html" style="--acc:#64748B"><span class="proj-name">Walkthrough</span></a>
+      <a class="proj-sum active" href="journeys.html" style="--acc:#DB2777;background:rgba(255,255,255,.06)"><span class="proj-name">Journey</span></a>
+      <div class="proj active">
+        <div class="proj-sum" style="--acc:#16274F"><span class="proj-name">CDD</span></div>
+        <div class="proj-links">
+          <div class="navgroup">Overview</div>
+          <a href="index.html" data-role="dpo compliance admin">Dashboard</a>
+          <a href="ecosystem.html" data-role="dpo compliance admin">Data ecosystem</a>
+          <a href="search.html" data-role="dpo compliance admin">Search</a>
+          <div class="navgroup">Connect</div>
+          <a href="Sources/index.html" data-role="dpo admin">Sources</a>
+          <a href="ingestion-ops.html" data-role="admin">Ingestion ops</a>
+          <div class="navgroup">Watch</div>
+          <a href="Monitoring/index.html" data-role="dpo admin">Changes</a>
+          <a href="delta-ops.html" data-role="admin">Delta ops</a>
+          <div class="navgroup">Detect</div>
+          <a href="Detect/index.html" data-role="dpo compliance admin">Detection</a>
+          <a href="findings.html" data-role="dpo compliance">Findings</a>
+          <a href="elements.html" data-role="dpo compliance">Elements</a>
+          <a href="detection-infra.html" data-role="admin compliance">Detection infra</a>
+          <div class="navgroup">Trust</div>
+          <a href="Trust/index.html" data-role="dpo compliance admin">Trust</a>
+          <a href="model-ops.html" data-role="admin compliance">Model ops</a>
+          <div class="navgroup">Comply</div>
+          <a href="compliance.html" data-role="compliance">Compliance</a>
+          <a href="reports.html" data-role="dpo compliance">Reports &amp; evidence</a>
+          <div class="navgroup">Manage</div>
+          <a href="system-health.html" data-role="dpo admin">System health</a>
+          <a href="pipeline.html" data-role="admin">Pipeline</a>
+          <a href="platform-admin.html" data-role="admin">Platform admin</a>
+          <a href="admin.html" data-role="admin">Admin</a>
+        </div>
+      </div>
+    </nav>
+    <div class="sidebar-foot">
+      <div class="line">CDD® · Confidential Data Discovery</div>
+      <div class="line">ID-PRIVACY® platform</div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="header">
+      <div><h1>The Journey</h1><p>One seamless flow, connect a source to managing everything — 19 screens, 7 stages.</p></div>
+      <div class="header-right"><select class="version-select" id="versionSelect" aria-label="Prototype version"><option value="../CDD-Simple/index.html">v1.0</option><option value="../CDD-Simple-v2/index.html">v2.0</option><option value="../CDD-Simple-v3/index.html">v3.0</option><option value="../CDD-Simple-v3.1/index.html">v3.1</option><option value="" selected>v3.2</option></select>
+        <select class="role-select" id="roleSelect" aria-label="Switch role">
+          <option value="dpo">Priya N. · Privacy Ops</option>
+          <option value="compliance">Marcus T. · Compliance Ops</option>
+          <option value="admin">Sam R. · Platform Ops</option>
+        </select>
+        <div class="avatar"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3.4" stroke="currentColor" stroke-width="1.6"/><path d="M4.5 19.5c1.6-3.4 4.4-5 7.5-5s5.9 1.6 7.5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></div>
+      </div>
+    </header>
+
+    <section class="content">
+      <h2 class="pageh">The Journey</h2>
+      <p class="sub">Every screen in CDD, in the order a real rollout actually happens. Most stops have a few tabs inside them — click through and the tab you land on is remembered in the link. Press Start and a banner on every screen shows exactly where you are and what's next.</p>
+
+      <div class="hero">
+        <div class="stat">Complete flow, start to finish<b id="heroStat">19 screens · 7 stages</b></div>
+        <div class="hero-actions">
+          <button class="hero-customize" id="journeyCustomizeBtn">✎ Customize steps</button>
+          <a class="hero-start" href="Sources/index.html" id="heroStart">Start &rarr;</a>
+        </div>
+      </div>
+      <p class="journeynote">Customizing — click the &times; on any step to hide it from your journey (it stays fully working, it just won't count toward the flow or show up in Next/Back). Click a hidden step's &#10003; to bring it back.</p>
+
+      <div class="stagelist" id="stagelist"></div>
+    </section>
+  </main>
+
+</div>
+
+<script>
+(function () {
+  var sel = document.getElementById("roleSelect");
+  sel.value = document.body.getAttribute("data-role") || "dpo";
+  sel.addEventListener("change", function () {
+    document.body.setAttribute("data-role", sel.value);
+    try { localStorage.setItem("cdd_role", sel.value); } catch (e) {}
+  });
+})();
+document.getElementById("versionSelect").addEventListener("change", function () { if (this.value) window.location.href = this.value; });
+</script>
+<script>
+var JOURNEY_STAGES = [
+  { name: "Overview", desc: "land here first", steps: [
+    { path: "index.html", label: "Dashboard" },
+    { path: "ecosystem.html", label: "Data ecosystem" },
+    { path: "search.html", label: "Search" }
+  ] },
+  { name: "Connect", desc: "bring a source in and watch it", steps: [
+    { path: "Sources/index.html", label: "Sources", tabs: 5 },
+    { path: "ingestion-ops.html", label: "Ingestion ops", tabs: 4 }
+  ] },
+  { name: "Watch", desc: "catch what changed", steps: [
+    { path: "Monitoring/index.html", label: "Changes", tabs: 2 },
+    { path: "delta-ops.html", label: "Delta ops", tabs: 5 }
+  ] },
+  { name: "Detect", desc: "find what's sensitive", steps: [
+    { path: "Detect/index.html", label: "Detection", tabs: 3 },
+    { path: "findings.html", label: "Findings" },
+    { path: "elements.html", label: "Elements" },
+    { path: "detection-infra.html", label: "Detection infra", tabs: 6 }
+  ] },
+  { name: "Trust", desc: "can you rely on it", steps: [
+    { path: "Trust/index.html", label: "Trust", tabs: 3 },
+    { path: "model-ops.html", label: "Model ops", tabs: 5 }
+  ] },
+  { name: "Comply", desc: "prove it to an auditor", steps: [
+    { path: "compliance.html", label: "Compliance", tabs: 2 },
+    { path: "reports.html", label: "Reports & evidence", tabs: 2 }
+  ] },
+  { name: "Manage", desc: "keep it healthy and secure", steps: [
+    { path: "system-health.html", label: "System health", tabs: 2 },
+    { path: "pipeline.html", label: "Pipeline", tabs: 5 },
+    { path: "platform-admin.html", label: "Platform admin", tabs: 6 },
+    { path: "admin.html", label: "Admin", tabs: 3 }
+  ] }
+];
+var TOTAL_STEPS = JOURNEY_STAGES.reduce(function (n, s) { return n + s.steps.length; }, 0);
+
+function loadHiddenSteps() {
+  try {
+    var raw = JSON.parse(localStorage.getItem("cdd_journey_hidden") || "[]");
+    return Array.isArray(raw) ? raw : [];
+  } catch (e) { return []; }
+}
+function saveHiddenSteps(arr) {
+  try { localStorage.setItem("cdd_journey_hidden", JSON.stringify(arr)); } catch (e) {}
+}
+var hiddenSteps = loadHiddenSteps();
+
+function renderJourney() {
+  var list = document.getElementById("stagelist");
+  list.innerHTML = "";
+  var globalIdx = 0;
+  var visibleCount = TOTAL_STEPS - hiddenSteps.filter(function (p) {
+    return JOURNEY_STAGES.some(function (s) { return s.steps.some(function (st) { return st.path === p; }); });
+  }).length;
+  var firstVisible = null, firstVisibleNonDashboard = null;
+
+  JOURNEY_STAGES.forEach(function (stage, si) {
+    var allHidden = stage.steps.every(function (st) { return hiddenSteps.indexOf(st.path) !== -1; });
+    var stageEl = document.createElement("div");
+    stageEl.className = "stage" + (allHidden ? " all-hidden" : "");
+    var stepsHtml = stage.steps.map(function (st) {
+      var isHidden = hiddenSteps.indexOf(st.path) !== -1;
+      if (!isHidden) {
+        globalIdx++;
+        if (!firstVisible) firstVisible = st.path;
+        if (!firstVisibleNonDashboard && st.path !== "index.html") firstVisibleNonDashboard = st.path;
+      }
+      var tabsHtml = st.tabs ? ' <span class="tabs">(' + st.tabs + ' tabs)</span>' : "";
+      var idxHtml = isHidden ? '<span class="idx">&mdash;</span>' : '<span class="idx">' + globalIdx + '</span>';
+      var toggleHtml = '<button type="button" class="toggle" data-path="' + st.path + '" title="' + (isHidden ? "Show this step" : "Hide this step") + '">' + (isHidden ? "&#10003;" : "&times;") + '</button>';
+      return '<a class="sstep' + (isHidden ? " hidden-step" : "") + '" href="' + st.path + '">' + idxHtml + st.label + tabsHtml + toggleHtml + '</a>';
+    }).join("");
+    stageEl.innerHTML =
+      '<div class="stage-h"><span class="stage-n">' + (si + 1) + '</span><b>' + stage.name + '</b><em>' + stage.desc + '</em><span>' + stage.steps.length + (stage.steps.length === 1 ? " screen" : " screens") + '</span></div>' +
+      '<div class="stage-steps">' + stepsHtml + '</div>';
+    list.appendChild(stageEl);
+  });
+
+  document.getElementById("heroStat").textContent = visibleCount + (visibleCount === 1 ? " screen" : " screens") + " · " + JOURNEY_STAGES.length + " stages" + (visibleCount < TOTAL_STEPS ? " (" + (TOTAL_STEPS - visibleCount) + " hidden)" : "");
+  document.getElementById("heroStart").setAttribute("href", firstVisibleNonDashboard || firstVisible || "index.html");
+}
+
+document.getElementById("stagelist").addEventListener("click", function (e) {
+  var btn = e.target.closest(".toggle");
+  if (!btn) return;
+  e.preventDefault();
+  var path = btn.getAttribute("data-path");
+  var idx = hiddenSteps.indexOf(path);
+  if (idx === -1) {
+    if (TOTAL_STEPS - hiddenSteps.length <= 1) {
+      alert("Keep at least one step in your journey.");
+      return;
+    }
+    hiddenSteps.push(path);
+  } else {
+    hiddenSteps.splice(idx, 1);
+  }
+  saveHiddenSteps(hiddenSteps);
+  renderJourney();
+});
+
+document.getElementById("journeyCustomizeBtn").addEventListener("click", function () {
+  var on = document.body.classList.toggle("customizing-journey");
+  this.classList.toggle("on", on);
+  this.textContent = on ? "✓ Done" : "✎ Customize steps";
+});
+
+renderJourney();
+</script>
+<div class="cm-overlay" id="cmOverlay">
+  <div class="cm-box">
+    <button class="cm-close" id="cmClose" aria-label="Close">&times;</button>
+    <iframe id="cmFrame" data-src="connect-source.html?modal=1" title="Connect a source"></iframe>
+  </div>
+</div>
+<script>
+(function () {
+  var overlay = document.getElementById("cmOverlay");
+  var frame = document.getElementById("cmFrame");
+  var closeBtn = document.getElementById("cmClose");
+  var DEPTH = "";
+  function openModal() {
+    if (!frame.src) frame.src = frame.getAttribute("data-src");
+    overlay.classList.add("open");
+    document.body.style.overflow = "hidden";
+  }
+  function closeModal() {
+    overlay.classList.remove("open");
+    document.body.style.overflow = "";
+  }
+  closeBtn.addEventListener("click", closeModal);
+  overlay.addEventListener("click", function (e) { if (e.target === overlay) closeModal(); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && overlay.classList.contains("open")) closeModal(); });
+  window.addEventListener("message", function (e) {
+    if (!e.data || typeof e.data !== "object") return;
+    if (e.data.type === "cdd-connect-done") {
+      closeModal();
+      window.location.href = DEPTH + (e.data.redirect || "Sources/index.html#scans");
+    }
+  });
+  document.querySelectorAll(".js-connect-open").forEach(function (el) {
+    el.addEventListener("click", function (e) { e.preventDefault(); openModal(); });
+  });
+})();
+</script>
+</body>
+</html>
