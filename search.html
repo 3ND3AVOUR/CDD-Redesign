@@ -18,16 +18,16 @@
   .shell{width:100%;min-height:100vh;background:var(--shell-bg);padding:16px;display:flex;gap:20px;align-items:flex-start;}
   .sidebar{width:264px;flex:0 0 264px;background:var(--sidebar);border-radius:16px;padding:24px 14px;min-height:880px;display:flex;flex-direction:column;position:sticky;top:24px;}
   .brand{padding:0 10px 20px;}
-  .brand-row{display:flex;align-items:center;gap:8px;}
-  .brand-word{font-size:21px;font-weight:700;} .brand-word .data{color:#fff;} .brand-word .safe{color:var(--brand-blue);}
-  .brand-sub{margin-top:3px;font-size:11px;font-style:italic;font-weight:600;color:var(--brand-blue);display:flex;align-items:center;gap:6px;}
-  .brand-sub .sep{width:3px;height:3px;border-radius:50%;background:var(--brand-blue);opacity:.7;}
+  .brand-row{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;}
+  .brand-word{font-size:32px;font-weight:700;color:var(--brand-blue);line-height:1;letter-spacing:-.01em;}
+  .brand-check{flex:0 0 auto;margin-top:3px;}
+  .brand-sub{margin-top:6px;font-size:13px;font-style:italic;font-weight:700;color:var(--brand-blue);text-align:right;}
   nav.primary{display:flex;flex-direction:column;gap:2px;}
   .nav-top{display:flex;align-items:center;gap:10px;padding:10px 10px 8px;color:#fff;font-weight:700;font-size:14.5px;}
   .nav-top .ico{width:19px;height:19px;color:#fff;}
   .proj{padding:0 6px;margin-bottom:2px;}
   .proj-sum{display:flex;align-items:center;gap:9px;padding:9px 6px;border-radius:8px;color:#fff;text-decoration:none;}
-  .proj-sum::before{content:"";width:8px;height:8px;border-radius:2px;background:var(--acc,#3979BD);flex:0 0 auto;}
+  .proj-sum svg.pico{width:15px;height:15px;flex:0 0 auto;color:var(--acc,#3979BD);}
   .proj-name{flex:1;font-size:13.5px;font-weight:700;}
   .proj.active .proj-sum{background:rgba(255,255,255,.05);}
   .proj-links{padding:4px 0 10px 33px;display:flex;flex-direction:column;gap:1px;}
@@ -51,12 +51,6 @@
     background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235B6577' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
     background-repeat:no-repeat;background-position:right 10px center;background-size:13px;}
   .role-select:hover{border-color:var(--sidebar-active);}
-  .version-select{font:inherit;font-size:12px;font-weight:700;color:var(--ink-2);background:#F3F5FA;
-    border:1px solid #E4E8F1;border-radius:20px;padding:7px 28px 7px 14px;cursor:pointer;
-    appearance:none;-webkit-appearance:none;
-    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235B6577' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
-    background-repeat:no-repeat;background-position:right 9px center;background-size:12px;}
-  .version-select:hover{border-color:var(--sidebar-active);}
   body[data-role="dpo"] .proj-links a:not([data-role~="dpo"]),
   body[data-role="compliance"] .proj-links a:not([data-role~="compliance"]),
   body[data-role="admin"] .proj-links a:not([data-role~="admin"]) { display:none; }
@@ -152,20 +146,20 @@
   <aside class="sidebar">
     <div class="brand">
       <div class="brand-row">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 2l7 3v6c0 4.97-3.05 9.36-7 11-3.95-1.64-7-6.03-7-11V5l7-3z" stroke="#4EA1E8" stroke-width="1.6" stroke-linejoin="round"/></svg>
-        <span class="brand-word"><span class="data">data</span><span class="safe">safeguard</span></span>
+        <span class="brand-word">data</span>
+        <svg class="brand-check" width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="#4EA1E8" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </div>
-      <div class="brand-sub">Privacy<span class="sep"></span>Management</div>
+      <div class="brand-sub">Privacy Management</div>
     </div>
     <nav class="primary">
       <div class="nav-top">
         <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M12 3l8 3.2v5.4c0 5-3.4 8.9-8 10.4-4.6-1.5-8-5.4-8-10.4V6.2L12 3z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="12" cy="11" r="2.6" stroke="currentColor" stroke-width="1.6"/></svg>
         <span>CDD</span>
       </div>
-      <a class="proj-sum" href="walkthrough.html" style="--acc:#64748B"><span class="proj-name">Walkthrough</span></a>
-      <a class="proj-sum" href="journeys.html" style="--acc:#DB2777"><span class="proj-name">Journey</span></a>
+      <a class="proj-sum" href="walkthrough.html" style="--acc:#64748B"><svg class="pico" viewBox="0 0 24 24" fill="none"><path d="M12 21s7-7.5 7-12a7 7 0 10-14 0c0 4.5 7 12 7 12z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="12" cy="9" r="2.3" stroke="currentColor" stroke-width="1.6"/></svg><span class="proj-name">Walkthrough</span></a>
+      <a class="proj-sum" href="journeys.html" style="--acc:#DB2777"><svg class="pico" viewBox="0 0 24 24" fill="none"><path d="M4 20V4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M4 6h8l-2 3 2 3H4" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg><span class="proj-name">Journey</span></a>
       <div class="proj active">
-        <div class="proj-sum" style="--acc:#16274F"><span class="proj-name">CDD</span></div>
+        <div class="proj-sum" style="--acc:#16274F"><svg class="pico" viewBox="0 0 24 24" fill="none"><path d="M12 3l8 3.2v5.4c0 5-3.4 8.9-8 10.4-4.6-1.5-8-5.4-8-10.4V6.2L12 3z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="12" cy="11" r="2.6" stroke="currentColor" stroke-width="1.6"/></svg><span class="proj-name">CDD</span></div>
         <div class="proj-links">
           <div class="navgroup">Overview</div>
           <a href="index.html" data-role="dpo compliance admin">Dashboard</a>
@@ -205,8 +199,7 @@
   <main class="main">
     <header class="header">
       <div><h1>Search</h1><p>One box, across sources, element types, team members, and every page.</p></div>
-      <div class="header-right"><select class="version-select" id="versionSelect" aria-label="Prototype version"><option value="../CDD-Simple/index.html">v1.0</option><option value="../CDD-Simple-v2/index.html">v2.0</option><option value="../CDD-Simple-v3/index.html">v3.0</option><option value="../CDD-Simple-v3.1/index.html">v3.1</option><option value="" selected>v3.2</option></select>
-        <select class="role-select" id="roleSelect" aria-label="Switch role">
+      <div class="header-right"><select class="role-select" id="roleSelect" aria-label="Switch role">
           <option value="dpo">Priya N. · Privacy Ops</option>
           <option value="compliance">Marcus T. · Compliance Ops</option>
           <option value="admin">Sam R. · Platform Ops</option>
@@ -304,7 +297,6 @@ document.querySelectorAll(".tabbtn").forEach(function (b) {
     try { localStorage.setItem("cdd_role", sel.value); } catch (e) {}
   });
 })();
-document.getElementById("versionSelect").addEventListener("change", function () { if (this.value) window.location.href = this.value; });
 </script>
 <script>
 var CDD_STAGES = [{n:"Overview",p:["index.html","ecosystem.html","search.html"]},{n:"Connect",p:["Sources/index.html","ingestion-ops.html"]},{n:"Watch",p:["Monitoring/index.html","delta-ops.html"]},{n:"Detect",p:["Detect/index.html","findings.html","elements.html","detection-infra.html"]},{n:"Trust",p:["Trust/index.html","model-ops.html"]},{n:"Comply",p:["compliance.html","reports.html"]},{n:"Manage",p:["system-health.html","pipeline.html","platform-admin.html","admin.html"]}];
