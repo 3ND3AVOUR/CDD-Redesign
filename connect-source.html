@@ -284,6 +284,7 @@
               <option>Weekly</option>
               <option>Monthly</option>
               <option>One time</option>
+              <option>Manual only</option>
             </select>
           </div>
           <div class="field" id="fld-day" style="display:none;"><label>Day of the week</label>
@@ -460,11 +461,13 @@
     document.getElementById("fld-day").style.display = v === "Weekly" ? "" : "none";
     document.getElementById("fld-monthday").style.display = v === "Monthly" ? "" : "none";
     document.getElementById("fld-onedate").style.display = v === "One time" ? "" : "none";
-    document.getElementById("fld-timerow").style.display = v === "Every hour" ? "none" : "";
+    document.getElementById("fld-timerow").style.display = (v === "Every hour" || v === "Manual only") ? "none" : "";
     clearFieldError("fld-onedate");
     var assure = document.getElementById("scheduleAssure");
     if (v === "One time") {
       assure.innerHTML = '<span>🗓️</span><div><b>This runs once, on the date above.</b> After that it stops automatically — come back here to schedule another check.</div>';
+    } else if (v === "Manual only") {
+      assure.innerHTML = '<span>🗓️</span><div><b>Your first check still starts right away.</b> After that, nothing runs on its own — come back to Sources and check it yourself whenever you want. You can always turn on a real schedule later.</div>';
     } else {
       assure.innerHTML = '<span>🗓️</span><div><b>Your first check starts right away.</b> After that, we’ll check on the schedule above — you can pause it or run one manually at any time from Sources.</div>';
     }
@@ -484,6 +487,7 @@
       return "Monthly on the " + (md === "last" ? "last day" : ordinalSimple(parseInt(md, 10))) + " at " + time + " (" + tz + ")";
     }
     if (v === "One time") return "Once on " + (onedateEl.value || "—") + " at " + time + " (" + tz + ")";
+    if (v === "Manual only") return "Manual only — you'll run checks yourself from Sources";
     return v;
   }
   function scheduleShort() {
@@ -495,6 +499,7 @@
       return "Monthly · " + (md === "last" ? "last day" : ordinalSimple(parseInt(md, 10)));
     }
     if (v === "One time") return "Once · " + (onedateEl.value || "—");
+    if (v === "Manual only") return "Manual";
     return v;
   }
 

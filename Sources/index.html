@@ -779,20 +779,23 @@ document.addEventListener("click", function (e) {
     editBtn.type = "button"; editBtn.className = "freq-edit"; editBtn.title = "Edit schedule"; editBtn.textContent = "✎";
     var pauseBtn = document.createElement("button");
     pauseBtn.type = "button"; pauseBtn.className = "freq-pause"; pauseBtn.title = "Pause this schedule"; pauseBtn.textContent = "⏸";
+    if (text.textContent.trim() === "Manual") pauseBtn.style.display = "none";
     cell.innerHTML = "";
     cell.appendChild(text); cell.appendChild(editBtn); cell.appendChild(pauseBtn);
 
     editBtn.addEventListener("click", function () {
-      var val = prompt("Set the check schedule for “" + name + "” (e.g. Every hour, Daily, Weekly · Mon, Monthly · 15th):", text.textContent);
+      var val = prompt("Set the check schedule for “" + name + "” (e.g. Every hour, Daily, Weekly · Mon, Monthly · 15th, or Manual for no automatic schedule):", text.textContent);
       if (val === null || !val.trim()) return;
+      var newVal = val.trim();
+      var isManual = newVal === "Manual";
       allFreqCellsFor(name).forEach(function (c) {
         var t = c.querySelector(".freq-text");
-        if (t) t.textContent = val.trim();
+        if (t) t.textContent = newVal;
         c.classList.remove("paused");
         var p = c.querySelector(".freq-pause");
-        if (p) { p.textContent = "⏸"; p.title = "Pause this schedule"; }
+        if (p) { p.textContent = "⏸"; p.title = "Pause this schedule"; p.style.display = isManual ? "none" : ""; }
       });
-      toast("Schedule for “" + name + "” updated to " + val.trim());
+      toast("Schedule for “" + name + "” updated to " + newVal);
     });
     pauseBtn.addEventListener("click", function () {
       var isPaused = cell.classList.contains("paused");
