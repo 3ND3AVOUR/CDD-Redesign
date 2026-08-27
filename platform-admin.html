@@ -86,6 +86,34 @@
   .walk-empty .we-ico{font-size:34px;margin-bottom:10px;}
   .walk-empty h3{margin:0 0 8px;font-size:17px;font-weight:700;color:var(--ink);}
   .walk-empty p{margin:0 auto 18px;font-size:13.5px;color:var(--ink-2);max-width:52ch;line-height:1.6;}
+  .flowbar.setupflow{background:linear-gradient(90deg,#EEF3FC,#F5F9FF);border-color:#CBDCF6;}
+  .flowbar.setupflow .fic{filter:none;}
+  .flowbar.setupflow .fstage{color:#1E4976;}
+  .flowbar.setupflow .fstep{color:#3979BD;}
+  .flowbar.setupflow .fbar{background:#CBDCF6;}
+  .flowbar.setupflow .fbar>span{background:#3979BD;}
+  .flowbar.setupflow a.fbtn{border-color:#CBDCF6;color:#1E4976;}
+  .flowbar.setupflow a.fbtn:hover{background:#3979BD;color:#fff;}
+  .flowbar.setupflow a.fbtn-primary{background:#3979BD;border-color:#3979BD;color:#fff;}
+  .flowbar.setupflow a.fbtn-primary:hover{background:#2C5A94;}
+  .flowbar.setupflow button.fbtn-end{border-color:#CBDCF6;color:#5B7FA6;}
+  .flowbar.setupflow button.fbtn-end:hover{background:#FEF0EE;border-color:#F3B7AE;color:#B42318;}
+  .flowbar.setupflow .fnote{border-top-color:#CBDCF6;color:#1E4976;}
+  .flowbar.setupflow .fnote b{color:#0F2A47;}
+  .flowbar.setupflow{background:linear-gradient(90deg,#EEF3FC,#F5F9FF);border-color:#CBDCF6;}
+  .flowbar.setupflow .fic{filter:none;}
+  .flowbar.setupflow .fstage{color:#1E4976;}
+  .flowbar.setupflow .fstep{color:#3979BD;}
+  .flowbar.setupflow .fbar{background:#CBDCF6;}
+  .flowbar.setupflow .fbar>span{background:#3979BD;}
+  .flowbar.setupflow a.fbtn{border-color:#CBDCF6;color:#1E4976;}
+  .flowbar.setupflow a.fbtn:hover{background:#3979BD;color:#fff;}
+  .flowbar.setupflow a.fbtn-primary{background:#3979BD;border-color:#3979BD;color:#fff;}
+  .flowbar.setupflow a.fbtn-primary:hover{background:#2C5A94;}
+  .flowbar.setupflow button.fbtn-end{border-color:#CBDCF6;color:#5B7FA6;}
+  .flowbar.setupflow button.fbtn-end:hover{background:#FEF0EE;border-color:#F3B7AE;color:#B42318;}
+  .flowbar.setupflow .fnote{border-top-color:#CBDCF6;color:#1E4976;}
+  .flowbar.setupflow .fnote b{color:#0F2A47;}
 
   .tabbar{display:flex;gap:4px;border-bottom:1px solid #E7EAF2;margin-bottom:22px;flex-wrap:wrap;}
   .tabbtn{font:inherit;font-size:13.5px;font-weight:700;color:var(--ink-2);background:none;border:none;border-bottom:2.5px solid transparent;padding:11px 4px;margin-right:22px;cursor:pointer;}
@@ -206,7 +234,7 @@
 
   <main class="main">
     <header class="header">
-      <div><h1>Platform admin</h1><p>The platform-wide settings a business Admin page doesn't cover &mdash; keys, notifications, deployment, cost, and ownership.</p></div>
+      <div><h1>Platform admin</h1><p>The platform-wide settings a business Admin page doesn't cover &mdash; tenants, keys, notifications, deployment, cost, and ownership.</p></div>
       <div class="header-right"><select class="role-select" id="roleSelect" aria-label="Switch role">
           <option value="dpo">Priya N. · Privacy Ops</option>
           <option value="compliance">Marcus T. · Compliance Ops</option>
@@ -218,14 +246,98 @@
 
     <section class="content">
 <div class="tabbar">
-        <button class="tabbtn active" data-tab="encryption">Encryption</button>
+        <button class="tabbtn active" data-tab="tenants">Tenants &amp; roles <span class="tbadge">New</span></button>
+        <button class="tabbtn" data-tab="encryption">Encryption</button>
         <button class="tabbtn" data-tab="notifications">Notifications</button>
         <button class="tabbtn" data-tab="deployment">Deployment</button>
         <button class="tabbtn" data-tab="sla">SLA & cost</button>
         <button class="tabbtn" data-tab="scaneconomics">Scan economics</button>
-        <button class="tabbtn" data-tab="ownership">Source ownership <span class="tbadge">New</span></button>
+        <button class="tabbtn" data-tab="ownership">Source ownership</button>
       </div>
-      <div class="tabpanel active" id="panel-encryption">
+      <div class="tabpanel active" id="panel-tenants">
+        <h3 class="tabh">Tenants &amp; roles (RBAC)</h3>
+        <p class="tabd">Every tenant this platform hosts, and who can administer each one. Admin's Roles &amp; permissions tab covers what a role can see inside one tenant — this is the layer above it: which tenants exist at all.</p>
+        <div class="kpis">
+          <div class="kpi"><div class="l">Active tenants</div><div class="v">3</div><div class="d">across 2 regions</div></div>
+          <div class="kpi"><div class="l">Pending approval</div><div class="v warn" id="tenantPendingCount">0</div><div class="d">waiting on a second admin</div></div>
+          <div class="kpi"><div class="l">Platform admins</div><div class="v">2</div><div class="d">can approve tenant changes</div></div>
+        </div>
+        <div class="twrap"><table>
+          <thead><tr><th>Tenant</th><th>Region</th><th>Status</th><th>Created</th><th>Owner</th></tr></thead>
+          <tbody id="tenantRows">
+            <tr><td>acme-eu</td><td>eu-west-1</td><td><span class="status ok"><span class="dot"></span>Active</span></td><td>14 months ago</td><td>Priya N.</td></tr>
+            <tr><td>acme-us</td><td>us-east-1</td><td><span class="status ok"><span class="dot"></span>Active</span></td><td>9 months ago</td><td>Sam R.</td></tr>
+            <tr><td>acme-apac</td><td>ap-southeast-1</td><td><span class="status ok"><span class="dot"></span>Active</span></td><td>3 months ago</td><td>Marcus T.</td></tr>
+          </tbody>
+        </table></div>
+        <button class="btn btn-primary" id="newTenantBtn">+ Create a new tenant</button>
+        <div class="note">Creating a tenant needs a second admin's approval before it goes live — same pattern as rotating an encryption key or changing deployment posture. One person can request it; a different admin has to confirm it.</div>
+
+        <div id="newTenantForm" style="display:none;margin-top:18px;">
+          <h3 class="tabh" style="font-size:13.5px;">New tenant request</h3>
+          <div class="twrap" style="margin-bottom:12px;"><table>
+            <tbody>
+              <tr><td style="width:160px;">Tenant name</td><td><input type="text" id="ntName" placeholder="e.g. acme-uk" style="width:100%;padding:7px 10px;border:1px solid var(--card-border);border-radius:6px;"></td></tr>
+              <tr><td>Region</td><td><select id="ntRegion"><option>eu-west-1</option><option>us-east-1</option><option>ap-southeast-1</option><option>uk-south-1</option></select></td></tr>
+              <tr><td>Requested by</td><td>Sam R. · Platform Ops</td></tr>
+            </tbody>
+          </table></div>
+          <button class="btn btn-primary" id="ntRequest">Request tenant creation</button>
+          <button class="btn" id="ntCancel">Cancel</button>
+        </div>
+
+        <div id="tenantApprovalRows"></div>
+        <script>
+        (function () {
+          var newBtn = document.getElementById("newTenantBtn");
+          var form = document.getElementById("newTenantForm");
+          var pendingWrap = document.getElementById("tenantApprovalRows");
+          var pendingCountEl = document.getElementById("tenantPendingCount");
+          var pending = [];
+
+          newBtn.addEventListener("click", function () { form.style.display = "block"; newBtn.style.display = "none"; });
+          document.getElementById("ntCancel").addEventListener("click", function () { form.style.display = "none"; newBtn.style.display = ""; });
+
+          function renderPending() {
+            pendingCountEl.textContent = pending.length;
+            pendingWrap.innerHTML = pending.map(function (p, i) {
+              return '<div class="note" style="border-color:#F3E0B8;background:#FEF9EE;margin-top:14px;">' +
+                '<b>&#128274; Waiting on a second approver &mdash; "' + p.name + '" (' + p.region + ')</b><br>' +
+                'Requested by Sam R. just now. A <i>different</i> admin needs to confirm this before the tenant goes live.' +
+                '<div style="margin-top:10px;"><button type="button" class="btn-sm" data-approve="' + i + '">Approve as Marcus T. (second admin)</button></div>' +
+              '</div>';
+            }).join("");
+          }
+
+          document.getElementById("ntRequest").addEventListener("click", function () {
+            var name = document.getElementById("ntName").value.trim();
+            if (!name) { document.getElementById("ntName").focus(); return; }
+            var region = document.getElementById("ntRegion").value;
+            pending.push({ name: name, region: region });
+            renderPending();
+            form.style.display = "none";
+            newBtn.style.display = "";
+            document.getElementById("ntName").value = "";
+            toast("Tenant request sent — needs a second admin's approval");
+          });
+
+          pendingWrap.addEventListener("click", function (e) {
+            var btn = e.target.closest("button[data-approve]");
+            if (!btn) return;
+            var idx = parseInt(btn.getAttribute("data-approve"), 10);
+            var p = pending[idx];
+            if (!p) return;
+            pending.splice(idx, 1);
+            renderPending();
+            var tr = document.createElement("tr");
+            tr.innerHTML = '<td>' + p.name + '</td><td>' + p.region + '</td><td><span class="status ok"><span class="dot"></span>Active</span></td><td>just now</td><td>Sam R.</td>';
+            document.getElementById("tenantRows").insertBefore(tr, document.getElementById("tenantRows").firstChild);
+            toast('Tenant "' + p.name + '" created — approved by two admins');
+          });
+        })();
+        </script>
+      </div>
+      <div class="tabpanel" id="panel-encryption">
         <h3 class="tabh">Encryption keys &amp; lifecycle (BYOK)</h3>
         <p class="tabd">Which keys protect which sources, and when they're due to rotate.</p>
         <div class="twrap"><table>
@@ -362,7 +474,7 @@ var STEP_NOTES = {
   "reports.html": "Where a finished check becomes something you can hand someone \u2014 a one-page summary report, or a full evidence package built for an auditor.",
   "system-health.html": "Everything across the whole platform that needs attention, in one feed \u2014 plus whether there's enough processing capacity for what's coming in next.",
   "pipeline.html": "The technical layer under System health \u2014 per-stage pipeline health, service topology, queue depth, and the lifecycle of every ingestion job. Platform Ops only.",
-  "platform-admin.html": "The technical layer under Admin \u2014 encryption key rotation, notification routing, deployment posture, and what each source actually costs to keep checking. Platform Ops only.",
+  "platform-admin.html": "The technical layer under Admin \u2014 tenant administration, encryption key rotation, notification routing, deployment posture, and what each source actually costs to keep checking. Platform Ops only.",
   "admin.html": "Where the three roles you've been switching between actually come from, plus how long each type of data is kept. The last stop \u2014 everything before this was what the product does; this is who's allowed to see it."
 };
 (function () {
@@ -456,6 +568,92 @@ var STEP_NOTES = {
       location.href = DEPTH + "journeys.html";
     });
   }
+})();
+</script>
+<script>
+var TENANT_FLOW_STEPS = [
+  { file: "admin.html", hash: "", label: "Admin", note: "Start here \u2014 the home base for who's on your team and what they can do." },
+  { file: "platform-admin.html", hash: "tenants", label: "Tenants & roles", note: "Every tenant this platform hosts. Creating one needs a second admin's approval \u2014 try it below." },
+  { file: "platform-admin.html", hash: "encryption", label: "Encryption keys", note: "Which keys protect which sources, and when they rotate. Key rotation follows the same second-approver pattern." },
+  { file: "admin.html", hash: "retention", label: "Retention", note: "How long each type of data is kept, and why \u2014 the policy a new tenant inherits by default." },
+  { file: "platform-admin.html", hash: "deployment", label: "Deployment posture", note: "Where this tenant actually runs, and whether it's air-gapped. The last check before a tenant goes live." }
+];
+(function () {
+  var isFlow = false;
+  try { isFlow = localStorage.getItem("cdd_tenant_flow_active") === "1"; } catch (e) {}
+  if (!isFlow) return;
+  var MY_FILE = "platform-admin.html";
+  var bannerEl = null;
+
+  function currentIdx() {
+    var h = location.hash.replace("#", "");
+    for (var i = 0; i < TENANT_FLOW_STEPS.length; i++) {
+      if (TENANT_FLOW_STEPS[i].file === MY_FILE && TENANT_FLOW_STEPS[i].hash === h) return i;
+    }
+    for (var j = 0; j < TENANT_FLOW_STEPS.length; j++) {
+      if (TENANT_FLOW_STEPS[j].file === MY_FILE) return j;
+    }
+    return -1;
+  }
+  function stepHref(s) { return s.file + (s.hash ? "#" + s.hash : ""); }
+
+  function renderBanner() {
+    var idx = currentIdx();
+    if (idx === -1) return;
+    var step = TENANT_FLOW_STEPS[idx];
+    var isLast = idx === TENANT_FLOW_STEPS.length - 1;
+    var pct = Math.round(((idx + 1) / TENANT_FLOW_STEPS.length) * 100);
+    var prevHtml = idx > 0 ? '<a class="fbtn" href="' + stepHref(TENANT_FLOW_STEPS[idx - 1]) + '" data-tf-nav="' + (idx - 1) + '">&larr; Previous</a>' : "";
+    var nextHtml = isLast
+      ? '<a class="fbtn fbtn-primary" href="#" id="tfFinish">Finish setup &#10003;</a>'
+      : '<a class="fbtn fbtn-primary" href="' + stepHref(TENANT_FLOW_STEPS[idx + 1]) + '" data-tf-nav="' + (idx + 1) + '">Next &rarr;</a>';
+    var html =
+      '<div class="ftop">' +
+        '<span class="fic">\uD83D\uDD10</span>' +
+        '<span class="fstage">Onboard a tenant safely</span>' +
+        '<span class="fstep">&middot; step ' + (idx + 1) + ' of ' + TENANT_FLOW_STEPS.length + '</span>' +
+        '<span class="fnav"><button type="button" class="fbtn fbtn-end" id="tfEnd" title="Exit this setup flow">&times; End setup flow</button>' + prevHtml + nextHtml + '</span>' +
+      '</div>' +
+      '<div class="fbar"><span style="width:' + pct + '%"></span></div>' +
+      '<div class="fnote"><b>Why this step:</b> ' + step.note + '</div>';
+
+    if (!bannerEl) {
+      bannerEl = document.createElement("div");
+      bannerEl.className = "flowbar setupflow";
+      var content = document.querySelector(".content");
+      var existingFlowbar = content.querySelector(".flowbar:not(.setupflow)");
+      if (existingFlowbar) existingFlowbar.parentNode.insertBefore(bannerEl, existingFlowbar.nextSibling);
+      else content.insertBefore(bannerEl, content.firstChild);
+    }
+    bannerEl.innerHTML = html;
+
+    Array.prototype.forEach.call(bannerEl.querySelectorAll("[data-tf-nav]"), function (a) {
+      a.addEventListener("click", function (e) {
+        var targetIdx = parseInt(a.getAttribute("data-tf-nav"), 10);
+        var target = TENANT_FLOW_STEPS[targetIdx];
+        if (target.file === MY_FILE) {
+          e.preventDefault();
+          history.replaceState(null, "", target.hash ? "#" + target.hash : location.pathname);
+          if (target.hash && typeof showTab === "function") showTab(target.hash);
+          renderBanner();
+        }
+      });
+    });
+    var endBtn = document.getElementById("tfEnd");
+    if (endBtn) endBtn.addEventListener("click", function () {
+      try { localStorage.removeItem("cdd_tenant_flow_active"); } catch (e) {}
+      bannerEl.remove();
+      bannerEl = null;
+    });
+    var finishBtn = document.getElementById("tfFinish");
+    if (finishBtn) finishBtn.addEventListener("click", function (e) {
+      e.preventDefault();
+      try { localStorage.removeItem("cdd_tenant_flow_active"); } catch (e) {}
+      location.href = "journeys.html";
+    });
+  }
+
+  renderBanner();
 })();
 </script>
 </body>
