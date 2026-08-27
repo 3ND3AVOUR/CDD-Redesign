@@ -31,6 +31,11 @@
   .proj{padding:0 6px;margin-bottom:2px;}
   .proj-sum{display:flex;align-items:center;gap:9px;padding:9px 6px;border-radius:8px;color:#fff;text-decoration:none;}
   .proj-sum svg.pico{width:15px;height:15px;flex:0 0 auto;color:var(--acc,#3979BD);}
+  .walk-trigger{background:none;border:none;width:100%;text-align:left;cursor:pointer;font:inherit;}
+  .walk-empty{border:1px dashed #D9C9F5;background:#FCFAFF;border-radius:14px;padding:44px 32px;text-align:center;margin-bottom:20px;}
+  .walk-empty .we-ico{font-size:34px;margin-bottom:10px;}
+  .walk-empty h3{margin:0 0 8px;font-size:17px;font-weight:700;color:var(--ink);}
+  .walk-empty p{margin:0 auto 18px;font-size:13.5px;color:var(--ink-2);max-width:52ch;line-height:1.6;}
   .proj-name{flex:1;font-size:13.5px;font-weight:700;}
   .proj.active .proj-sum{background:rgba(255,255,255,.05);}
   .proj-links{padding:4px 0 10px 33px;display:flex;flex-direction:column;gap:1px;}
@@ -174,7 +179,7 @@
       </div>
       <a class="proj-sum active" href="walkthrough.html" style="--acc:#64748B;background:rgba(255,255,255,.06)"><svg class="pico" viewBox="0 0 24 24" fill="none"><path d="M12 21s7-7.5 7-12a7 7 0 10-14 0c0 4.5 7 12 7 12z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="12" cy="9" r="2.3" stroke="currentColor" stroke-width="1.6"/></svg><span class="proj-name">Walkthrough</span></a>
       <a class="proj-sum" href="journeys.html" style="--acc:#DB2777"><svg class="pico" viewBox="0 0 24 24" fill="none"><path d="M4 20V4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M4 6h8l-2 3 2 3H4" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg><span class="proj-name">Journey</span></a>
-      <button type="button" class="proj-sum walk-trigger" id="walkTriggerBtn" style="--acc:#16A34A;" onclick="try{localStorage.setItem('cdd_walkthrough_active','1');}catch(e){}location.href='index.html';"><svg class="pico" viewBox="0 0 24 24" fill="none"><path d="M8 5v14l11-7L8 5z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg><span class="proj-name">Start walkthrough</span></button>
+      <button type="button" class="proj-sum walk-trigger" id="walkTriggerBtn" style="--acc:#16A34A;" onclick="try{localStorage.setItem('cdd_walkthrough_active','1');localStorage.setItem('cdd_walkthrough_empty','1');}catch(e){}location.href='index.html';"><svg class="pico" viewBox="0 0 24 24" fill="none"><path d="M8 5v14l11-7L8 5z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg><span class="proj-name">Start walkthrough</span></button>
       <div class="proj">
         <div class="proj-sum" style="--acc:#16274F"><svg class="pico" viewBox="0 0 24 24" fill="none"><path d="M12 3l8 3.2v5.4c0 5-3.4 8.9-8 10.4-4.6-1.5-8-5.4-8-10.4V6.2L12 3z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="12" cy="11" r="2.6" stroke="currentColor" stroke-width="1.6"/></svg><span class="proj-name">CDD</span></div>
         <div class="proj-links">

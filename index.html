@@ -80,6 +80,10 @@
   .flowbar button.fbtn-end:hover{background:#FEF0EE;border-color:#F3B7AE;color:#B42318;}
   .flowbar.walkmode{border-color:#C9B3F5;box-shadow:0 0 0 3px rgba(124,58,237,.08);}
   .walk-trigger{background:none;border:none;width:100%;text-align:left;cursor:pointer;font:inherit;}
+  .walk-empty{border:1px dashed #D9C9F5;background:#FCFAFF;border-radius:14px;padding:44px 32px;text-align:center;margin-bottom:20px;}
+  .walk-empty .we-ico{font-size:34px;margin-bottom:10px;}
+  .walk-empty h3{margin:0 0 8px;font-size:17px;font-weight:700;color:var(--ink);}
+  .walk-empty p{margin:0 auto 18px;font-size:13.5px;color:var(--ink-2);max-width:52ch;line-height:1.6;}
   .flowbar .fdo{font-size:12.5px;color:#4C3A7A;line-height:1.5;}
   .flowbar .fdo b{color:#3A2A63;}
 
@@ -224,7 +228,7 @@
       </div>
       <a class="proj-sum" href="walkthrough.html" style="--acc:#64748B"><svg class="pico" viewBox="0 0 24 24" fill="none"><path d="M12 21s7-7.5 7-12a7 7 0 10-14 0c0 4.5 7 12 7 12z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="12" cy="9" r="2.3" stroke="currentColor" stroke-width="1.6"/></svg><span class="proj-name">Walkthrough</span></a>
       <a class="proj-sum" href="journeys.html" style="--acc:#DB2777"><svg class="pico" viewBox="0 0 24 24" fill="none"><path d="M4 20V4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M4 6h8l-2 3 2 3H4" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg><span class="proj-name">Journey</span></a>
-      <button type="button" class="proj-sum walk-trigger" id="walkTriggerBtn" style="--acc:#16A34A;" onclick="try{localStorage.setItem('cdd_walkthrough_active','1');}catch(e){}location.href='index.html';"><svg class="pico" viewBox="0 0 24 24" fill="none"><path d="M8 5v14l11-7L8 5z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg><span class="proj-name">Start walkthrough</span></button>
+      <button type="button" class="proj-sum walk-trigger" id="walkTriggerBtn" style="--acc:#16A34A;" onclick="try{localStorage.setItem('cdd_walkthrough_active','1');localStorage.setItem('cdd_walkthrough_empty','1');}catch(e){}location.href='index.html';"><svg class="pico" viewBox="0 0 24 24" fill="none"><path d="M8 5v14l11-7L8 5z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg><span class="proj-name">Start walkthrough</span></button>
       <div class="proj active">
         <div class="proj-sum" style="--acc:#16274F"><svg class="pico" viewBox="0 0 24 24" fill="none"><path d="M12 3l8 3.2v5.4c0 5-3.4 8.9-8 10.4-4.6-1.5-8-5.4-8-10.4V6.2L12 3z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="12" cy="11" r="2.6" stroke="currentColor" stroke-width="1.6"/></svg><span class="proj-name">CDD</span></div>
         <div class="proj-links" id="mainNav">
@@ -287,6 +291,14 @@
         <button class="btn btn-customize" id="customizeBtn">✎ Customize tiles</button>
       </div>
 
+      <div class="walk-empty" id="dashEmptyState" style="display:none;">
+        <div class="we-ico">🗂️</div>
+        <h3>Nothing connected yet</h3>
+        <p>This is CDD on day one — no sources, no findings, nothing checked. Every tile, chart, and number you'll see later on this dashboard starts from exactly this: zero. Connect your first source to watch it fill in.</p>
+        <a class="btn btn-primary js-connect-open" href="connect-source.html">+ Connect your first source</a>
+      </div>
+
+      <div id="dashRealContent">
       <div class="tgrid" id="tileGrid"></div>
 
       <div class="addpool" id="addPool">
@@ -371,6 +383,7 @@
         <div class="fitem"><span class="dot warn"></span><div><div class="t"><b>Billing database</b> hasn't been checked in 30 days</div><div class="w">needs attention</div></div></div>
         <div class="fitem"><span class="dot ok"></span><div><div class="t">Connected a new source: <b>Marketing files (S3)</b></div><div class="w">yesterday</div></div></div>
         <div class="fitem"><span class="dot ok"></span><div><div class="t">Finished checking <b>Sales database</b> — found 2,389 sensitive items</div><div class="w">2 days ago</div></div></div>
+      </div>
       </div>
     </section>
   </main>
@@ -505,6 +518,22 @@ function saveLayout(layout) {
       TILES.findings.val = total.toLocaleString();
       TILES.findings.spark[TILES.findings.spark.length - 1] = total;
     }
+  }
+})();
+
+// Guided walkthrough, day-1 state: on step 1, before anything's connected, show a real
+// empty state instead of the (always fully-populated) demo tiles/ecopanel/activity feed.
+(function () {
+  var isWalk = false, isEmpty = false;
+  try {
+    isWalk = localStorage.getItem("cdd_walkthrough_active") === "1";
+    isEmpty = localStorage.getItem("cdd_walkthrough_empty") === "1";
+  } catch (e) {}
+  if (isWalk && isEmpty) {
+    var es = document.getElementById("dashEmptyState");
+    var rc = document.getElementById("dashRealContent");
+    if (es) es.style.display = "block";
+    if (rc) rc.style.display = "none";
   }
 })();
 
@@ -652,10 +681,10 @@ renderTiles();
 <script>
 var CDD_STAGES = [{n:"Overview",p:["index.html","ecosystem.html","search.html"]},{n:"Connect",p:["Sources/index.html","ingestion-ops.html"]},{n:"Watch",p:["Monitoring/index.html","delta-ops.html"]},{n:"Detect",p:["Detect/index.html","findings.html","elements.html","detection-infra.html"]},{n:"Trust",p:["Trust/index.html","model-ops.html"]},{n:"Comply",p:["compliance.html","reports.html"]},{n:"Manage",p:["system-health.html","pipeline.html","platform-admin.html","admin.html"]}];
 var STEP_NOTES = {
-  "index.html": "Home base. Every tile is a live KPI pulled from the real page it links to \u2014 add, remove, or reorder them, and the layout is remembered per browser.",
-  "ecosystem.html": "Every connected source in one place, grouped by type \u2014 the exact same counts Sources and Findings report, just organized by database vs. files vs. business app instead of by connection.",
-  "search.html": "One box, live results, across sources, element types, team members, and every page \u2014 there's no separate results screen to wait on.",
-  "Sources/index.html": "Where a connection actually lives. Health, Scans, Failed items, and History are tabs on this one page, not separate screens \u2014 and \u2018Connect a source\u2019 opens the same wizard as a modal, right here.",
+  "index.html": "Home base \u2014 right now it\u2019s showing what day one actually looks like: nothing connected, nothing to report. Every tile you\u2019ll see later is a live KPI pulled from a real page; connect a source and this same screen starts filling in.",
+  "ecosystem.html": "Once sources exist, this groups them by type \u2014 database vs. files vs. business app \u2014 with the exact same counts Sources and Findings report. It\u2019s empty right now for the same reason everything else is: nothing\u2019s connected yet.",
+  "search.html": "One box, live results, across sources, element types, team members, and every page. There\u2019s nothing to find yet because there\u2019s nothing connected yet \u2014 that changes at the next step.",
+  "Sources/index.html": "This is the step. Click \u2018Connect your first source\u2019 below and watch it actually happen \u2014 a real wizard, then a real row that starts checking live. Everything from here on assumes you did.",
   "ingestion-ops.html": "The technical layer under Sources. This is literally what happens when a source connects \u2014 records get matched to a routing rule and handed to a real ingestion job. Platform Ops only.",
   "Monitoring/index.html": "Instead of re-checking everything on every scan, this is the logic deciding what's actually new since last time \u2014 the reason a rescan doesn't cost what a first scan does.",
   "delta-ops.html": "The technical layer under Changes \u2014 how \u2018what changed\u2019 actually gets computed (log-based CDC vs. timestamp polling), with a manual override per source if the default strategy is wrong. Platform Ops only.",
