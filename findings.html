@@ -11,6 +11,11 @@
     --ink:#092339; --ink-2:#64748B; --ink-3:#8A93A6;
     --high:#DC2626; --high-soft:#FBE7E7; --med:#D97706; --med-soft:#FDF1DF; --low:#2563EB; --low-soft:#E7EEFC;
     --ok:#1F9D55; --ok-soft:#E8F6EE;
+    --cat-pii:#7C3AED; --cat-pii-soft:#F3EEFD;
+    --cat-phi:#9F1239; --cat-phi-soft:#FCE7EF;
+    --cat-pi:#2563EB; --cat-pi-soft:#E7EEFC;
+    --cat-pfi:#DB2777; --cat-pfi-soft:#FCE7F0;
+    --cat-other:#0FA3A3; --cat-other-soft:#E3F6F6;
     --font: "Segoe UI", Inter, system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif;
   }
   *{box-sizing:border-box;} html,body{margin:0;padding:0;}
@@ -56,9 +61,17 @@
   .srcbanner .blinks{display:flex;gap:16px;}
   .srcbanner a{font-size:12.5px;font-weight:700;color:var(--sidebar-active);text-decoration:none;white-space:nowrap;}
   .srcbanner a:hover{text-decoration:underline;}
-  .filters{display:flex;gap:8px;margin-bottom:18px;}
+  .filters{display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap;}
+  .filters:last-of-type{margin-bottom:18px;}
+  .filtlabel{font-size:10.5px;font-weight:800;color:var(--ink-3);text-transform:uppercase;letter-spacing:.03em;margin-right:2px;}
   .fchip{font:inherit;font-size:12.5px;font-weight:700;padding:7px 14px;border-radius:20px;border:1px solid var(--card-border);background:#fff;color:var(--ink-2);cursor:pointer;}
   .fchip.on{background:var(--ink);color:#fff;border-color:var(--ink);}
+  .catpill{display:inline-block;font-size:10.5px;font-weight:800;padding:2px 8px;border-radius:20px;}
+  .catpill.pii{background:var(--cat-pii-soft);color:var(--cat-pii);}
+  .catpill.phi{background:var(--cat-phi-soft);color:var(--cat-phi);}
+  .catpill.pi{background:var(--cat-pi-soft);color:var(--cat-pi);}
+  .catpill.pfi{background:var(--cat-pfi-soft);color:var(--cat-pfi);}
+  .catpill.other{background:var(--cat-other-soft);color:var(--cat-other);}
 
   .twrap{border:1px solid #E7EAF2;border-radius:12px;overflow:hidden;}
   table{border-collapse:collapse;width:100%;font-size:13.5px;}
@@ -238,58 +251,74 @@
       </div>
 
       <div class="filters" id="filters">
+        <span class="filtlabel">Severity</span>
         <button class="fchip on" data-f="all">All</button>
         <button class="fchip" data-f="high">High</button>
         <button class="fchip" data-f="med">Medium</button>
         <button class="fchip" data-f="low">Low</button>
       </div>
+      <div class="filters" id="catFilters">
+        <span class="filtlabel">Category</span>
+        <button class="fchip on" data-cat="all">All</button>
+        <button class="fchip" data-cat="pii">PII</button>
+        <button class="fchip" data-cat="phi">PHI</button>
+        <button class="fchip" data-cat="pi">PI</button>
+        <button class="fchip" data-cat="pfi">PFI</button>
+        <button class="fchip" data-cat="other">Other</button>
+      </div>
 
       <div class="twrap">
         <table>
-          <thead><tr><th>Type</th><th>Found in</th><th>Sensitivity</th><th>Count</th><th>Status</th><th></th></tr></thead>
+          <thead><tr><th>Type</th><th>Category</th><th>Found in</th><th>Sensitivity</th><th>Count</th><th>Status</th><th></th></tr></thead>
           <tbody id="rows">
-            <tr data-sev="high" data-type="Government ID numbers" data-src="Sales database" data-count="2,389" data-sample="AB 12 34 56 C  ·  CD 98 76 54 E  ·  EF 45 21 09 G">
+            <tr data-sev="high" data-cat="pii" data-type="Government ID numbers" data-src="Sales database" data-count="2,389" data-sample="AB 12 34 56 C  ·  CD 98 76 54 E  ·  EF 45 21 09 G">
               <td class="type">Government ID numbers</td>
+              <td><span class="catpill pii">PII</span></td>
               <td>Sales database</td>
               <td><span class="sev high"><span class="dot"></span>High</span></td>
               <td class="num">2,389</td>
               <td><span class="rstat todo">Needs review</span></td>
               <td><button class="btn-sm" data-action="review">Review</button></td>
             </tr>
-            <tr data-sev="high" data-type="Credit card numbers" data-src="Billing database" data-count="1,420" data-sample="4•••• •••• •••• 1187  ·  5•••• •••• •••• 4402">
+            <tr data-sev="high" data-cat="pfi" data-type="Credit card numbers" data-src="Billing database" data-count="1,420" data-sample="4•••• •••• •••• 1187  ·  5•••• •••• •••• 4402">
               <td class="type">Credit card numbers</td>
+              <td><span class="catpill pfi">PFI</span></td>
               <td>Billing database</td>
               <td><span class="sev high"><span class="dot"></span>High</span></td>
               <td class="num">1,420</td>
               <td><span class="rstat done">Reviewed</span></td>
               <td><button class="btn-sm" data-action="view">View</button></td>
             </tr>
-            <tr data-sev="high" data-type="Health records" data-src="Clinical database" data-count="1,644" data-sample="Diagnosis code J45.909  ·  Rx: metformin 500mg">
+            <tr data-sev="high" data-cat="phi" data-type="Health records" data-src="Clinical database" data-count="1,644" data-sample="Diagnosis code J45.909  ·  Rx: metformin 500mg">
               <td class="type">Health records</td>
+              <td><span class="catpill phi">PHI</span></td>
               <td>Clinical database</td>
               <td><span class="sev high"><span class="dot"></span>High</span></td>
               <td class="num">1,644</td>
               <td><span class="rstat todo">Needs review</span></td>
               <td><button class="btn-sm" data-action="review">Review</button></td>
             </tr>
-            <tr data-sev="med" data-type="People's names" data-src="HR files (SharePoint)" data-count="2,401" data-sample="J. Alvarez  ·  M. Okafor  ·  S. Chen">
+            <tr data-sev="med" data-cat="pi" data-type="People's names" data-src="HR files (SharePoint)" data-count="2,401" data-sample="J. Alvarez  ·  M. Okafor  ·  S. Chen">
               <td class="type">People's names</td>
+              <td><span class="catpill pi">PI</span></td>
               <td>HR files (SharePoint)</td>
               <td><span class="sev med"><span class="dot"></span>Medium</span></td>
               <td class="num">2,401</td>
               <td><span class="rstat done">Reviewed</span></td>
               <td><button class="btn-sm" data-action="view">View</button></td>
             </tr>
-            <tr data-sev="med" data-type="Email addresses" data-src="Sales data (Salesforce)" data-count="1,380" data-sample="j.alvarez@company.com  ·  m.okafor@company.com">
+            <tr data-sev="med" data-cat="pi" data-type="Email addresses" data-src="Sales data (Salesforce)" data-count="1,380" data-sample="j.alvarez@company.com  ·  m.okafor@company.com">
               <td class="type">Email addresses</td>
+              <td><span class="catpill pi">PI</span></td>
               <td>Sales data (Salesforce)</td>
               <td><span class="sev med"><span class="dot"></span>Medium</span></td>
               <td class="num">1,380</td>
               <td><span class="rstat todo">Needs review</span></td>
               <td><button class="btn-sm" data-action="review">Review</button></td>
             </tr>
-            <tr data-sev="low" data-type="Phone numbers" data-src="Marketing files (S3)" data-count="1,102" data-sample="+1 (415) 555-01••  ·  +1 (628) 555-04••">
+            <tr data-sev="low" data-cat="pi" data-type="Phone numbers" data-src="Marketing files (S3)" data-count="1,102" data-sample="+1 (415) 555-01••  ·  +1 (628) 555-04••">
               <td class="type">Phone numbers</td>
+              <td><span class="catpill pi">PI</span></td>
               <td>Marketing files (S3)</td>
               <td><span class="sev low"><span class="dot"></span>Low</span></td>
               <td class="num">1,102</td>
@@ -298,7 +327,7 @@
             </tr>
           </tbody>
         </table>
-        <div class="empty" id="empty">No findings at this sensitivity level.</div>
+        <div class="empty" id="empty">No findings match these filters.</div>
       </div>
     </section>
   </main>
@@ -311,6 +340,7 @@
     <h3 id="dTitle">Finding</h3>
   </div>
   <div class="body">
+    <div class="row"><span class="k">Category</span><span class="v" id="dCat"></span></div>
     <div class="row"><span class="k">Found in</span><span class="v" id="dSrc"></span></div>
     <div class="row"><span class="k">How many</span><span class="v" id="dCount"></span></div>
     <div class="row"><span class="k">Status</span><span class="v" id="dStatus"></span></div>
@@ -377,10 +407,13 @@
     });
   })();
 
+  var activeCat = "all";
+
   function applyFilters() {
     var visible = 0;
     rows.forEach(function (r) {
       var show = (activeSev === "all" || r.getAttribute("data-sev") === activeSev) &&
+                 (activeCat === "all" || r.getAttribute("data-cat") === activeCat) &&
                  (!activeSrc || r.getAttribute("data-src") === activeSrc);
       r.classList.toggle("hide", !show);
       if (show) visible++;
@@ -403,13 +436,25 @@
     applyFilters();
   });
 
+  var catFilters = document.getElementById("catFilters");
+  catFilters.addEventListener("click", function (e) {
+    var btn = e.target.closest(".fchip");
+    if (!btn) return;
+    catFilters.querySelectorAll(".fchip").forEach(function (b) { b.classList.remove("on"); });
+    btn.classList.add("on");
+    activeCat = btn.getAttribute("data-cat");
+    applyFilters();
+  });
+
   // ---- review dialog ----
   var dlg = document.getElementById("revDialog");
   var dSev = document.getElementById("dSev"), dTitle = document.getElementById("dTitle"),
+      dCat = document.getElementById("dCat"),
       dSrc = document.getElementById("dSrc"), dCount = document.getElementById("dCount"),
       dStatus = document.getElementById("dStatus"), dSample = document.getElementById("dSample"),
       dMark = document.getElementById("dMark");
   var sevLabel = { high: "High", med: "Medium", low: "Low" };
+  var catLabel = { pii: "PII", phi: "PHI", pi: "PI", pfi: "PFI", other: "Other" };
   var activeRow = null;
 
   document.getElementById("rows").addEventListener("click", function (e) {
@@ -421,6 +466,8 @@
     dSev.className = "sev " + sev;
     dSev.innerHTML = '<span class="dot"></span>' + sevLabel[sev];
     dTitle.textContent = row.getAttribute("data-type");
+    var cat = row.getAttribute("data-cat");
+    dCat.innerHTML = '<span class="catpill ' + cat + '">' + catLabel[cat] + '</span>';
     dSrc.textContent = row.getAttribute("data-src");
     dCount.textContent = row.getAttribute("data-count") + " items";
     var isReviewed = row.querySelector(".rstat").classList.contains("done");
@@ -475,8 +522,8 @@ var STEP_NOTES = {
   "Monitoring/index.html": "Instead of re-checking everything on every scan, this is the logic deciding what's actually new since last time \u2014 the reason a rescan doesn't cost what a first scan does.",
   "delta-ops.html": "The technical layer under Changes \u2014 how \u2018what changed\u2019 actually gets computed (log-based CDC vs. timestamp polling), with a manual override per source if the default strategy is wrong. Platform Ops only.",
   "Detect/index.html": "The detection engine's home page \u2014 how much of the estate has actually been scanned, and how confident the model is in what it found.",
-  "findings.html": "Every sensitive item found, ranked by urgency, with a real review workflow \u2014 mark something reviewed, filter by type, or drill into just one source.",
-  "elements.html": "The same findings, sliced a different way \u2014 by the actual category of data (PII, PI, PFI, or Other) instead of by which source it came from.",
+  "findings.html": "Every sensitive item found, ranked by urgency, with a real review workflow \u2014 filter by category (PII, PHI, PI, PFI, Other) or severity, mark something reviewed, or drill into just one source.",
+  "elements.html": "The same findings, sliced a different way \u2014 by the actual category of data (PII, PHI, PI, PFI, or Other) instead of by which source it came from.",
   "detection-infra.html": "The technical layer under Detection \u2014 what it costs to run in GPU-hours and dollars, and where the same sensitive item turns up more than once across the estate. Platform Ops only.",
   "Trust/index.html": "The \u2018can I actually trust this number\u2019 page \u2014 the model's tested accuracy, what it was tested against, and the evidence behind every release.",
   "model-ops.html": "The technical layer under Trust \u2014 how that accuracy figure gets produced: experiment tracking, synthetic test data, a human review queue, and drift monitoring over time. Platform Ops only.",
