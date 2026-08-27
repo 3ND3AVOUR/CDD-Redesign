@@ -73,6 +73,14 @@
   .flowbar a.fbtn:hover{background:#7C3AED;color:#fff;}
   .flowbar .fbar{height:4px;border-radius:2px;background:#E4D9FA;margin:9px 0 8px;overflow:hidden;}
   .flowbar .fbar > span{display:block;height:100%;background:#7C3AED;border-radius:2px;}
+  .flowbar .fnote{margin-top:9px;padding-top:9px;border-top:1px solid #E4D9FA;font-size:12.5px;color:#4C3A7A;line-height:1.6;}
+  .flowbar .fnote b{color:#3A2A63;}
+  .flowbar a.fbtn-primary{background:#7C3AED;border-color:#7C3AED;color:#fff;}
+  .flowbar a.fbtn-primary:hover{background:#651FBF;}
+  .flowbar button.fbtn-end{font:inherit;font-size:12px;font-weight:700;padding:6px 10px;border-radius:7px;border:1px solid #D9C9F5;background:#fff;color:#8A7AA8;cursor:pointer;white-space:nowrap;}
+  .flowbar button.fbtn-end:hover{background:#FEF0EE;border-color:#F3B7AE;color:#B42318;}
+  .flowbar.walkmode{border-color:#C9B3F5;box-shadow:0 0 0 3px rgba(124,58,237,.08);}
+  .walk-trigger{background:none;border:none;width:100%;text-align:left;cursor:pointer;font:inherit;}
 
   /* KPIs */
   .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px;}
@@ -150,6 +158,7 @@
       </div>
       <a class="proj-sum" href="walkthrough.html" style="--acc:#64748B"><svg class="pico" viewBox="0 0 24 24" fill="none"><path d="M12 21s7-7.5 7-12a7 7 0 10-14 0c0 4.5 7 12 7 12z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="12" cy="9" r="2.3" stroke="currentColor" stroke-width="1.6"/></svg><span class="proj-name">Walkthrough</span></a>
       <a class="proj-sum" href="journeys.html" style="--acc:#DB2777"><svg class="pico" viewBox="0 0 24 24" fill="none"><path d="M4 20V4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M4 6h8l-2 3 2 3H4" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg><span class="proj-name">Journey</span></a>
+      <button type="button" class="proj-sum walk-trigger" id="walkTriggerBtn" style="--acc:#16A34A;" onclick="try{localStorage.setItem('cdd_walkthrough_active','1');}catch(e){}location.href='index.html';"><svg class="pico" viewBox="0 0 24 24" fill="none"><path d="M8 5v14l11-7L8 5z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg><span class="proj-name">Start walkthrough</span></button>
       <div class="proj active">
         <div class="proj-sum" style="--acc:#16274F"><svg class="pico" viewBox="0 0 24 24" fill="none"><path d="M12 3l8 3.2v5.4c0 5-3.4 8.9-8 10.4-4.6-1.5-8-5.4-8-10.4V6.2L12 3z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="12" cy="11" r="2.6" stroke="currentColor" stroke-width="1.6"/></svg><span class="proj-name">CDD</span></div>
         <div class="proj-links">
@@ -425,6 +434,27 @@
 </script>
 <script>
 var CDD_STAGES = [{n:"Overview",p:["index.html","ecosystem.html","search.html"]},{n:"Connect",p:["Sources/index.html","ingestion-ops.html"]},{n:"Watch",p:["Monitoring/index.html","delta-ops.html"]},{n:"Detect",p:["Detect/index.html","findings.html","elements.html","detection-infra.html"]},{n:"Trust",p:["Trust/index.html","model-ops.html"]},{n:"Comply",p:["compliance.html","reports.html"]},{n:"Manage",p:["system-health.html","pipeline.html","platform-admin.html","admin.html"]}];
+var STEP_NOTES = {
+  "index.html": "Home base. Every tile is a live KPI pulled from the real page it links to \u2014 add, remove, or reorder them, and the layout is remembered per browser.",
+  "ecosystem.html": "Every connected source in one place, grouped by type \u2014 the exact same counts Sources and Findings report, just organized by database vs. files vs. business app instead of by connection.",
+  "search.html": "One box, live results, across sources, element types, team members, and every page \u2014 there's no separate results screen to wait on.",
+  "Sources/index.html": "Where a connection actually lives. Health, Scans, Failed items, and History are tabs on this one page, not separate screens \u2014 and \u2018Connect a source\u2019 opens the same wizard as a modal, right here.",
+  "ingestion-ops.html": "The technical layer under Sources. This is literally what happens when a source connects \u2014 records get matched to a routing rule and handed to a real ingestion job. Platform Ops only.",
+  "Monitoring/index.html": "Instead of re-checking everything on every scan, this is the logic deciding what's actually new since last time \u2014 the reason a rescan doesn't cost what a first scan does.",
+  "delta-ops.html": "The technical layer under Changes \u2014 how \u2018what changed\u2019 actually gets computed (log-based CDC vs. timestamp polling), with a manual override per source if the default strategy is wrong. Platform Ops only.",
+  "Detect/index.html": "The detection engine's home page \u2014 how much of the estate has actually been scanned, and how confident the model is in what it found.",
+  "findings.html": "Every sensitive item found, ranked by urgency, with a real review workflow \u2014 mark something reviewed, filter by type, or drill into just one source.",
+  "elements.html": "The same findings, sliced a different way \u2014 by the actual category of data (PII, PI, PFI, or Other) instead of by which source it came from.",
+  "detection-infra.html": "The technical layer under Detection \u2014 what it costs to run in GPU-hours and dollars, and where the same sensitive item turns up more than once across the estate. Platform Ops only.",
+  "Trust/index.html": "The \u2018can I actually trust this number\u2019 page \u2014 the model's tested accuracy, what it was tested against, and the evidence behind every release.",
+  "model-ops.html": "The technical layer under Trust \u2014 how that accuracy figure gets produced: experiment tracking, synthetic test data, a human review queue, and drift monitoring over time. Platform Ops only.",
+  "compliance.html": "Turns \u2018we checked your data\u2019 into a plain-language guarantee, then maps that guarantee onto the specific regulations you're actually covered under.",
+  "reports.html": "Where a finished check becomes something you can hand someone \u2014 a one-page summary report, or a full evidence package built for an auditor.",
+  "system-health.html": "Everything across the whole platform that needs attention, in one feed \u2014 plus whether there's enough processing capacity for what's coming in next.",
+  "pipeline.html": "The technical layer under System health \u2014 per-stage pipeline health, service topology, queue depth, and the lifecycle of every ingestion job. Platform Ops only.",
+  "platform-admin.html": "The technical layer under Admin \u2014 encryption key rotation, notification routing, deployment posture, and what each source actually costs to keep checking. Platform Ops only.",
+  "admin.html": "Where the three roles you've been switching between actually come from, plus how long each type of data is kept. The last stop \u2014 everything before this was what the product does; this is who's allowed to see it."
+};
 (function () {
   var MY_PATH = "elements.html";
   var DEPTH = "";
@@ -445,22 +475,49 @@ var CDD_STAGES = [{n:"Overview",p:["index.html","ecosystem.html","search.html"]}
   var useList = vidx !== -1 ? visFlat : flat;
   var useIdx = vidx !== -1 ? vidx : idx;
   var stage = CDD_STAGES[useList[useIdx].stageIdx];
-  var prevHtml = useIdx > 0 ? '<a class="fbtn" href="' + DEPTH + useList[useIdx - 1].path + '">&larr; Back</a>' : "";
-  var nextHtml = useIdx < useList.length - 1
-    ? '<a class="fbtn" href="' + DEPTH + useList[useIdx + 1].path + '">Next &rarr;</a>'
-    : '<a class="fbtn" href="' + DEPTH + 'journeys.html">Flow complete ✓</a>';
+  var isWalk = false;
+  try { isWalk = localStorage.getItem("cdd_walkthrough_active") === "1"; } catch (e) {}
+  var isLast = useIdx === useList.length - 1;
+  var prevHtml = useIdx > 0 ? '<a class="fbtn" href="' + DEPTH + useList[useIdx - 1].path + '">&larr; Previous</a>' : "";
+  var nextHtml;
+  if (isWalk && isLast) {
+    nextHtml = '<a class="fbtn fbtn-primary" href="#" id="fFinish">Finish tour &#10003;</a>';
+  } else if (isWalk) {
+    nextHtml = '<a class="fbtn fbtn-primary" href="' + DEPTH + useList[useIdx + 1].path + '">Next &rarr;</a>';
+  } else if (!isLast) {
+    nextHtml = '<a class="fbtn" href="' + DEPTH + useList[useIdx + 1].path + '">Next &rarr;</a>';
+  } else {
+    nextHtml = '<a class="fbtn" href="' + DEPTH + 'journeys.html">Flow complete \u2713</a>';
+  }
+  var endHtml = isWalk ? '<button type="button" class="fbtn fbtn-end" id="fEnd" title="Exit the guided tour">&times; End tour</button>' : "";
   var pct = Math.round(((useIdx + 1) / useList.length) * 100);
+  var note = STEP_NOTES[MY_PATH] || "";
+  var noteHtml = isWalk && note ? '<div class="fnote"><b>How it works:</b> ' + note + '</div>' : "";
   var el = document.createElement("div");
-  el.className = "flowbar";
+  el.className = "flowbar" + (isWalk ? " walkmode" : "");
   el.innerHTML =
     '<div class="ftop">' +
-      '<span class="fic">🧭</span>' +
-      '<span class="fstage">' + stage.n + '</span>' +
+      '<span class="fic">' + (isWalk ? "\uD83C\uDFAC" : "\uD83E\uDDED") + '</span>' +
+      '<span class="fstage">' + (isWalk ? "Guided tour &middot; " : "") + stage.n + '</span>' +
       '<span class="fstep">&middot; step ' + (useIdx + 1) + ' of ' + useList.length + '</span>' +
-      '<span class="fnav">' + prevHtml + nextHtml + '</span>' +
+      '<span class="fnav">' + endHtml + prevHtml + nextHtml + '</span>' +
     '</div>' +
-    '<div class="fbar"><span style="width:' + pct + '%"></span></div>';
+    '<div class="fbar"><span style="width:' + pct + '%"></span></div>' +
+    noteHtml;
   content.insertBefore(el, content.firstChild);
+  if (isWalk) {
+    var endBtn = document.getElementById("fEnd");
+    if (endBtn) endBtn.addEventListener("click", function () {
+      try { localStorage.removeItem("cdd_walkthrough_active"); } catch (e) {}
+      location.reload();
+    });
+    var finishBtn = document.getElementById("fFinish");
+    if (finishBtn) finishBtn.addEventListener("click", function (e) {
+      e.preventDefault();
+      try { localStorage.removeItem("cdd_walkthrough_active"); } catch (e) {}
+      location.href = DEPTH + "journeys.html";
+    });
+  }
 })();
 </script>
 </body>
