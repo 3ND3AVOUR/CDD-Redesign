@@ -272,6 +272,8 @@
           <a class="btn btn-primary js-connect-open role-gate" data-role="dpo admin" href="connect-source.html">+ Connect a source</a>
           <a class="btn role-gate" data-role="dpo compliance" href="findings.html">View findings</a>
           <a class="btn role-gate" data-role="dpo compliance" href="reports.html">Download a report</a>
+          <a class="btn role-gate" data-role="admin" href="pipeline.html">View pipeline health</a>
+          <a class="btn role-gate" data-role="admin" href="ingestion-ops.html">Ingestion ops</a>
         </div>
         <button class="btn btn-customize" id="customizeBtn">✎ Customize tiles</button>
       </div>
@@ -396,9 +398,13 @@ var TILES = {
   failed:    { label:"Failed items today", val:"4", trend:"down", trendv:"−1 vs yesterday", tint:"#FEF0EE", tintc:"#B42318", spark:[6,5,7,5,6,5,4], href:"Sources/index.html", ic:"fail", roles:["dpo","admin"] },
   changes:   { label:"Changes this week", val:"1,842", trend:"up", trendv:"across 6 sources", tint:"#EEF3FC", tintc:"#2563EB", spark:[1200,1400,1500,1650,1700,1800,1842], href:"Monitoring/index.html", ic:"chg", roles:["dpo","admin"] },
   savings:   { label:"Checking time saved", val:"71%", trend:"flat", trendv:"vs a full rescan", tint:"#E8F6EE", tintc:"#1F9D55", spark:[68,69,70,70,71,71,71], href:"Monitoring/index.html", ic:"sav", roles:["dpo","admin"] },
-  retention: { label:"Retention policies set", val:"4", trend:"flat", trendv:"of 4 data types", tint:"#F3EEFD", tintc:"#7C3AED", spark:[4,4,4,4,4,4,4], href:"admin.html", ic:"ret", roles:["admin"] }
+  retention: { label:"Retention policies set", val:"4", trend:"flat", trendv:"of 4 data types", tint:"#F3EEFD", tintc:"#7C3AED", spark:[4,4,4,4,4,4,4], href:"admin.html", ic:"ret", roles:["admin"] },
+  pipeuptime:{ label:"Pipeline uptime", val:"99.94%", trend:"flat", trendv:"trailing 30 days", tint:"#E8F6EE", tintc:"#1F9D55", spark:[99.90,99.91,99.92,99.93,99.94,99.94,99.94], href:"pipeline.html", ic:"pulse", roles:["admin"] },
+  queuedepth:{ label:"Total queue depth", val:"48,203", trend:"up", trendv:"1 queue over threshold", tint:"#FEF3E2", tintc:"#B45309", spark:[38000,40500,42000,44200,45800,47000,48203], href:"pipeline.html", ic:"queue", roles:["admin"] },
+  gpucost:   { label:"GPU cost (month)", val:"$4,920", trend:"up", trendv:"on track for budget", tint:"#F3EEFD", tintc:"#7C3AED", spark:[4200,4400,4550,4700,4800,4880,4920], href:"detection-infra.html", ic:"gpu", roles:["admin"] },
+  routing:   { label:"Records routed / hr", val:"1.2M", trend:"flat", trendv:"across 7 sources", tint:"#EEF3FC", tintc:"#2563EB", spark:[1.0,1.05,1.1,1.15,1.18,1.19,1.2], href:"ingestion-ops.html", ic:"route", roles:["admin"] }
 };
-var DEFAULT_LAYOUT = ["sources","coverage","findings","attention","accuracy","compliance","alerts","capacity"];
+var DEFAULT_LAYOUT = ["sources","coverage","findings","attention","accuracy","compliance","alerts","capacity","pipeuptime","queuedepth","gpucost","routing"];
 function currentRole() { return document.body.getAttribute("data-role") || "dpo"; }
 var ICONS = {
   src:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M4 6c0-1.1 3.6-2 8-2s8 .9 8 2-3.6 2-8 2-8-.9-8-2z" stroke="currentColor" stroke-width="1.7"/><path d="M4 6v12c0 1.1 3.6 2 8 2s8-.9 8-2V6" stroke="currentColor" stroke-width="1.7"/><path d="M4 12c0 1.1 3.6 2 8 2s8-.9 8-2" stroke="currentColor" stroke-width="1.7"/></svg>',
@@ -414,7 +420,11 @@ var ICONS = {
   fail:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.7"/><path d="M9 9l6 6M15 9l-6 6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>',
   chg:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M4 12a8 8 0 0113.7-5.7L20 8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M20 4v4h-4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 12a8 8 0 01-13.7 5.7L4 16" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M4 20v-4h4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   sav:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 3v18M5 8l7-5 7 5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>',
-  ret:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.7"/><path d="M12 7v5l3.5 2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+  ret:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.7"/><path d="M12 7v5l3.5 2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  pulse:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M3 12h4l2-7 4 14 2-7h6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  queue:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 3l9 5-9 5-9-5 9-5z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M3 12l9 5 9-5" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M3 17l9 5 9-5" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>',
+  gpu:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="7" y="7" width="10" height="10" rx="1.5" stroke="currentColor" stroke-width="1.7"/><path d="M9 3v4M15 3v4M9 17v4M15 17v4M3 9h4M3 15h4M17 9h4M17 15h4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>',
+  route:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M4 6h6l4 12h6M4 18h6l4-12h6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>'
 };
 
 function sparkSVG(data, color) {
