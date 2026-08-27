@@ -201,41 +201,107 @@
     <section class="content">
 <div class="tabbar">
         <button class="tabbtn active" data-tab="routing">Routing</button>
-        <button class="tabbtn" data-tab="jobdetail">Job detail</button>
+        <button class="tabbtn" data-tab="jobdetail">Jobs <span class="tbadge">2</span></button>
         <button class="tabbtn" data-tab="partitions">Partitions</button>
         <button class="tabbtn" data-tab="dlq">DLQ & replay <span class="tbadge">2</span></button>
       </div>
       <div class="tabpanel active" id="panel-routing">
         <h3 class="tabh">Routing &amp; throughput</h3>
-        <p class="tabd">How ingested records are routed to the right lane, and how fast.</p>
+        <p class="tabd">Every record a source hands over gets read once, matched against a rule, and sent down one of three lanes for processing. This is that decision, made live, source by source.</p>
+        <div class="note">
+          <b>How routing works, in order:</b> (1) a source delivers a batch of records &rarr; (2) the router inspects the format of each record &rarr; (3) it's matched against the rules below, top to bottom, first match wins &rarr; (4) the record is handed to that lane's queue for the detection engine to pick up. A record only sits in the router itself for milliseconds &mdash; the latency KPI below is that hop, not the full ingestion time.
+        </div>
         <div class="kpis">
           <div class="kpi"><div class="l">Messages routed / hr</div><div class="v">1.2M</div><div class="d">across 7 sources</div></div>
-          <div class="kpi"><div class="l">Avg routing latency</div><div class="v">340 ms</div><div class="d">p50</div></div>
-          <div class="kpi"><div class="l">Error rate</div><div class="v ok">0.02%</div><div class="d">last hour</div></div>
+          <div class="kpi"><div class="l">Avg routing latency</div><div class="v">340 ms</div><div class="d">p50, source &rarr; lane</div></div>
+          <div class="kpi"><div class="l">Error rate</div><div class="v ok">0.02%</div><div class="d">malformed records, last hour</div></div>
+          <div class="kpi"><div class="l">Sources routing now</div><div class="v warn">6<span style="font-size:14px;color:var(--ink-3);"> / 7</span></div><div class="d">1 blocked, see below</div></div>
         </div>
+        <h3 class="tabh" style="font-size:13.5px;margin-top:6px;">Routing rules &mdash; evaluated top to bottom</h3>
+        <p class="tabd" style="margin-bottom:10px;">What decides which lane a record lands in.</p>
         <div class="twrap"><table>
-          <thead><tr><th>Source</th><th>Lane</th><th>Rate</th><th>Status</th></tr></thead>
+          <thead><tr><th>#</th><th>If a record looks like&hellip;</th><th>It goes to&hellip;</th><th>Because</th></tr></thead>
           <tbody>
-            <tr><td>Sales database</td><td>Type-1 (structured)</td><td class="num">240K/hr</td><td><span class="status ok"><span class="dot"></span>OK</span></td></tr>
-            <tr><td>HR files (SharePoint)</td><td>Type-2 (unstructured)</td><td class="num">180K/hr</td><td><span class="status ok"><span class="dot"></span>OK</span></td></tr>
-            <tr><td>Sales data (Salesforce)</td><td>Type-1 (structured)</td><td class="num">96K/hr</td><td><span class="status ok"><span class="dot"></span>OK</span></td></tr>
-            <tr><td>Legacy CRM</td><td>Type-1 (structured)</td><td class="num">&mdash;</td><td><span class="status bad"><span class="dot"></span>Blocked &mdash; source disconnected</span></td></tr>
+            <tr><td class="num">1</td><td>A structured row &mdash; database record or API/JSON payload</td><td><b>Type-1</b></td><td>Already field-delimited, no pre-processing needed &mdash; fastest lane</td></tr>
+            <tr><td class="num">2</td><td>An unstructured file &mdash; PDF, DOCX, scanned image</td><td><b>Type-2</b></td><td>Needs an OCR / text-extraction pre-pass before detection can read it</td></tr>
+            <tr><td class="num">3</td><td>A bulk export &mdash; over 50MB or 100K+ rows in one delivery</td><td><b>Type-3 (batch)</b></td><td>Chunked into smaller pieces so one big drop can't starve everything else</td></tr>
+            <tr><td class="num">&mdash;</td><td>Anything from a source that's currently disconnected</td><td><span class="status bad"><span class="dot"></span>Held, not routed</span></td><td>Queued at the source; nothing to route until it reconnects</td></tr>
+          </tbody>
+        </table></div>
+        <h3 class="tabh" style="font-size:13.5px;">Per-source routing, live</h3>
+        <p class="tabd" style="margin-bottom:10px;">Which rule each connected source actually matched, and how it's running right now.</p>
+        <div class="twrap"><table>
+          <thead><tr><th>Source</th><th>Record format</th><th>Lane</th><th>Rule matched</th><th>Rate</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td>Sales database</td><td>DB rows</td><td>Type-1</td><td class="num">Rule 1</td><td class="num">240K/hr</td><td><span class="status ok"><span class="dot"></span>OK</span></td></tr>
+            <tr><td>Billing database</td><td>DB rows</td><td>Type-1</td><td class="num">Rule 1</td><td class="num">142K/hr</td><td><span class="status ok"><span class="dot"></span>OK</span></td></tr>
+            <tr><td>Clinical database</td><td>DB rows</td><td>Type-1</td><td class="num">Rule 1</td><td class="num">88K/hr</td><td><span class="status ok"><span class="dot"></span>OK</span></td></tr>
+            <tr><td>HR files (SharePoint)</td><td>Docs &amp; scans</td><td>Type-2</td><td class="num">Rule 2</td><td class="num">180K/hr</td><td><span class="status ok"><span class="dot"></span>OK</span></td></tr>
+            <tr><td>Marketing files (S3)</td><td>Docs &amp; images</td><td>Type-2</td><td class="num">Rule 2</td><td class="num">54K/hr</td><td><span class="status warn"><span class="dot"></span>OCR queue backing up</span></td></tr>
+            <tr><td>Sales data (Salesforce)</td><td>API/JSON</td><td>Type-1</td><td class="num">Rule 1</td><td class="num">96K/hr</td><td><span class="status ok"><span class="dot"></span>OK</span></td></tr>
+            <tr><td>Legacy CRM</td><td>DB rows</td><td>Type-1</td><td class="num">&mdash;</td><td class="num">&mdash;</td><td><span class="status bad"><span class="dot"></span>Blocked &mdash; source disconnected</span></td></tr>
           </tbody>
         </table></div>
       </div>
       <div class="tabpanel" id="panel-jobdetail">
-        <h3 class="tabh">Ingestion job &mdash; ops view</h3>
-        <p class="tabd">Engine overrides and lane hints for the currently running ingestion job.</p>
+        <h3 class="tabh">Ingestion jobs</h3>
+        <p class="tabd">Every ingestion job from the last 24 hours &mdash; running, queued, finished, or failed. Click a job to see its full ops detail below.</p>
+        <div class="kpis">
+          <div class="kpi"><div class="l">Running now</div><div class="v ok">2</div><div class="d">actively pulling records</div></div>
+          <div class="kpi"><div class="l">Queued</div><div class="v">1</div><div class="d">waiting for a lane slot</div></div>
+          <div class="kpi"><div class="l">Completed, last 24h</div><div class="v">3</div><div class="d">no issues</div></div>
+          <div class="kpi"><div class="l">Failed, last 24h</div><div class="v bad">1</div><div class="d">see DLQ &amp; replay tab</div></div>
+        </div>
         <div class="twrap"><table>
+          <thead><tr><th>Job</th><th>Source</th><th>Lane</th><th>Status</th><th>Started</th><th></th></tr></thead>
+          <tbody id="jobRows">
+            <tr data-job="ing-job-20260824-0300"><td class="num">ing-job-20260824-0300</td><td>HR files (SharePoint)</td><td>Type-2</td><td><span class="status ok"><span class="dot"></span>Running &mdash; 61%</span></td><td>3 hours ago</td><td><button class="btn-sm" data-action="view-job">View</button></td></tr>
+            <tr data-job="ing-job-20260824-0245"><td class="num">ing-job-20260824-0245</td><td>Sales database</td><td>Type-1</td><td><span class="status ok"><span class="dot"></span>Running &mdash; 88%</span></td><td>15 min ago</td><td><button class="btn-sm" data-action="view-job">View</button></td></tr>
+            <tr data-job="ing-job-20260824-0230"><td class="num">ing-job-20260824-0230</td><td>Marketing files (S3)</td><td>Type-2</td><td><span class="status warn"><span class="dot"></span>Queued</span></td><td>2 min ago</td><td><button class="btn-sm" data-action="view-job">View</button></td></tr>
+            <tr data-job="ing-job-20260823-2200"><td class="num">ing-job-20260823-2200</td><td>Billing database</td><td>Type-1</td><td><span class="status ok"><span class="dot"></span>Completed</span></td><td>8 hours ago</td><td><button class="btn-sm" data-action="view-job">View</button></td></tr>
+            <tr data-job="ing-job-20260823-2100"><td class="num">ing-job-20260823-2100</td><td>Sales data (Salesforce)</td><td>Type-1</td><td><span class="status ok"><span class="dot"></span>Completed</span></td><td>9 hours ago</td><td><button class="btn-sm" data-action="view-job">View</button></td></tr>
+            <tr data-job="ing-job-20260823-1830"><td class="num">ing-job-20260823-1830</td><td>Legacy CRM</td><td>Type-1</td><td><span class="status bad"><span class="dot"></span>Failed</span></td><td>14 hours ago</td><td><button class="btn-sm" data-action="view-job">View</button></td></tr>
+            <tr data-job="ing-job-20260823-1500"><td class="num">ing-job-20260823-1500</td><td>Clinical database</td><td>Type-3 (batch)</td><td><span class="status ok"><span class="dot"></span>Completed</span></td><td>18 hours ago</td><td><button class="btn-sm" data-action="view-job">View</button></td></tr>
+          </tbody>
+        </table></div>
+        <h3 class="tabh" style="font-size:13.5px;">Job detail &mdash; <span id="jobDetailTitle">ing-job-20260824-0300</span></h3>
+        <div class="twrap" id="jobDetailPanel"><table>
           <tbody>
-            <tr><td>Job</td><td class="num">ing-job-20260824-0300</td></tr>
-            <tr><td>Source</td><td>HR files (SharePoint)</td></tr>
+            <tr><td style="width:180px;">Source</td><td>HR files (SharePoint)</td></tr>
             <tr><td>Engine override</td><td>Type-2 lane, batch size 500</td></tr>
             <tr><td>Lane hint</td><td>Unstructured &mdash; OCR pre-pass enabled</td></tr>
             <tr><td>Retry policy</td><td>3 attempts, exponential backoff</td></tr>
             <tr><td>Status</td><td><span class="status ok"><span class="dot"></span>Running &mdash; 61% complete</span></td></tr>
           </tbody>
         </table></div>
+        <script>
+        var JOB_DETAILS = {
+          "ing-job-20260824-0300": { source: "HR files (SharePoint)", override: "Type-2 lane, batch size 500", hint: "Unstructured &mdash; OCR pre-pass enabled", retry: "3 attempts, exponential backoff", status: '<span class="status ok"><span class="dot"></span>Running &mdash; 61% complete</span>' },
+          "ing-job-20260824-0245": { source: "Sales database", override: "Type-1 lane, batch size 1000", hint: "Structured &mdash; no pre-pass needed", retry: "3 attempts, exponential backoff", status: '<span class="status ok"><span class="dot"></span>Running &mdash; 88% complete</span>' },
+          "ing-job-20260824-0230": { source: "Marketing files (S3)", override: "Type-2 lane, batch size 250", hint: "Unstructured &mdash; OCR queue currently backed up", retry: "3 attempts, exponential backoff", status: '<span class="status warn"><span class="dot"></span>Queued &mdash; waiting for a Type-2 slot</span>' },
+          "ing-job-20260823-2200": { source: "Billing database", override: "Type-1 lane, batch size 1000", hint: "Structured &mdash; no pre-pass needed", retry: "3 attempts, exponential backoff", status: '<span class="status ok"><span class="dot"></span>Completed &mdash; 142,880 records</span>' },
+          "ing-job-20260823-2100": { source: "Sales data (Salesforce)", override: "Type-1 lane, batch size 500", hint: "API/JSON &mdash; no pre-pass needed", retry: "3 attempts, exponential backoff", status: '<span class="status ok"><span class="dot"></span>Completed &mdash; 96,004 records</span>' },
+          "ing-job-20260823-1830": { source: "Legacy CRM", override: "Type-1 lane, batch size 1000", hint: "Structured &mdash; no pre-pass needed", retry: "3 of 3 attempts used", status: '<span class="status bad"><span class="dot"></span>Failed &mdash; connection refused, see DLQ</span>' },
+          "ing-job-20260823-1500": { source: "Clinical database", override: "Type-3 (batch) lane, chunk size 20K rows", hint: "Bulk export &mdash; 118K rows, chunked into 6 pieces", retry: "3 attempts, exponential backoff", status: '<span class="status ok"><span class="dot"></span>Completed &mdash; 118,340 records</span>' }
+        };
+        document.getElementById("jobRows").addEventListener("click", function (e) {
+          var btn = e.target.closest('button[data-action="view-job"]');
+          if (!btn) return;
+          var jobId = btn.closest("tr").getAttribute("data-job");
+          var d = JOB_DETAILS[jobId];
+          if (!d) return;
+          document.getElementById("jobDetailTitle").textContent = jobId;
+          document.getElementById("jobDetailPanel").innerHTML =
+            '<table><tbody>' +
+            '<tr><td style="width:180px;">Source</td><td>' + d.source + '</td></tr>' +
+            '<tr><td>Engine override</td><td>' + d.override + '</td></tr>' +
+            '<tr><td>Lane hint</td><td>' + d.hint + '</td></tr>' +
+            '<tr><td>Retry policy</td><td>' + d.retry + '</td></tr>' +
+            '<tr><td>Status</td><td>' + d.status + '</td></tr>' +
+            '</tbody></table>';
+          document.querySelectorAll("#jobRows tr").forEach(function (r) { r.style.background = r.getAttribute("data-job") === jobId ? "#F5F9FF" : ""; });
+        });
+        </script>
       </div>
       <div class="tabpanel" id="panel-partitions">
         <h3 class="tabh">Partitions &amp; back-pressure</h3>
