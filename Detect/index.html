@@ -87,6 +87,17 @@
   .walk-empty .we-ico{font-size:34px;margin-bottom:10px;}
   .walk-empty h3{margin:0 0 8px;font-size:17px;font-weight:700;color:var(--ink);}
   .walk-empty p{margin:0 auto 18px;font-size:13.5px;color:var(--ink-2);max-width:52ch;line-height:1.6;}
+  .asslist{display:flex;flex-direction:column;gap:10px;}
+  .assitem{display:flex;gap:12px;align-items:flex-start;border:1px solid #E7EAF2;border-radius:12px;padding:14px 16px;background:#FCFDFF;}
+  .assitem .t{font-size:13.5px;color:var(--ink);font-weight:600;}
+  .assitem .d{font-size:12.5px;color:var(--ink-2);margin-top:3px;line-height:1.5;}
+  .status{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;}
+  .status .dot{width:7px;height:7px;border-radius:50%;}
+  .status.ok{color:var(--ok,#1F9D55);} .status.ok .dot{background:var(--ok,#1F9D55);}
+  .status.warn{color:var(--warn,#B45309);} .status.warn .dot{background:var(--warn,#B45309);}
+  .tabbtn .tbadge{font-size:10.5px;font-weight:800;background:#F0F1F6;color:var(--ink-3);border-radius:20px;padding:1px 7px;}
+  .tabbtn.active .tbadge{background:#E7EEFC;color:var(--sidebar-active);}
+  .tabbtn .tbadge.warn{background:var(--warn-soft);color:var(--warn);}
   .flowbar .fdo{font-size:12.5px;color:#4C3A7A;line-height:1.5;}
   .flowbar .fdo b{color:#3A2A63;}
 
@@ -236,6 +247,7 @@
         <button class="tabbtn active" data-tab="overview">Overview</button>
         <button class="tabbtn" data-tab="coverage">Coverage</button>
         <button class="tabbtn" data-tab="bysource">By source</button>
+        <button class="tabbtn" data-tab="assurance">Assurance <span class="tbadge">New</span></button>
       </div>
 
       <div class="tabpanel active" id="panel-overview">
@@ -248,6 +260,7 @@
         <div class="actions">
           <a class="btn btn-primary" href="../findings.html">Review findings</a>
           <button class="btn" data-goto="coverage">See coverage by source</button>
+          <a class="btn" href="../Sources/index.html#scans">See live scan status &rarr;</a>
           <button class="btn" data-goto="bysource">Drill into a source</button>
         </div>
         <h3 class="section-h">Recent activity</h3>
@@ -323,6 +336,19 @@
               </tr>
             </tbody>
           </table>
+        </div>
+      </div>
+      <div class="tabpanel" id="panel-assurance">
+        <p class="sub">Detection assurance, in plain language &mdash; and the guarantee behind the number everyone quotes: 1.28M findings is a real, deduplicated total, not an inflated one.</p>
+        <div class="asslist">
+          <div class="assitem"><span class="status ok"><span class="dot"></span>Met</span>
+            <div style="margin-left:4px;"><div class="t">Every finding is reviewed or auto-classified with high confidence</div><div class="d">97.2% detection accuracy, tested against 2,320 verified examples &mdash; see Test results under Trust.</div></div></div>
+          <div class="assitem"><span class="status ok"><span class="dot"></span>Met</span>
+            <div style="margin-left:4px;"><div class="t">The same item is never counted twice</div><div class="d">Re-checking a source mostly re-finds the same sensitive items, not new ones &mdash; every total shown across Findings, Elements, and the Dashboard is the deduplicated count, not the sum of every scan. See History under Sources.</div></div></div>
+          <div class="assitem"><span class="status ok"><span class="dot"></span>Met</span>
+            <div style="margin-left:4px;"><div class="t">Coverage is measured, not assumed</div><div class="d">87% estate coverage means 87% of connected data has actually been scanned at least once &mdash; not an estimate. See Coverage.</div></div></div>
+          <div class="assitem"><span class="status warn"><span class="dot"></span>Partial</span>
+            <div style="margin-left:4px;"><div class="t">Every source has completed at least one scan</div><div class="d">6 of 7 connected sources have &mdash; Legacy CRM is disconnected and has never completed a first scan, so it isn't in the deduplicated total yet. See Health under Sources.</div></div></div>
         </div>
       </div>
 

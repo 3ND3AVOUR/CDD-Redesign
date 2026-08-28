@@ -98,6 +98,12 @@
   .tabbtn .tbadge{font-size:10.5px;font-weight:800;background:#F0F1F6;color:var(--ink-3);border-radius:20px;padding:1px 7px;}
   .tabbtn.active .tbadge{background:#E7EEFC;color:var(--sidebar-active);}
   .tabbtn .tbadge.warn{background:var(--warn-soft);color:var(--warn);}
+  .cataloggrid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px;}
+  .catgroup{border:1px solid #E7EAF2;border-radius:12px;padding:14px 16px;background:#FCFDFF;}
+  .catgroup h4{margin:0 0 10px;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.03em;color:var(--ink-3);}
+  .catitem{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 0;border-bottom:1px solid #F0F1F6;font-size:13px;color:var(--ink);}
+  .catitem:last-child{border-bottom:none;}
+  @media (max-width:1080px){ .cataloggrid{grid-template-columns:repeat(2,1fr);} }
   .tabpanel{display:none;}
   .tabpanel.active{display:block;}
 
@@ -273,6 +279,7 @@
         <button class="tabbtn" data-tab="scans">Scans</button>
         <button class="tabbtn" data-tab="failed">Failed items <span class="tbadge warn" id="failedBadge">4</span></button>
         <button class="tabbtn" data-tab="history">History</button>
+        <button class="tabbtn" data-tab="catalog">Catalog <span class="tbadge">New</span></button>
       </div>
 
       <!-- ===== OVERVIEW ===== -->
@@ -281,7 +288,7 @@
           <div class="kpi"><div class="l">Total connections</div><div class="v">7</div><div class="d">across 3 kinds of source</div></div>
           <div class="kpi"><div class="l">Healthy</div><div class="v">5</div><div class="d">syncing normally</div></div>
           <div class="kpi"><div class="l">Needs attention</div><div class="v warn">2</div><div class="d" style="color:var(--warn)">1 broken, 1 delayed</div></div>
-          <div class="kpi"><div class="l">Available to add</div><div class="v">10+</div><div class="d">integrations ready to connect</div></div>
+          <div class="kpi"><div class="l">Available to add</div><div class="v">14</div><div class="d"><a href="#catalog" onclick="showTab('catalog')" style="color:var(--sidebar-active);font-weight:700;text-decoration:none;">Browse the catalog &rarr;</a></div></div>
         </div>
         <div class="actions">
           <a class="btn btn-primary js-connect-open" href="../connect-source.html">Connect a source</a>
@@ -318,6 +325,7 @@
       <!-- ===== SCANS ===== -->
       <div class="tabpanel" id="panel-scans">
         <div class="banner" id="newBanner"><span>✅</span><div><b id="newBannerText"></b> — its first check just started below.</div></div>
+        <p class="sub" style="margin:-2px 0 12px;">This is per-source check status. For total items found, detection accuracy, and coverage across the whole estate, see <a href="../Detect/index.html" style="color:var(--sidebar-active);font-weight:700;">Detection &rarr;</a></p>
         <div class="twrap">
           <table>
             <thead><tr><th>Source</th><th>Status</th><th>Progress</th><th>Items found</th><th>Last checked</th><th>Schedule</th><th></th></tr></thead>
@@ -546,6 +554,39 @@
           </div>
           <div class="histempty">This source hasn't completed a check yet — its connection needs to be fixed first. <a href="#health" onclick="showTab('health')">Go to Health &rarr;</a></div>
         </div>
+      </div>
+      <div class="tabpanel" id="panel-catalog">
+        <h3 class="tabh">Integration catalog</h3>
+        <p class="tabd">Every integration ready to connect today &mdash; not just the "10+ ready" number, the actual list.</p>
+        <div class="cataloggrid">
+          <div class="catgroup">
+            <h4>Databases</h4>
+            <div class="catitem"><span>PostgreSQL</span><a class="btn-sm js-connect-open" href="../connect-source.html">Connect</a></div>
+            <div class="catitem"><span>MySQL</span><a class="btn-sm js-connect-open" href="../connect-source.html">Connect</a></div>
+            <div class="catitem"><span>Oracle</span><a class="btn-sm js-connect-open" href="../connect-source.html">Connect</a></div>
+            <div class="catitem"><span>SQL Server</span><a class="btn-sm js-connect-open" href="../connect-source.html">Connect</a></div>
+          </div>
+          <div class="catgroup">
+            <h4>Files &amp; storage</h4>
+            <div class="catitem"><span>SharePoint</span><a class="btn-sm js-connect-open" href="../connect-source.html">Connect</a></div>
+            <div class="catitem"><span>Amazon S3</span><a class="btn-sm js-connect-open" href="../connect-source.html">Connect</a></div>
+            <div class="catitem"><span>Google Drive</span><a class="btn-sm js-connect-open" href="../connect-source.html">Connect</a></div>
+            <div class="catitem"><span>Azure Blob Storage</span><a class="btn-sm js-connect-open" href="../connect-source.html">Connect</a></div>
+          </div>
+          <div class="catgroup">
+            <h4>Business apps</h4>
+            <div class="catitem"><span>Salesforce</span><a class="btn-sm js-connect-open" href="../connect-source.html">Connect</a></div>
+            <div class="catitem"><span>HubSpot</span><a class="btn-sm js-connect-open" href="../connect-source.html">Connect</a></div>
+            <div class="catitem"><span>Zendesk</span><a class="btn-sm js-connect-open" href="../connect-source.html">Connect</a></div>
+            <div class="catitem"><span>Workday</span><a class="btn-sm js-connect-open" href="../connect-source.html">Connect</a></div>
+          </div>
+          <div class="catgroup">
+            <h4>Email</h4>
+            <div class="catitem"><span>Outlook / Exchange</span><a class="btn-sm js-connect-open" href="../connect-source.html">Connect</a></div>
+            <div class="catitem"><span>Gmail</span><a class="btn-sm js-connect-open" href="../connect-source.html">Connect</a></div>
+          </div>
+        </div>
+        <div class="note">Don't see what you need? Every connection starts the same way &mdash; pick the closest category in the wizard and tell us where it lives.</div>
       </div>
       </div>
 

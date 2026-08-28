@@ -243,7 +243,12 @@
       </div>
 
       <div class="tabpanel" id="panel-why">
-        <p class="sub">Pick a change and we'll show exactly why it did — or didn't — get checked. Nothing here is a guess: every decision is recorded.</p>
+        <p class="sub">The PII-relevance gate audit: every change gets a checked-or-skipped decision, and every decision is recorded — pick one below to see its full reasoning. Nothing here is a guess.</p>
+        <div class="kpis" style="grid-template-columns:repeat(3,1fr);">
+          <div class="kpi"><div class="l">Decisions this week</div><div class="v">1,842</div><div class="d">every one recorded</div></div>
+          <div class="kpi"><div class="l">Sent for checking</div><div class="v">312</div><div class="d">17% of decisions</div></div>
+          <div class="kpi"><div class="l">Safely skipped</div><div class="v">1,530</div><div class="d">83% — no new information</div></div>
+        </div>
         <div class="field">
           <label>Change</label>
           <select id="pick">

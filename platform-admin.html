@@ -86,6 +86,11 @@
   .walk-empty .we-ico{font-size:34px;margin-bottom:10px;}
   .walk-empty h3{margin:0 0 8px;font-size:17px;font-weight:700;color:var(--ink);}
   .walk-empty p{margin:0 auto 18px;font-size:13.5px;color:var(--ink-2);max-width:52ch;line-height:1.6;}
+  .filtbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:12px 14px;background:#FAFBFD;border:1px solid #EEF1F7;border-radius:10px;}
+  .filtbar .fgroup{display:flex;align-items:center;gap:6px;}
+  .filtbar label{font-size:11px;font-weight:700;color:var(--ink-3);text-transform:uppercase;letter-spacing:.03em;}
+  .filtbar select{font:inherit;font-size:12.5px;font-weight:600;color:var(--ink);background:#fff;border:1px solid var(--card-border);border-radius:7px;padding:6px 10px;cursor:pointer;}
+  .resultcount{font-size:12px;color:var(--ink-3);}
   .flowbar.setupflow{background:linear-gradient(90deg,#EEF3FC,#F5F9FF);border-color:#CBDCF6;}
   .flowbar.setupflow .fic{filter:none;}
   .flowbar.setupflow .fstage{color:#1E4976;}
@@ -246,13 +251,14 @@
 
     <section class="content">
 <div class="tabbar">
-        <button class="tabbtn active" data-tab="tenants">Tenants &amp; roles <span class="tbadge">New</span></button>
+        <button class="tabbtn active" data-tab="tenants">Tenants &amp; roles</button>
         <button class="tabbtn" data-tab="encryption">Encryption</button>
         <button class="tabbtn" data-tab="notifications">Notifications</button>
         <button class="tabbtn" data-tab="deployment">Deployment</button>
         <button class="tabbtn" data-tab="sla">SLA & cost</button>
         <button class="tabbtn" data-tab="scaneconomics">Scan economics</button>
         <button class="tabbtn" data-tab="ownership">Source ownership</button>
+        <button class="tabbtn" data-tab="audit">Audit log <span class="tbadge">New</span></button>
       </div>
       <div class="tabpanel active" id="panel-tenants">
         <h3 class="tabh">Tenants &amp; roles (RBAC)</h3>
@@ -333,21 +339,64 @@
             tr.innerHTML = '<td>' + p.name + '</td><td>' + p.region + '</td><td><span class="status ok"><span class="dot"></span>Active</span></td><td>just now</td><td>Sam R.</td>';
             document.getElementById("tenantRows").insertBefore(tr, document.getElementById("tenantRows").firstChild);
             toast('Tenant "' + p.name + '" created — approved by two admins');
+            if (window.cddLogAuditAction) {
+              window.cddLogAuditAction({ type: "tenant", admin: "Sam R.", action: "Created tenant", target: p.name, approver: "Marcus T." });
+            }
           });
         })();
         </script>
       </div>
       <div class="tabpanel" id="panel-encryption">
         <h3 class="tabh">Encryption keys &amp; lifecycle (BYOK)</h3>
-        <p class="tabd">Which keys protect which sources, and when they're due to rotate.</p>
+        <p class="tabd">Which keys protect which sources, and when they're due to rotate. Rotating a key needs a second admin's approval, same as creating a tenant.</p>
         <div class="twrap"><table>
-          <thead><tr><th>Key</th><th>Used by</th><th>Rotation due</th><th>Status</th></tr></thead>
-          <tbody>
-            <tr><td>acme-eu-primary</td><td>Sales database, Billing database</td><td>in 41 days</td><td><span class="status ok"><span class="dot"></span>OK</span></td></tr>
-            <tr><td>acme-eu-files</td><td>HR files, Marketing files</td><td>in 6 days</td><td><span class="status warn"><span class="dot"></span>Rotate soon</span></td></tr>
-            <tr><td>acme-eu-apps</td><td>Sales data (Salesforce), Legacy CRM</td><td>in 89 days</td><td><span class="status ok"><span class="dot"></span>OK</span></td></tr>
+          <thead><tr><th>Key</th><th>Used by</th><th>Rotation due</th><th>Status</th><th></th></tr></thead>
+          <tbody id="keyRows">
+            <tr data-key="acme-eu-primary"><td>acme-eu-primary</td><td>Sales database, Billing database</td><td class="due">in 41 days</td><td><span class="status ok"><span class="dot"></span>OK</span></td><td><button class="btn-sm" data-rotate="acme-eu-primary">Rotate now</button></td></tr>
+            <tr data-key="acme-eu-files"><td>acme-eu-files</td><td>HR files, Marketing files</td><td class="due">in 6 days</td><td><span class="status warn"><span class="dot"></span>Rotate soon</span></td><td><button class="btn-sm" data-rotate="acme-eu-files">Rotate now</button></td></tr>
+            <tr data-key="acme-eu-apps"><td>acme-eu-apps</td><td>Sales data (Salesforce), Legacy CRM</td><td class="due">in 89 days</td><td><span class="status ok"><span class="dot"></span>OK</span></td><td><button class="btn-sm" data-rotate="acme-eu-apps">Rotate now</button></td></tr>
           </tbody>
         </table></div>
+        <div id="keyApprovalRows"></div>
+        <script>
+        (function () {
+          var pendingKey = [];
+          var wrap = document.getElementById("keyApprovalRows");
+          function renderPendingKey() {
+            wrap.innerHTML = pendingKey.map(function (k, i) {
+              return '<div class="note" style="border-color:#F3E0B8;background:#FEF9EE;margin-top:14px;">' +
+                '<b>&#128274; Waiting on a second approver &mdash; rotate "' + k + '"</b><br>' +
+                'Requested by Sam R. just now. A different admin needs to confirm before the new key takes effect.' +
+                '<div style="margin-top:10px;"><button type="button" class="btn-sm" data-approve-key="' + i + '">Approve as Marcus T. (second admin)</button></div>' +
+              '</div>';
+            }).join("");
+          }
+          document.getElementById("keyRows").addEventListener("click", function (e) {
+            var btn = e.target.closest("button[data-rotate]");
+            if (!btn) return;
+            var key = btn.getAttribute("data-rotate");
+            if (pendingKey.indexOf(key) !== -1) return;
+            pendingKey.push(key);
+            renderPendingKey();
+            toast('Rotation for "' + key + '" requested — needs a second admin\\u2019s approval');
+          });
+          wrap.addEventListener("click", function (e) {
+            var btn = e.target.closest("button[data-approve-key]");
+            if (!btn) return;
+            var idx = parseInt(btn.getAttribute("data-approve-key"), 10);
+            var key = pendingKey[idx];
+            if (!key) return;
+            pendingKey.splice(idx, 1);
+            renderPendingKey();
+            var row = document.querySelector('#keyRows tr[data-key="' + key + '"]');
+            if (row) row.querySelector(".due").textContent = "in 90 days";
+            toast('Key "' + key + '" rotated — approved by two admins');
+            if (window.cddLogAuditAction) {
+              window.cddLogAuditAction({ type: "encryption", admin: "Sam R.", action: "Rotated encryption key", target: key, approver: "Marcus T." });
+            }
+          });
+        })();
+        </script>
       </div>
       <div class="tabpanel" id="panel-notifications">
         <h3 class="tabh">Notification routing</h3>
@@ -413,6 +462,84 @@
           </tbody>
         </table></div>
         <div class="note">The other gap flagged as genuinely missing &mdash; Sources' Health tab shows a source's status, not who owns fixing it.</div>
+      </div>
+      <div class="tabpanel" id="panel-audit">
+        <h3 class="tabh">Activity trail</h3>
+        <p class="tabd">Every sensitive action across the platform, who did it, and who approved it &mdash; the single place a security review starts. Tenant creation and encryption key rotation land here automatically the moment they're approved.</p>
+        <div class="kpis">
+          <div class="kpi"><div class="l">Actions logged (30d)</div><div class="v" id="auditTotalKpi">18</div><div class="d">across all admins</div></div>
+          <div class="kpi"><div class="l">Needed a second approver</div><div class="v" id="auditApprovedKpi">4</div><div class="d">tenant &amp; key changes</div></div>
+          <div class="kpi"><div class="l">Active admins</div><div class="v">2</div><div class="d">who can approve</div></div>
+        </div>
+        <div class="filtbar" style="margin-bottom:14px;">
+          <div class="fgroup"><label>Action type</label>
+            <select id="auditTypeFilter">
+              <option value="all">All types</option>
+              <option value="tenant">Tenant</option>
+              <option value="encryption">Encryption</option>
+              <option value="roles">Roles &amp; permissions</option>
+              <option value="retention">Retention</option>
+              <option value="deployment">Deployment</option>
+            </select>
+          </div>
+          <div class="fgroup"><label>Admin</label>
+            <select id="auditAdminFilter">
+              <option value="all">All admins</option>
+              <option value="Sam R.">Sam R.</option>
+              <option value="Marcus T.">Marcus T.</option>
+              <option value="Priya N.">Priya N.</option>
+            </select>
+          </div>
+        </div>
+        <div class="twrap"><table>
+          <thead><tr><th>When</th><th>Admin</th><th>Action</th><th>Target</th><th>Approved by</th></tr></thead>
+          <tbody id="auditLogRows">
+            <tr data-type="encryption" data-admin="Sam R."><td>2 hours ago</td><td>Sam R.</td><td>Rotated encryption key</td><td>acme-eu-files</td><td>Marcus T.</td></tr>
+            <tr data-type="roles" data-admin="Priya N."><td>yesterday</td><td>Priya N.</td><td>Changed role permissions</td><td>Compliance Ops</td><td>&mdash;</td></tr>
+            <tr data-type="retention" data-admin="Priya N."><td>2 days ago</td><td>Priya N.</td><td>Updated retention policy</td><td>Financial records &mdash; 7 years</td><td>&mdash;</td></tr>
+            <tr data-type="deployment" data-admin="Sam R."><td>4 days ago</td><td>Sam R.</td><td>Confirmed deployment posture</td><td>eu-west-1, not air-gapped</td><td>&mdash;</td></tr>
+            <tr data-type="tenant" data-admin="Sam R."><td>9 days ago</td><td>Sam R.</td><td>Created tenant</td><td>acme-apac</td><td>Marcus T.</td></tr>
+            <tr data-type="roles" data-admin="Marcus T."><td>12 days ago</td><td>Marcus T.</td><td>Added team member</td><td>Priya N. &middot; Privacy Ops</td><td>&mdash;</td></tr>
+          </tbody>
+        </table></div>
+        <div class="resultcount" id="auditResultCount" style="margin-top:10px;"></div>
+        <script>
+        (function () {
+          var typeSel = document.getElementById("auditTypeFilter");
+          var adminSel = document.getElementById("auditAdminFilter");
+          var tbody = document.getElementById("auditLogRows");
+          var countEl = document.getElementById("auditResultCount");
+          function apply() {
+            var t = typeSel.value, a = adminSel.value, visible = 0;
+            Array.prototype.forEach.call(tbody.querySelectorAll("tr"), function (r) {
+              var show = (t === "all" || r.getAttribute("data-type") === t) &&
+                         (a === "all" || r.getAttribute("data-admin") === a);
+              r.style.display = show ? "" : "none";
+              if (show) visible++;
+            });
+            countEl.textContent = "Showing " + visible + " of " + tbody.querySelectorAll("tr").length + " actions";
+          }
+          typeSel.addEventListener("change", apply);
+          adminSel.addEventListener("change", apply);
+          apply();
+
+          // Wired to the Tenants & roles second-approver flow: every tenant approved there logs here too.
+          window.cddLogAuditAction = function (opts) {
+            var tr = document.createElement("tr");
+            tr.setAttribute("data-type", opts.type);
+            tr.setAttribute("data-admin", opts.admin);
+            tr.innerHTML = "<td>just now</td><td>" + opts.admin + "</td><td>" + opts.action + "</td><td>" + opts.target + "</td><td>" + (opts.approver || "&mdash;") + "</td>";
+            tbody.insertBefore(tr, tbody.firstChild);
+            var totalKpi = document.getElementById("auditTotalKpi");
+            totalKpi.textContent = parseInt(totalKpi.textContent, 10) + 1;
+            if (opts.approver) {
+              var apprKpi = document.getElementById("auditApprovedKpi");
+              apprKpi.textContent = parseInt(apprKpi.textContent, 10) + 1;
+            }
+            apply();
+          };
+        })();
+        </script>
       </div>
     </section>
   </main>

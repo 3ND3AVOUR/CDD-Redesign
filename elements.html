@@ -91,6 +91,19 @@
   .walk-empty .we-ico{font-size:34px;margin-bottom:10px;}
   .walk-empty h3{margin:0 0 8px;font-size:17px;font-weight:700;color:var(--ink);}
   .walk-empty p{margin:0 auto 18px;font-size:13.5px;color:var(--ink-2);max-width:52ch;line-height:1.6;}
+  .tabbtn .tbadge{font-size:10.5px;font-weight:800;background:#F0F1F6;color:var(--ink-3);border-radius:20px;padding:1px 7px;}
+  .tabbtn.active .tbadge{background:#E7EEFC;color:var(--sidebar-active);}
+  .tabbtn .tbadge.warn{background:var(--warn-soft);color:var(--warn);}
+  .tabbar{display:flex;gap:4px;border-bottom:1px solid #E7EAF2;margin-bottom:22px;flex-wrap:wrap;}
+  .tabbtn{font:inherit;font-size:13.5px;font-weight:700;color:var(--ink-2);background:none;border:none;border-bottom:2.5px solid transparent;padding:11px 4px;margin-right:22px;cursor:pointer;}
+  .tabbtn:hover{color:var(--ink);}
+  .tabbtn.active{color:var(--sidebar-active);border-bottom-color:var(--sidebar-active);}
+  .tabpanel{display:none;}
+  .tabpanel.active{display:block;}
+  .status{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;}
+  .status .dot{width:7px;height:7px;border-radius:50%;}
+  .status.ok{color:var(--ok,#1F9D55);} .status.ok .dot{background:var(--ok,#1F9D55);}
+  .status.warn{color:var(--warn,#B45309);} .status.warn .dot{background:var(--warn,#B45309);}
 
   /* KPIs */
   .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px;}
@@ -221,7 +234,12 @@
     </header>
 
     <section class="content">
-<div class="kpis" id="kpiRow"></div>
+<div class="tabbar">
+        <button class="tabbtn active" data-tab="bycat">By category</button>
+        <button class="tabbtn" data-tab="byschema">By schema field <span class="tbadge">New</span></button>
+      </div>
+      <div class="tabpanel active" id="panel-bycat">
+      <div class="kpis" id="kpiRow"></div>
 
       <div class="catgrid" id="catGrid"></div>
 
@@ -297,6 +315,23 @@
           </tbody>
         </table>
         <div class="empty" id="empty">No element types match these filters.</div>
+      </div>
+      </div>
+      <div class="tabpanel" id="panel-byschema">
+        <h3 class="tabh">Field-level classification</h3>
+        <p class="tabd">Which specific column or field a classification came from &mdash; not just "Government ID numbers, somewhere in Sales database," but the exact table and column.</p>
+        <div class="twrap"><table>
+          <thead><tr><th>Source</th><th>Table / file</th><th>Field</th><th>Element type</th><th>Category</th><th>Confidence</th></tr></thead>
+          <tbody>
+            <tr><td>Sales database</td><td class="num">customers</td><td class="num">national_id</td><td>Government ID numbers</td><td><span class="catpill pii">PII</span></td><td><span class="status ok"><span class="dot"></span>High</span></td></tr>
+            <tr><td>Billing database</td><td class="num">payments</td><td class="num">card_number</td><td>Credit card numbers</td><td><span class="catpill pfi">PFI</span></td><td><span class="status ok"><span class="dot"></span>High</span></td></tr>
+            <tr><td>Clinical database</td><td class="num">patient_records</td><td class="num">diagnosis_notes</td><td>Health records</td><td><span class="catpill phi">PHI</span></td><td><span class="status ok"><span class="dot"></span>High</span></td></tr>
+            <tr><td>HR files (SharePoint)</td><td class="num">employee_roster.xlsx</td><td class="num">full_name</td><td>People's names</td><td><span class="catpill pi">PI</span></td><td><span class="status warn"><span class="dot"></span>Medium</span></td></tr>
+            <tr><td>Sales data (Salesforce)</td><td class="num">Contact</td><td class="num">Email</td><td>Email addresses</td><td><span class="catpill pi">PI</span></td><td><span class="status ok"><span class="dot"></span>High</span></td></tr>
+            <tr><td>Marketing files (S3)</td><td class="num">subscribers.csv</td><td class="num">phone</td><td>Phone numbers</td><td><span class="catpill pi">PI</span></td><td><span class="status warn"><span class="dot"></span>Medium</span></td></tr>
+          </tbody>
+        </table></div>
+        <div class="note">Confidence reflects how certain the model is that this specific field &mdash; not just the table it lives in &mdash; is the source of the classification. Medium-confidence fields are the ones worth a manual spot-check.</div>
       </div>
     </section>
   </main>
@@ -433,6 +468,15 @@
     applyFilters();
   });
 })();
+</script>
+<script>
+function showTab(name) {
+  document.querySelectorAll(".tabbtn").forEach(function (b) { b.classList.toggle("active", b.getAttribute("data-tab") === name); });
+  document.querySelectorAll(".tabpanel").forEach(function (p) { p.classList.toggle("active", p.id === "panel-" + name); });
+}
+document.querySelectorAll(".tabbtn").forEach(function (b) {
+  b.addEventListener("click", function () { showTab(b.getAttribute("data-tab")); });
+});
 </script>
 <script>
 (function () {

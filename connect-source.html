@@ -270,6 +270,19 @@
           <p class="stepd">We use these details only to read your data and check it for sensitive information.</p>
           <div class="field" id="fld-name"><label>Name this source<span class="req">*</span></label><input type="text" id="srcName" value="" placeholder="e.g. Sales database"><div class="errmsg" id="err-name">Give it a name — and make it different from your other sources.</div></div>
           <div id="dynFields"></div>
+          <div class="field"><label>Encryption key <span style="color:var(--ink-3);font-weight:500;">(optional)</span></label>
+            <select id="f_key">
+              <option value="platform" selected>Use platform-managed key</option>
+              <option value="acme-eu-primary">acme-eu-primary (your key)</option>
+              <option value="acme-eu-files">acme-eu-files (your key)</option>
+              <option value="acme-eu-apps">acme-eu-apps (your key)</option>
+              <option value="new">Bring my own key (BYOK)&hellip;</option>
+            </select>
+          </div>
+          <div class="field" id="fld-newkey" style="display:none;"><label>Key identifier<span class="req">*</span></label>
+            <input type="text" id="f_newkey" placeholder="e.g. arn:aws:kms:eu-west-1:...:key/...">
+            <div class="errmsg" id="err-newkey">Enter your key's identifier, or switch back to a platform-managed key.</div>
+          </div>
           <div class="assure"><span>🔒</span><div><b>We only read your data.</b> Nothing is ever changed or deleted, and you can remove this connection at any time.</div></div>
           <div class="wizfoot" style="margin-top:20px;"><label class="btn" for="w1">Back</label><button type="button" class="btn btn-primary" id="continueW2">Continue</button></div>
         </div>
@@ -510,12 +523,15 @@
     var subVal = sub ? sub.value : "";
     var locVal = loc && loc.value ? loc.value : (loc ? loc.getAttribute("placeholder") : "");
     var email = (document.getElementById("f_email").value || "").trim();
+    var keySel = document.getElementById("f_key").value;
+    var keyLabel = keySel === "platform" ? "Platform-managed" : (keySel === "new" ? "Your own key — " + (document.getElementById("f_newkey").value || "—") : keySel + " (your key)");
     var box = document.getElementById("reviewBox");
     box.innerHTML =
       '<div class="row"><span class="k">Source name</span><span class="v">' + (srcName.value || t.defaultName) + '</span></div>' +
       '<div class="row"><span class="k">Type</span><span class="v">' + subVal + '</span></div>' +
       '<div class="row"><span class="k">Location</span><span class="v">' + locVal + '</span></div>' +
       '<div class="row"><span class="k">Access</span><span class="v">' + t.access + '</span></div>' +
+      '<div class="row"><span class="k">Encryption key</span><span class="v">' + keyLabel + '</span></div>' +
       '<div class="row"><span class="k">Check schedule</span><span class="v">' + scheduleLong() + '</span></div>' +
       (email ? '<div class="row"><span class="k">Email notifications</span><span class="v">' + email + '</span></div>' : '');
     var finishAssure = document.getElementById("finishAssure");
@@ -525,12 +541,22 @@
   }
   document.getElementById("w4").addEventListener("change", function () { if (this.checked) buildReview(); });
 
+  var keySel = document.getElementById("f_key");
+  var newkeyEl = document.getElementById("f_newkey");
+  keySel.addEventListener("change", function () {
+    document.getElementById("fld-newkey").style.display = keySel.value === "new" ? "" : "none";
+    clearFieldError("fld-newkey");
+  });
+  newkeyEl.addEventListener("input", function () { clearFieldError("fld-newkey"); });
+
   document.getElementById("continueW2").addEventListener("click", function () {
     var nameOk = srcName.value.trim().length > 0 && !nameTaken(srcName.value);
     var loc = document.getElementById("f_loc");
     var locOk = !loc || loc.value.trim().length > 0;
+    var keyOk = keySel.value !== "new" || newkeyEl.value.trim().length > 0;
     clearFieldError("fld-name");
     clearFieldError("fld-loc");
+    clearFieldError("fld-newkey");
     if (!nameOk) {
       document.getElementById("fld-name").classList.add("err");
       document.getElementById("err-name").textContent = srcName.value.trim()
@@ -538,8 +564,9 @@
         : "Give it a name — and make it different from your other sources.";
     }
     if (!locOk) document.getElementById("fld-loc").classList.add("err");
-    if (!nameOk || !locOk) {
-      (nameOk ? document.getElementById("f_loc") : srcName).focus();
+    if (!keyOk) document.getElementById("fld-newkey").classList.add("err");
+    if (!nameOk || !locOk || !keyOk) {
+      (nameOk ? (locOk ? newkeyEl : document.getElementById("f_loc")) : srcName).focus();
       return;
     }
     document.getElementById("w3").checked = true;

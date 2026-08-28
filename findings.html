@@ -72,6 +72,28 @@
   .catpill.pi{background:var(--cat-pi-soft);color:var(--cat-pi);}
   .catpill.pfi{background:var(--cat-pfi-soft);color:var(--cat-pfi);}
   .catpill.other{background:var(--cat-other-soft);color:var(--cat-other);}
+  .tabbar{display:flex;gap:4px;border-bottom:1px solid #E7EAF2;margin-bottom:22px;flex-wrap:wrap;}
+  .tabbtn{font:inherit;font-size:13.5px;font-weight:700;color:var(--ink-2);background:none;border:none;border-bottom:2.5px solid transparent;padding:11px 4px;margin-right:22px;cursor:pointer;}
+  .tabbtn:hover{color:var(--ink);}
+  .tabbtn.active{color:var(--sidebar-active);border-bottom-color:var(--sidebar-active);}
+  .tabbtn .tbadge{font-size:10.5px;font-weight:800;background:#F0F1F6;color:var(--ink-3);border-radius:20px;padding:1px 7px;}
+  .tabbtn.active .tbadge{background:#E7EEFC;color:var(--sidebar-active);}
+  .tabpanel{display:none;}
+  .tabpanel.active{display:block;}
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
+  .kpi{border:1px solid #E7EAF2;border-radius:12px;padding:15px 16px;background:#FCFDFF;}
+  .kpi .l{font-size:11px;font-weight:600;color:var(--ink-3);}
+  .kpi .v{font-size:24px;font-weight:800;color:var(--ink);margin-top:4px;font-variant-numeric:tabular-nums;}
+  .kpi .v.ok{color:var(--ok);}
+  .kpi .d{font-size:11px;color:var(--ink-2);font-weight:600;margin-top:3px;}
+  .bars{display:flex;align-items:flex-end;gap:14px;height:110px;padding:0 4px;margin-bottom:6px;}
+  .bcol{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;}
+  .bcol .bar{width:100%;max-width:36px;background:linear-gradient(180deg,#4EA1E8,var(--sidebar-active));border-radius:4px 4px 0 0;}
+  .bcol .val{font-size:10.5px;font-weight:700;color:var(--ink);margin-bottom:4px;}
+  .bcol .lbl{font-size:10.5px;color:var(--ink-3);margin-top:6px;}
+  .note{border:1px solid #EEF1F7;background:#FAFBFD;border-radius:10px;padding:12px 16px;margin-top:14px;font-size:12.5px;color:var(--ink-2);line-height:1.6;}
+  h3.tabh{font-size:15px;font-weight:700;margin:0 0 4px;}
+  p.tabd{font-size:13px;color:var(--ink-2);margin:0 0 16px;max-width:70ch;}
 
   .twrap{border:1px solid #E7EAF2;border-radius:12px;overflow:hidden;}
   table{border-collapse:collapse;width:100%;font-size:13.5px;}
@@ -162,6 +184,9 @@
   .walk-empty .we-ico{font-size:34px;margin-bottom:10px;}
   .walk-empty h3{margin:0 0 8px;font-size:17px;font-weight:700;color:var(--ink);}
   .walk-empty p{margin:0 auto 18px;font-size:13.5px;color:var(--ink-2);max-width:52ch;line-height:1.6;}
+  .tabbtn .tbadge{font-size:10.5px;font-weight:800;background:#F0F1F6;color:var(--ink-3);border-radius:20px;padding:1px 7px;}
+  .tabbtn.active .tbadge{background:#E7EEFC;color:var(--sidebar-active);}
+  .tabbtn .tbadge.warn{background:var(--warn-soft);color:var(--warn);}
   .flowbar .fdo{font-size:12.5px;color:#4C3A7A;line-height:1.5;}
   .flowbar .fdo b{color:#3A2A63;}
   .flowbar .fnone{font-size:11px;color:#8A7BAE;font-weight:600;}
@@ -245,7 +270,12 @@
     </header>
 
     <section class="content">
-<div class="srcbanner" id="srcBanner">
+<div class="tabbar">
+        <button class="tabbtn active" data-tab="triage">Findings</button>
+        <button class="tabbtn" data-tab="analytics">Analytics <span class="tbadge">New</span></button>
+      </div>
+      <div class="tabpanel active" id="panel-triage">
+      <div class="srcbanner" id="srcBanner">
         <div>Showing findings for <b id="srcBannerName"></b></div>
         <div class="blinks"><a href="Sources/index.html#scans">&larr; Back to Sources</a><a href="findings.html">Show all findings</a></div>
       </div>
@@ -328,6 +358,37 @@
           </tbody>
         </table>
         <div class="empty" id="empty">No findings match these filters.</div>
+      </div>
+      </div>
+      <div class="tabpanel" id="panel-analytics">
+        <h3 class="tabh">Findings analytics</h3>
+        <p class="tabd">How the picture has moved over time &mdash; not just what's true right now, but which direction it's heading.</p>
+        <div class="kpis" style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:22px;">
+          <div class="kpi"><div class="l">Total findings</div><div class="v">10,336</div><div class="d">+236 this week</div></div>
+          <div class="kpi"><div class="l">7-week growth</div><div class="v ok">+27.6%</div><div class="d">8,100 &rarr; 10,336</div></div>
+          <div class="kpi"><div class="l">Fastest-growing category</div><div class="v" style="font-size:18px;">PHI</div><div class="d">+2.7 pts of mix in 4 weeks</div></div>
+        </div>
+        <h3 class="tabh" style="font-size:13.5px;">Total findings, last 7 weeks</h3>
+        <div class="bars">
+          <div class="bcol"><span class="val">8,100</span><div class="bar" style="height:63%;"></div><span class="lbl">Wk 1</span></div>
+          <div class="bcol"><span class="val">8,600</span><div class="bar" style="height:69%;"></div><span class="lbl">Wk 2</span></div>
+          <div class="bcol"><span class="val">9,000</span><div class="bar" style="height:74%;"></div><span class="lbl">Wk 3</span></div>
+          <div class="bcol"><span class="val">9,400</span><div class="bar" style="height:79%;"></div><span class="lbl">Wk 4</span></div>
+          <div class="bcol"><span class="val">9,800</span><div class="bar" style="height:85%;"></div><span class="lbl">Wk 5</span></div>
+          <div class="bcol"><span class="val">10,100</span><div class="bar" style="height:92%;"></div><span class="lbl">Wk 6</span></div>
+          <div class="bcol"><span class="val">10,336</span><div class="bar" style="height:100%;"></div><span class="lbl">Wk 7</span></div>
+        </div>
+        <h3 class="tabh" style="font-size:13.5px;margin-top:24px;">Category mix, now vs. 4 weeks ago</h3>
+        <div class="twrap"><table>
+          <thead><tr><th>Category</th><th>Now</th><th>4 weeks ago</th><th>Change</th></tr></thead>
+          <tbody>
+            <tr><td><span class="catpill pii">PII</span></td><td class="num">23.1%</td><td class="num">24.8%</td><td class="num" style="color:var(--low);">&minus;1.7 pts</td></tr>
+            <tr><td><span class="catpill phi">PHI</span></td><td class="num">15.9%</td><td class="num">13.2%</td><td class="num" style="color:var(--high);">+2.7 pts</td></tr>
+            <tr><td><span class="catpill pi">PI</span></td><td class="num">47.2%</td><td class="num">46.1%</td><td class="num">+1.1 pts</td></tr>
+            <tr><td><span class="catpill pfi">PFI</span></td><td class="num">13.7%</td><td class="num">15.9%</td><td class="num" style="color:var(--low);">&minus;2.2 pts</td></tr>
+          </tbody>
+        </table></div>
+        <div class="note">PHI's share is growing faster than any other category &mdash; worth watching if Clinical database's scan frequency should increase.</div>
       </div>
     </section>
   </main>
@@ -492,6 +553,15 @@
     toast("Marked “" + activeRow.getAttribute("data-type") + "” as reviewed");
   });
 })();
+</script>
+<script>
+function showTab(name) {
+  document.querySelectorAll(".tabbtn").forEach(function (b) { b.classList.toggle("active", b.getAttribute("data-tab") === name); });
+  document.querySelectorAll(".tabpanel").forEach(function (p) { p.classList.toggle("active", p.id === "panel-" + name); });
+}
+document.querySelectorAll(".tabbtn").forEach(function (b) {
+  b.addEventListener("click", function () { showTab(b.getAttribute("data-tab")); });
+});
 </script>
 <script>
 (function () {

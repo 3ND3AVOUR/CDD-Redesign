@@ -86,6 +86,13 @@
   .walk-empty .we-ico{font-size:34px;margin-bottom:10px;}
   .walk-empty h3{margin:0 0 8px;font-size:17px;font-weight:700;color:var(--ink);}
   .walk-empty p{margin:0 auto 18px;font-size:13.5px;color:var(--ink-2);max-width:52ch;line-height:1.6;}
+  .tabbtn .tbadge{font-size:10.5px;font-weight:800;background:#F0F1F6;color:var(--ink-3);border-radius:20px;padding:1px 7px;}
+  .tabbtn.active .tbadge{background:#E7EEFC;color:var(--sidebar-active);}
+  .tabbtn .tbadge.warn{background:var(--warn-soft);color:var(--warn);}
+  .flist{display:flex;flex-direction:column;gap:10px;}
+  .fitem{display:flex;gap:12px;align-items:flex-start;border:1px solid #E7EAF2;border-radius:12px;padding:14px 16px;background:#FCFDFF;}
+  .fitem .t{font-size:13.5px;color:var(--ink);font-weight:600;}
+  .fitem .d{font-size:12.5px;color:var(--ink-2);margin-top:3px;line-height:1.5;}
 
   .tabbar{display:flex;gap:4px;border-bottom:1px solid #E7EAF2;margin-bottom:22px;flex-wrap:wrap;}
   .tabbtn{font:inherit;font-size:13.5px;font-weight:700;color:var(--ink-2);background:none;border:none;border-bottom:2.5px solid transparent;padding:11px 4px;margin-right:22px;cursor:pointer;}
@@ -223,6 +230,7 @@
         <button class="tabbtn" data-tab="savings">Savings</button>
         <button class="tabbtn" data-tab="override">CDC override</button>
         <button class="tabbtn" data-tab="alerting">Alerting</button>
+        <button class="tabbtn" data-tab="assurance">Assurance <span class="tbadge">New</span></button>
       </div>
       <div class="tabpanel active" id="panel-metrics">
         <h3 class="tabh">Delta metrics</h3>
@@ -302,6 +310,20 @@
             <tr><td>Detection latency</td><td>&gt; 5 min change-to-classification</td><td>Medium</td><td><label class="toggle-sw"><input type="checkbox"><span class="tk"></span></label></td></tr>
           </tbody>
         </table></div>
+      </div>
+      <div class="tabpanel" id="panel-assurance">
+        <h3 class="tabh">Delta-processing assurance</h3>
+        <p class="tabd">What change detection actually promises, stated plainly &mdash; not the engineering behind it, the guarantee in front of it.</p>
+        <div class="flist">
+          <div class="fitem"><span class="status ok"><span class="dot"></span>Met</span>
+            <div style="margin-left:4px;"><div class="t">Nothing gets checked twice for no reason</div><div class="d">Re-checking a source finds what's new since last time, not the whole thing again &mdash; a 71% reduction in what actually needs re-scanning, verified against a full rescan baseline on the Savings tab.</div></div></div>
+          <div class="fitem"><span class="status ok"><span class="dot"></span>Met</span>
+            <div style="margin-left:4px;"><div class="t">Every source has a defined change-detection strategy</div><div class="d">Log-based CDC where the source supports it, timestamp polling where it doesn't &mdash; nothing is left on an undefined or ad-hoc strategy. See CDC config.</div></div></div>
+          <div class="fitem"><span class="status ok"><span class="dot"></span>Met</span>
+            <div style="margin-left:4px;"><div class="t">Overriding the default strategy is deliberate, not silent</div><div class="d">A manual override requires a stated reason and is logged with who made it and when &mdash; see CDC override.</div></div></div>
+          <div class="fitem"><span class="status warn"><span class="dot"></span>Partial</span>
+            <div style="margin-left:4px;"><div class="t">Every skipped record has a documented reason</div><div class="d">Covered for changes evaluated before checking; a source that's never completed a first scan (like Legacy CRM) isn't yet in scope for this guarantee &mdash; see Why wasn't this checked? under Changes.</div></div></div>
+        </div>
       </div>
     </section>
   </main>
