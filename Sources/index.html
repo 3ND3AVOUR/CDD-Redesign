@@ -264,6 +264,13 @@
     </header>
 
     <section class="content">
+<div class="walk-empty" id="pipelineNudge" style="display:none;border-color:#F3D9A8;background:#FFFBF3;">
+        <div class="we-ico">&#9888;&#65039;</div>
+        <h3>Provision the pipeline first?</h3>
+        <p>Every source you connect here flows through the shared processing pipeline. It doesn't look provisioned yet &mdash; that's a one-minute setup on the Pipeline page, and it only needs doing once.</p>
+        <a class="btn btn-primary" href="../pipeline.html#setup">Go provision the pipeline &rarr;</a>
+        <button type="button" class="btn" id="nudgeDismiss" style="margin-left:8px;">Not now</button>
+      </div>
 <div class="walk-empty" id="srcEmptyState" style="display:none;">
         <div class="we-ico">🗂️</div>
         <h3>No sources connected yet</h3>
@@ -927,8 +934,27 @@ document.addEventListener("click", function (e) {
   sel.addEventListener("change", function () {
     document.body.setAttribute("data-role", sel.value);
     try { localStorage.setItem("cdd_role", sel.value); } catch (e) {}
+    if (typeof updatePipelineNudge === "function") updatePipelineNudge();
   });
 })();
+</script>
+<script>
+function updatePipelineNudge() {
+  var el = document.getElementById("pipelineNudge");
+  if (!el) return;
+  var isPlatformOps = document.body.getAttribute("data-role") === "admin";
+  var provisioned = false, dismissed = false;
+  try {
+    provisioned = localStorage.getItem("cdd_pipeline_provisioned") === "1";
+    dismissed = localStorage.getItem("cdd_pipeline_nudge_dismissed") === "1";
+  } catch (e) {}
+  el.style.display = (isPlatformOps && !provisioned && !dismissed) ? "" : "none";
+}
+document.getElementById("nudgeDismiss").addEventListener("click", function () {
+  try { localStorage.setItem("cdd_pipeline_nudge_dismissed", "1"); } catch (e) {}
+  updatePipelineNudge();
+});
+updatePipelineNudge();
 </script>
 
 <script>

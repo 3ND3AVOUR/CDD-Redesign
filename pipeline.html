@@ -138,6 +138,13 @@
   .glossary{border:1px solid #EEF1F7;background:#FAFBFD;border-radius:10px;padding:12px 16px;margin-bottom:18px;font-size:12px;color:var(--ink-2);line-height:1.7;}
   .glossary b{color:var(--ink);}
 
+  .cfgfield{display:flex;flex-direction:column;gap:6px;}
+  .cfgfield label{font-size:12px;font-weight:700;color:var(--ink-2);}
+  .cfgfield select,.cfgfield input{font:inherit;font-size:13px;padding:9px 12px;border-radius:8px;border:1px solid var(--card-border);background:#fff;color:var(--ink);}
+  .cfggrid{display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:640px;margin-bottom:18px;}
+  .cfgerr{display:none;color:var(--bad);font-size:12.5px;font-weight:600;margin-bottom:12px;}
+  .prov-locked{display:none;}
+
   #toasts{position:fixed;right:20px;bottom:20px;display:flex;flex-direction:column;gap:8px;z-index:80;}
   .toast{background:var(--ink);color:#fff;font-size:13px;font-weight:600;padding:10px 16px;border-radius:8px;box-shadow:0 8px 20px rgba(0,0,0,.2);opacity:0;transform:translateY(8px);transition:opacity .18s,transform .18s;}
   .toast.show{opacity:1;transform:translateY(0);}
@@ -217,13 +224,57 @@
 
     <section class="content">
 <div class="tabbar">
+        <button class="tabbtn" data-tab="setup">Setup</button>
         <button class="tabbtn active" data-tab="health">Health</button>
         <button class="tabbtn" data-tab="topology">Topology</button>
         <button class="tabbtn" data-tab="queues">Queues</button>
         <button class="tabbtn" data-tab="jobs">Jobs</button>
         <button class="tabbtn" data-tab="autoscaling">Autoscaling</button>
       </div>
+      <div class="tabpanel" id="panel-setup">
+        <div id="setupIntro">
+          <h3 class="tabh">Provision the pipeline</h3>
+          <p class="tabd">Set up the shared processing infrastructure once &mdash; every source connected afterward flows through what you configure here. This is the Platform Ops starting point, before any source exists.</p>
+          <div class="glossary" style="margin-bottom:20px;"><b>Why this comes first:</b> Health, Topology, Queues, Jobs, and Autoscaling below are all reporting on this pipeline &mdash; there's nothing for them to show until it's provisioned.</div>
+          <div class="cfggrid">
+            <div class="cfgfield"><label for="cfgRegion">Region</label>
+              <select id="cfgRegion">
+                <option value="eu-west-1">eu-west-1 (Ireland)</option>
+                <option value="us-east-1">us-east-1 (N. Virginia)</option>
+                <option value="ap-south-1">ap-south-1 (Mumbai)</option>
+              </select>
+            </div>
+            <div class="cfgfield"><label for="cfgTier">Capacity tier</label>
+              <select id="cfgTier">
+                <option value="small">Small &mdash; dev/test</option>
+                <option value="medium" selected>Medium &mdash; production</option>
+                <option value="large">Large &mdash; high volume</option>
+              </select>
+            </div>
+            <div class="cfgfield"><label for="cfgMin">Autoscaling &mdash; min nodes</label><input type="number" id="cfgMin" value="20" min="1"></div>
+            <div class="cfgfield"><label for="cfgMax">Autoscaling &mdash; max nodes</label><input type="number" id="cfgMax" value="60" min="1"></div>
+            <div class="cfgfield"><label for="cfgPartitions">Queue partitions</label><input type="number" id="cfgPartitions" value="12" min="1"></div>
+          </div>
+          <div class="cfgerr" id="cfgError"></div>
+          <button type="button" class="btn btn-primary" id="provisionBtn">Provision pipeline</button>
+        </div>
+        <div id="setupDone" style="display:none;">
+          <div class="walk-empty" style="border-color:#CDEBD9;background:#F6FCF9;">
+            <div class="we-ico">&#9989;</div>
+            <h3>Pipeline provisioned</h3>
+            <p id="setupSummaryText"></p>
+            <button type="button" class="btn" id="reconfigureBtn">Edit configuration</button>
+          </div>
+        </div>
+      </div>
       <div class="tabpanel active" id="panel-health">
+        <div class="prov-locked walk-empty">
+          <div class="we-ico">&#128274;</div>
+          <h3>Provision the pipeline first</h3>
+          <p>Health reports on the pipeline's own infrastructure &mdash; there's nothing to show until that infrastructure exists.</p>
+          <button type="button" class="btn btn-primary" onclick="showTab('setup')">Go to Setup &rarr;</button>
+        </div>
+        <div class="prov-content">
         <h3 class="tabh">Pipeline health</h3>
         <p class="tabd">Where the processing pipeline stands right now, stage by stage.</p>
         <div class="kpis">
@@ -241,8 +292,16 @@
             <tr><td>Storage write</td><td><span class="status ok"><span class="dot"></span>Healthy</span></td><td class="num">1.1M/hr</td><td>&mdash;</td></tr>
           </tbody>
         </table></div>
+        </div>
       </div>
       <div class="tabpanel" id="panel-topology">
+        <div class="prov-locked walk-empty">
+          <div class="we-ico">&#128274;</div>
+          <h3>Provision the pipeline first</h3>
+          <p>Topology lists the services running inside the pipeline &mdash; there's nothing deployed until it's provisioned.</p>
+          <button type="button" class="btn btn-primary" onclick="showTab('setup')">Go to Setup &rarr;</button>
+        </div>
+        <div class="prov-content">
         <h3 class="tabh">System topology</h3>
         <p class="tabd">Every service in the pipeline, which stage owns it, and how it's holding up.</p>
         <div class="note">A full interactive topology graph is out of scope for this prototype &mdash; this is the service inventory it would be drawn from.</div>
@@ -256,8 +315,16 @@
             <tr><td>Control plane</td><td>Manage</td><td class="num">3</td><td><span class="status ok"><span class="dot"></span>Healthy</span></td></tr>
           </tbody>
         </table></div>
+        </div>
       </div>
       <div class="tabpanel" id="panel-queues">
+        <div class="prov-locked walk-empty">
+          <div class="we-ico">&#128274;</div>
+          <h3>Provision the pipeline first</h3>
+          <p>Queues live inside the pipeline's own infrastructure &mdash; provision it to see real depth and lag.</p>
+          <button type="button" class="btn btn-primary" onclick="showTab('setup')">Go to Setup &rarr;</button>
+        </div>
+        <div class="prov-content">
         <h3 class="tabh">Queue depth &amp; consumer lag</h3>
         <p class="tabd">How far each queue is running behind its producers.</p>
         <div class="kpis">
@@ -274,8 +341,16 @@
             <tr><td>detection.dlq</td><td class="num">2,603</td><td>&mdash;</td><td><span class="status bad"><span class="dot"></span>Needs attention</span></td></tr>
           </tbody>
         </table></div>
+        </div>
       </div>
       <div class="tabpanel" id="panel-jobs">
+        <div class="prov-locked walk-empty">
+          <div class="we-ico">&#128274;</div>
+          <h3>Provision the pipeline first</h3>
+          <p>Jobs run on top of the pipeline's own infrastructure &mdash; provision it before anything can schedule here.</p>
+          <button type="button" class="btn btn-primary" onclick="showTab('setup')">Go to Setup &rarr;</button>
+        </div>
+        <div class="prov-content">
         <h3 class="tabh">Job lifecycle</h3>
         <p class="tabd">Scheduled and workflow-driven jobs running across the platform.</p>
         <div class="twrap"><table>
@@ -287,12 +362,20 @@
             <tr><td>Tenant onboarding &mdash; acme-eu</td><td>Onboarding workflow</td><td><span class="status ok"><span class="dot"></span>Completed</span></td><td>3 days ago</td><td>22m</td></tr>
           </tbody>
         </table></div>
+        </div>
       </div>
       <div class="tabpanel" id="panel-autoscaling">
+        <div class="prov-locked walk-empty">
+          <div class="we-ico">&#128274;</div>
+          <h3>Provision the pipeline first</h3>
+          <p>Autoscaling has no cluster to report on until the pipeline is provisioned.</p>
+          <button type="button" class="btn btn-primary" onclick="showTab('setup')">Go to Setup &rarr;</button>
+        </div>
+        <div class="prov-content">
         <h3 class="tabh">Cluster autoscaling &amp; capacity</h3>
         <p class="tabd">Node count against target range, over the last 7 days.</p>
         <div class="kpis">
-          <div class="kpi"><div class="l">Current nodes</div><div class="v">34</div><div class="d">target range 20&ndash;60</div></div>
+          <div class="kpi"><div class="l">Current nodes</div><div class="v">34</div><div class="d" id="autoscaleRangeNote">target range 20&ndash;60</div></div>
           <div class="kpi"><div class="l">CPU utilization</div><div class="v">68%</div><div class="d">cluster average</div></div>
           <div class="kpi"><div class="l">Scale events today</div><div class="v">3</div><div class="d">all scale-out</div></div>
         </div>
@@ -309,6 +392,7 @@
           });
         })();
         </script>
+        </div>
       </div>
     </section>
   </main>
@@ -351,6 +435,79 @@ document.querySelectorAll(".tabbtn").forEach(function (b) {
 })();
 </script>
 <script>
+var LOCKED_TABS = ["health", "topology", "queues", "jobs", "autoscaling"];
+function isProvisioned() {
+  try { return localStorage.getItem("cdd_pipeline_provisioned") === "1"; } catch (e) { return false; }
+}
+function getPipelineConfig() {
+  try { return JSON.parse(localStorage.getItem("cdd_pipeline_config") || "null"); } catch (e) { return null; }
+}
+function setLockedTabsVisible(visible) {
+  LOCKED_TABS.forEach(function (t) {
+    var panel = document.getElementById("panel-" + t);
+    if (!panel) return;
+    var content = panel.querySelector(".prov-content");
+    var locked = panel.querySelector(".prov-locked");
+    if (content) content.style.display = visible ? "" : "none";
+    if (locked) locked.style.display = visible ? "none" : "block";
+  });
+}
+function renderSetupSummary() {
+  var cfg = getPipelineConfig();
+  if (!cfg) return;
+  document.getElementById("setupIntro").style.display = "none";
+  document.getElementById("setupDone").style.display = "";
+  var tierLabel = { small: "Small (dev/test)", medium: "Medium (production)", large: "Large (high volume)" }[cfg.tier] || cfg.tier;
+  document.getElementById("setupSummaryText").textContent =
+    cfg.region + " · " + tierLabel + " · autoscaling " + cfg.min + "–" + cfg.max + " nodes · " + cfg.partitions + " queue partitions.";
+  var rangeNote = document.getElementById("autoscaleRangeNote");
+  if (rangeNote) rangeNote.textContent = "target range " + cfg.min + "–" + cfg.max;
+}
+document.getElementById("provisionBtn").addEventListener("click", function () {
+  var min = parseInt(document.getElementById("cfgMin").value, 10);
+  var max = parseInt(document.getElementById("cfgMax").value, 10);
+  var part = parseInt(document.getElementById("cfgPartitions").value, 10);
+  var errEl = document.getElementById("cfgError");
+  if (!min || !max || min < 1 || max < 1 || min > max) {
+    errEl.textContent = "Min nodes must be at least 1 and no greater than max nodes.";
+    errEl.style.display = "";
+    return;
+  }
+  if (!part || part < 1) {
+    errEl.textContent = "Queue partitions must be at least 1.";
+    errEl.style.display = "";
+    return;
+  }
+  errEl.style.display = "none";
+  var cfg = {
+    region: document.getElementById("cfgRegion").value,
+    tier: document.getElementById("cfgTier").value,
+    min: min, max: max, partitions: part
+  };
+  try {
+    localStorage.setItem("cdd_pipeline_provisioned", "1");
+    localStorage.setItem("cdd_pipeline_config", JSON.stringify(cfg));
+  } catch (e) {}
+  setLockedTabsVisible(true);
+  renderSetupSummary();
+  toast("Pipeline provisioned — Health, Queues, and the rest are live now.");
+  showTab("health");
+});
+document.getElementById("reconfigureBtn").addEventListener("click", function () {
+  document.getElementById("setupDone").style.display = "none";
+  document.getElementById("setupIntro").style.display = "";
+});
+(function () {
+  if (isProvisioned()) {
+    setLockedTabsVisible(true);
+    renderSetupSummary();
+  } else {
+    setLockedTabsVisible(false);
+    if (!location.hash) showTab("setup");
+  }
+})();
+</script>
+<script>
 var CDD_STAGES = [{n:"Overview",p:["index.html","ecosystem.html"]},{n:"Connect",p:["Sources/index.html","ingestion-ops.html"]},{n:"Watch",p:["Monitoring/index.html","delta-ops.html"]},{n:"Detect",p:["Detect/index.html","findings.html","elements.html","detection-infra.html"]},{n:"Trust",p:["Trust/index.html","model-ops.html"]},{n:"Comply",p:["compliance.html","reports.html"]},{n:"Manage",p:["system-health.html","pipeline.html","platform-admin.html","admin.html"]}];
 var STEP_NOTES = {
   "index.html": "Home base \u2014 right now it\u2019s showing what day one actually looks like: nothing connected, nothing to report. Every tile you\u2019ll see later is a live KPI pulled from a real page; connect a source and this same screen starts filling in.",
@@ -367,7 +524,7 @@ var STEP_NOTES = {
   "compliance.html": "Turns \u2018we checked your data\u2019 into a plain-language guarantee, then maps that guarantee onto the specific regulations you're actually covered under.",
   "reports.html": "Where a finished check becomes something you can hand someone \u2014 a one-page summary report, or a full evidence package built for an auditor.",
   "system-health.html": "Everything across the whole platform that needs attention, in one feed \u2014 plus whether there's enough processing capacity for what's coming in next.",
-  "pipeline.html": "The technical layer under System health \u2014 per-stage pipeline health, service topology, queue depth, and the lifecycle of every ingestion job. Platform Ops only.",
+  "pipeline.html": "The technical layer under System health \u2014 per-stage pipeline health, service topology, queue depth, and the lifecycle of every ingestion job. Its new Setup tab is also where Platform Ops actually starts: provision the shared processing infrastructure here before any source is connected. Platform Ops only.",
   "platform-admin.html": "The technical layer under Admin \u2014 tenant administration, encryption key rotation, notification routing, deployment posture, and what each source actually costs to keep checking. Platform Ops only.",
   "admin.html": "Where the three roles you've been switching between actually come from, plus how long each type of data is kept. The last stop \u2014 everything before this was what the product does; this is who's allowed to see it."
 };

@@ -222,6 +222,7 @@
   sel.addEventListener("change", function () {
     document.body.setAttribute("data-role", sel.value);
     try { localStorage.setItem("cdd_role", sel.value); } catch (e) {}
+    if (typeof renderJourney === "function") renderJourney();
   });
 })();
 </script>
@@ -305,7 +306,17 @@ function renderJourney() {
   });
 
   document.getElementById("heroStat").textContent = visibleCount + (visibleCount === 1 ? " screen" : " screens") + " · " + JOURNEY_STAGES.length + " stages" + (visibleCount < TOTAL_STEPS ? " (" + (TOTAL_STEPS - visibleCount) + " hidden)" : "");
-  document.getElementById("heroStart").setAttribute("href", firstVisible || "index.html");
+  // Platform Ops doesn't start at Dashboard like everyone else — the pipeline has to exist
+  // before there's a source to connect, so their "Start" goes to Pipeline's Setup tab instead.
+  var isPlatformOps = document.body.getAttribute("data-role") === "admin";
+  var heroStartEl = document.getElementById("heroStart");
+  if (isPlatformOps) {
+    heroStartEl.setAttribute("href", "pipeline.html#setup");
+    heroStartEl.textContent = "Start — provision the pipeline →";
+  } else {
+    heroStartEl.setAttribute("href", firstVisible || "index.html");
+    heroStartEl.textContent = "Start →";
+  }
 }
 
 document.getElementById("stagelist").addEventListener("click", function (e) {
@@ -334,6 +345,9 @@ document.getElementById("journeyCustomizeBtn").addEventListener("click", functio
 });
 
 document.getElementById("heroStart").addEventListener("click", function () {
+  // Platform Ops jumps straight to Pipeline Setup, outside the shared 18-step tour — that tour
+  // assumes you start at Dashboard, and Pipeline sits near the end of its sequence.
+  if (document.body.getAttribute("data-role") === "admin") return;
   try {
     localStorage.setItem("cdd_walkthrough_active", "1");
     localStorage.setItem("cdd_walkthrough_empty", "1");

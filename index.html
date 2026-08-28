@@ -286,6 +286,7 @@
     <section class="content">
 <div class="dtoolbar">
         <div class="actions">
+          <a class="btn btn-primary role-gate" data-role="admin" href="pipeline.html#setup" id="provisionCta">&#9881; Provision the pipeline</a>
           <a class="btn btn-primary js-connect-open role-gate" data-role="dpo admin" href="connect-source.html">+ Connect a source</a>
           <a class="btn role-gate" data-role="dpo compliance" href="findings.html">View findings</a>
           <a class="btn role-gate" data-role="dpo compliance" href="reports.html">Download a report</a>
@@ -680,6 +681,18 @@ renderTiles();
     if (typeof renderTiles === "function") renderTiles();
     if (typeof updateEcoVisibility === "function") updateEcoVisibility();
   });
+})();
+</script>
+<script>
+(function () {
+  // Platform Ops starts from the pipeline, not a source — once it's provisioned this CTA has
+  // done its job, so it steps aside and "+ Connect a source" becomes the lead action again.
+  var provisioned = false;
+  try { provisioned = localStorage.getItem("cdd_pipeline_provisioned") === "1"; } catch (e) {}
+  if (provisioned) {
+    var cta = document.getElementById("provisionCta");
+    if (cta) cta.style.display = "none";
+  }
 })();
 </script>
 <script>
