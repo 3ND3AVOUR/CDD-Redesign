@@ -165,7 +165,6 @@
           <div class="navgroup">Overview</div>
           <a href="index.html" data-role="dpo compliance admin">Dashboard</a>
           <a href="ecosystem.html" data-role="dpo compliance admin">Data ecosystem</a>
-          <a href="search.html" data-role="dpo compliance admin">Search</a>
           <div class="navgroup">Connect</div>
           <a href="Sources/index.html" data-role="dpo admin">Sources</a>
           <a href="ingestion-ops.html" data-role="admin">Ingestion ops</a>
@@ -309,12 +308,10 @@ document.getElementById("tabbar").addEventListener("click", function (e) {
 })();
 </script>
 <script>
-var CDD_STAGES = [{n:"Overview",p:["index.html","ecosystem.html","search.html"]},{n:"Connect",p:["Sources/index.html","ingestion-ops.html"]},{n:"Watch",p:["Monitoring/index.html","delta-ops.html"]},{n:"Detect",p:["Detect/index.html","findings.html","elements.html","detection-infra.html"]},{n:"Trust",p:["Trust/index.html","model-ops.html"]},{n:"Comply",p:["compliance.html","reports.html"]},{n:"Manage",p:["system-health.html","pipeline.html","platform-admin.html","admin.html"]}];
+var CDD_STAGES = [{n:"Overview",p:["index.html","ecosystem.html"]},{n:"Connect",p:["Sources/index.html","ingestion-ops.html"]},{n:"Watch",p:["Monitoring/index.html","delta-ops.html"]},{n:"Detect",p:["Detect/index.html","findings.html","elements.html","detection-infra.html"]},{n:"Trust",p:["Trust/index.html","model-ops.html"]},{n:"Comply",p:["compliance.html","reports.html"]},{n:"Manage",p:["system-health.html","pipeline.html","platform-admin.html","admin.html"]}];
 var STEP_NOTES = {
   "index.html": "Home base \u2014 right now it\u2019s showing what day one actually looks like: nothing connected, nothing to report. Every tile you\u2019ll see later is a live KPI pulled from a real page; connect a source and this same screen starts filling in.",
-  "ecosystem.html": "Once sources exist, this groups them by type \u2014 database vs. files vs. business app \u2014 with the exact same counts Sources and Findings report. It\u2019s empty right now for the same reason everything else is: nothing\u2019s connected yet.",
-  "search.html": "One box, live results, across sources, element types, team members, and every page. There\u2019s nothing to find yet because there\u2019s nothing connected yet \u2014 that changes at the next step.",
-  "Sources/index.html": "This is the step. Click \u2018Connect your first source\u2019 below and watch it actually happen \u2014 a real wizard, then a real row that starts checking live. Everything from here on assumes you did.",
+  "ecosystem.html": "Once sources exist, this groups them by type \u2014 database vs. files vs. business app \u2014 with the exact same counts Sources and Findings report. It\u2019s empty right now for the same reason everything else is: nothing\u2019s connected yet.",  "Sources/index.html": "This is the step. Click \u2018Connect your first source\u2019 below and watch it actually happen \u2014 a real wizard, then a real row that starts checking live. Everything from here on assumes you did.",
   "ingestion-ops.html": "The technical layer under Sources. This is literally what happens when a source connects \u2014 records get matched to a routing rule and handed to a real ingestion job. Platform Ops only.",
   "Monitoring/index.html": "Instead of re-checking everything on every scan, this is the logic deciding what's actually new since last time \u2014 the reason a rescan doesn't cost what a first scan does.",
   "delta-ops.html": "The technical layer under Changes \u2014 how \u2018what changed\u2019 actually gets computed (log-based CDC vs. timestamp polling), with a manual override per source if the default strategy is wrong. Platform Ops only.",

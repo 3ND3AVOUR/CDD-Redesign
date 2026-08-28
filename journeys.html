@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>CDD · The Journey</title>
 <!-- v3.2 — the tile dashboard and tab consolidation fold dozens of underlying screens into
-     19 main pages (each with tabs for its "inside" views), so the flow is 19 steps across
+     18 main pages (each with tabs for its "inside" views), so the flow is 18 steps across
      7 stages. Connect a source is no longer its own page — it's a button on Sources that opens
      a modal. Every step still lands on real, working content — tabs included. -->
 <style>
@@ -138,7 +138,6 @@
           <div class="navgroup">Overview</div>
           <a href="index.html" data-role="dpo compliance admin">Dashboard</a>
           <a href="ecosystem.html" data-role="dpo compliance admin">Data ecosystem</a>
-          <a href="search.html" data-role="dpo compliance admin">Search</a>
           <div class="navgroup">Connect</div>
           <a href="Sources/index.html" data-role="dpo admin">Sources</a>
           <a href="ingestion-ops.html" data-role="admin">Ingestion ops</a>
@@ -172,7 +171,7 @@
 
   <main class="main">
     <header class="header">
-      <div><h1>The Journey</h1><p>One seamless flow, connect a source to managing everything — 19 screens, 7 stages.</p></div>
+      <div><h1>The Journey</h1><p>One seamless flow, connect a source to managing everything — 18 screens, 7 stages.</p></div>
       <div class="header-right"><select class="role-select" id="roleSelect" aria-label="Switch role">
           <option value="dpo">Priya N. · Privacy Ops</option>
           <option value="compliance">Marcus T. · Compliance Ops</option>
@@ -184,7 +183,7 @@
 
     <section class="content">
 <div class="hero">
-        <div class="stat">Complete flow, start to finish<b id="heroStat">19 screens · 7 stages</b></div>
+        <div class="stat">Complete flow, start to finish<b id="heroStat">18 screens · 7 stages</b></div>
         <div class="hero-actions">
           <button class="hero-customize" id="journeyCustomizeBtn">✎ Customize steps</button>
           <a class="hero-start" href="Sources/index.html" id="heroStart">Start &rarr;</a>
@@ -230,8 +229,7 @@
 var JOURNEY_STAGES = [
   { name: "Overview", desc: "land here first", steps: [
     { path: "index.html", label: "Dashboard" },
-    { path: "ecosystem.html", label: "Data ecosystem" },
-    { path: "search.html", label: "Search", tabs: 2 }
+    { path: "ecosystem.html", label: "Data ecosystem" }
   ] },
   { name: "Connect", desc: "bring a source in and watch it", steps: [
     { path: "Sources/index.html", label: "Sources", tabs: 6 },
