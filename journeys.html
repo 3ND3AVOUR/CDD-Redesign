@@ -231,20 +231,20 @@ var JOURNEY_STAGES = [
   { name: "Overview", desc: "land here first", steps: [
     { path: "index.html", label: "Dashboard" },
     { path: "ecosystem.html", label: "Data ecosystem" },
-    { path: "search.html", label: "Search" }
+    { path: "search.html", label: "Search", tabs: 2 }
   ] },
   { name: "Connect", desc: "bring a source in and watch it", steps: [
-    { path: "Sources/index.html", label: "Sources", tabs: 5 },
+    { path: "Sources/index.html", label: "Sources", tabs: 6 },
     { path: "ingestion-ops.html", label: "Ingestion ops", tabs: 4 }
   ] },
   { name: "Watch", desc: "catch what changed", steps: [
     { path: "Monitoring/index.html", label: "Changes", tabs: 2 },
-    { path: "delta-ops.html", label: "Delta ops", tabs: 5 }
+    { path: "delta-ops.html", label: "Delta ops", tabs: 6 }
   ] },
   { name: "Detect", desc: "find what's sensitive", steps: [
-    { path: "Detect/index.html", label: "Detection", tabs: 3 },
-    { path: "findings.html", label: "Findings" },
-    { path: "elements.html", label: "Elements" },
+    { path: "Detect/index.html", label: "Detection", tabs: 4 },
+    { path: "findings.html", label: "Findings", tabs: 2 },
+    { path: "elements.html", label: "Elements", tabs: 2 },
     { path: "detection-infra.html", label: "Detection infra", tabs: 6 }
   ] },
   { name: "Trust", desc: "can you rely on it", steps: [
@@ -258,7 +258,7 @@ var JOURNEY_STAGES = [
   { name: "Manage", desc: "keep it healthy and secure", steps: [
     { path: "system-health.html", label: "System health", tabs: 2 },
     { path: "pipeline.html", label: "Pipeline", tabs: 5 },
-    { path: "platform-admin.html", label: "Platform admin", tabs: 6 },
+    { path: "platform-admin.html", label: "Platform admin", tabs: 8 },
     { path: "admin.html", label: "Admin", tabs: 3 }
   ] }
 ];

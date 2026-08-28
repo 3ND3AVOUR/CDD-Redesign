@@ -274,14 +274,14 @@
           <div class="iarows">
             <div class="iarow"><a href="index.html">Dashboard</a><span>Customizable KPI tiles with trend sparklines, an estate-coverage chart, and quick access to what needs attention. Add, remove, and reorder tiles — it remembers your layout.</span></div>
             <div class="iarow"><a href="ecosystem.html">Data ecosystem</a><span>The full connected estate at a glance — every source, its type, coverage, and last-check status, filterable and clickable through to the detail.</span></div>
-            <div class="iarow"><a href="search.html">Search</a><span>One box, live results, across sources, element types, team members, and every page — no separate results page to wait on.</span></div>
+            <div class="iarow"><a href="search.html">Search <span class="tabtag">2 tabs</span></a><span>One box, live results, across sources, element types, team members, and every page — plus a Browse results tab into the raw result store, independent of the Findings review workflow.</span></div>
           </div>
         </div>
 
         <div class="iaproj">
           <div class="iaproj-h"><span class="dot" style="background:#2563EB"></span><b>Connect</b><span>— bring a source in and watch it</span></div>
           <div class="iarows">
-            <div class="iarow"><a href="Sources/index.html">Sources <span class="tabtag">5 tabs</span></a><span>Overview, Health, Scans, Failed items, and History — every connection, its status, a live "check again," a real retry, and a per-source scan history with a deduplicated consolidated total. Its <b>Connect a source</b> button opens the 4-step wizard (what to connect, access, a check schedule, review) as a modal, right on top of this page — no separate screen to navigate to.</span></div>
+            <div class="iarow"><a href="Sources/index.html">Sources <span class="tabtag">6 tabs</span></a><span>Overview, Health, Scans, Failed items, History, and Catalog — every connection, its status, a live "check again," a real retry, a per-source scan history with a deduplicated consolidated total, and a real browsable list of 14 named integrations. Its <b>Connect a source</b> button opens the 4-step wizard (what to connect, access — including an optional bring-your-own-key field, a check schedule, review) as a modal, right on top of this page — no separate screen to navigate to.</span></div>
             <div class="iarow"><a href="ingestion-ops.html">Ingestion ops <span class="tabtag">4 tabs</span></a><span>Sources' technical deep pair — routing, per-job detail, partition lag, and a dead-letter queue with a working Replay button. Admin only.</span></div>
           </div>
         </div>
@@ -290,16 +290,16 @@
           <div class="iaproj-h"><span class="dot" style="background:#0FA3A3"></span><b>Watch</b><span>— catch what changed</span></div>
           <div class="iarows">
             <div class="iarow"><a href="Monitoring/index.html">Changes <span class="tabtag">2 tabs</span></a><span>What changed since the last check and how much that saved you, plus "Why wasn't this checked?" — look up any change and get an honest answer.</span></div>
-            <div class="iarow"><a href="delta-ops.html">Delta ops <span class="tabtag">5 tabs</span></a><span>Changes' technical deep pair — CDC metrics, source-by-source config, the savings math behind the headline percentage, a manual override form, and alerting rules. Admin only.</span></div>
+            <div class="iarow"><a href="delta-ops.html">Delta ops <span class="tabtag">6 tabs</span></a><span>Changes' technical deep pair — CDC metrics, source-by-source config, the savings math behind the headline percentage, a manual override form, alerting rules, and a plain-language delta-processing assurance checklist. Admin only.</span></div>
           </div>
         </div>
 
         <div class="iaproj">
           <div class="iaproj-h"><span class="dot" style="background:#D97706"></span><b>Detect</b><span>— find what's sensitive</span></div>
           <div class="iarows">
-            <div class="iarow"><a href="Detect/index.html">Detection <span class="tabtag">3 tabs</span></a><span>Overview, Coverage, and By source — totals and accuracy, how much has actually been checked, and a drill-down per source.</span></div>
-            <div class="iarow"><a href="findings.html">Findings</a><span>What's been found, by type and how urgent it is, with a full review workflow. Kept as its own page — it's a workflow, not just another view.</span></div>
-            <div class="iarow"><a href="elements.html">Elements</a><span>Every element type CDD looks for, broken down by PII / PI / PFI / Other, with a glossary and category-level filtering.</span></div>
+            <div class="iarow"><a href="Detect/index.html">Detection <span class="tabtag">4 tabs</span></a><span>Overview, Coverage, By source, and Assurance — totals and accuracy, how much has actually been checked, a drill-down per source, and the plain-language guarantee behind the numbers (including that nothing's ever double-counted).</span></div>
+            <div class="iarow"><a href="findings.html">Findings <span class="tabtag">2 tabs</span></a><span>What's been found, by type and how urgent it is, with a full review workflow, plus an Analytics tab showing volume trends and how the PII/PHI/PI/PFI mix has shifted over 7 weeks. Kept as its own page — it's a workflow, not just another view.</span></div>
+            <div class="iarow"><a href="elements.html">Elements <span class="tabtag">2 tabs</span></a><span>Every element type CDD looks for, broken down by PII / PHI / PI / PFI / Other, with a glossary and category-level filtering, plus a By schema field tab showing exactly which table and column each classification came from.</span></div>
             <div class="iarow"><a href="detection-infra.html">Detection infra <span class="tabtag">6 tabs</span></a><span>Detection's technical deep pair — GPU cost, topic throughput, a cost-model sensitivity table, DLQ replay, throughput KPIs, and a data-sprawl table (duplicate sensitive elements across sources). Admin/compliance.</span></div>
           </div>
         </div>
@@ -325,7 +325,7 @@
           <div class="iarows">
             <div class="iarow"><a href="system-health.html">System health <span class="tabtag">2 tabs</span></a><span>Alerts and Capacity — everything that needs attention in one feed, and whether there's enough processing power for what's coming in.</span></div>
             <div class="iarow"><a href="pipeline.html">Pipeline <span class="tabtag">5 tabs</span></a><span>System health's technical deep pair — per-stage pipeline health, service topology, queue depth &amp; consumer lag, job lifecycle, and a 7-day autoscaling chart. Admin only.</span></div>
-            <div class="iarow"><a href="platform-admin.html">Platform admin <span class="tabtag">6 tabs</span></a><span>Admin's technical deep pair — encryption key rotation, notification routing, deployment/air-gap posture, an SLA &amp; cost scorecard, per-source scan economics, and source ownership. Admin only.</span></div>
+            <div class="iarow"><a href="platform-admin.html">Platform admin <span class="tabtag">8 tabs</span></a><span>Admin's technical deep pair — tenants &amp; roles (with a real second-approver flow for creating one), encryption key rotation (same second-approver pattern), notification routing, deployment/air-gap posture, an SLA &amp; cost scorecard, per-source scan economics, source ownership, and a platform-wide audit log that both second-approver flows write to automatically. Admin only.</span></div>
             <div class="iarow"><a href="admin.html">Admin <span class="tabtag">3 tabs</span></a><span>Team, Roles &amp; permissions, and Data retention — invite and manage your team, who can see what, and how long we keep data by type.</span></div>
           </div>
         </div>
@@ -391,11 +391,11 @@
             <ul>
               <li><b>Duplicate or near-duplicate views</b> — Data inventory and Posture trends overlapped with Coverage and Compliance assurance closely enough to drop without losing information. Still cut — genuine duplicates, not brought back.</li>
               <li><b>Deeper configuration screens</b> — Detection settings, Alert rules, Sensitivity types, Test data, Drift monitoring, Review queue. Originally cut as one level deeper than a seamless connect-to-manage story needs; <b>Drift monitoring, Review queue, and Test data are now back</b> as tabs on Model ops, and <b>Alert rules</b> as a tab on Delta ops.</li>
-              <li><b>Secondary catalog/detail views</b> — Browse integrations, Throughput, Data copies, Trends, Stuck items, Activity (change log), Savings report. <b>Search is now back</b> as its own page; <b>Throughput and Data copies (as "data sprawl") are now back</b> on Detection infra; <b>Savings report is now back</b> on Delta ops.</li>
+              <li><b>Secondary catalog/detail views</b> — Browse integrations, Throughput, Data copies, Trends, Stuck items, Activity (change log), Savings report. <b>Search is now back</b> as its own page; <b>Browse integrations is now back</b> as a real Catalog tab on Sources (14 named integrations, not a "10+" stat); <b>Throughput and Data copies (as "data sprawl") are now back</b> on Detection infra; <b>Savings report is now back</b> on Delta ops; <b>Activity (change log) is now back</b> as a platform-wide Audit log on Platform admin.</li>
               <li><b>Deeper admin surfaces</b> — Pipeline health and Queue depth, Data encryption, Where data lives. <b>All of these are now back</b> — Pipeline health &amp; Queue depth on the new Pipeline page, Data encryption on Platform admin.</li>
               <li><b>Onboarding wizard</b> — the flow now starts directly at the Dashboard instead of a separate "welcome" screen first. Still cut.</li>
               <li><b>Connect a source as its own page</b> — not cut, just no longer a standalone screen or a journey step: it's now a button on Sources that opens the same wizard as a modal, so getting there costs zero navigation.</li>
-              <li><b>Five separate sidebar entries per group, now one hub with tabs</b> — not cut, just no longer a standalone page: Connections, Connection health, Failed items, and Scans are now 4 of the 5 tabs inside Sources (the 5th, History, is new — see below); Compliance assurance and Regulation coverage are now the 2 tabs inside Compliance; Reports and Evidence packs are now the 2 tabs inside Reports &amp; evidence; Alerts and Capacity are now the 2 tabs inside System health; Admin, Roles &amp; permissions, and Data retention are now the 3 tabs inside Admin; Changes and Why wasn't this checked? are now the 2 tabs inside Monitoring; Detection, Coverage, and By source are now the 3 tabs inside the Detect hub.</li>
+              <li><b>Five separate sidebar entries per group, now one hub with tabs</b> — not cut, just no longer a standalone page: Connections, Connection health, Failed items, and Scans are now 4 of the 6 tabs inside Sources (History and Catalog are new — see below); Compliance assurance and Regulation coverage are now the 2 tabs inside Compliance; Reports and Evidence packs are now the 2 tabs inside Reports &amp; evidence; Alerts and Capacity are now the 2 tabs inside System health; Admin, Roles &amp; permissions, and Data retention are now the 3 tabs inside Admin; Changes and Why wasn't this checked? are now the 2 tabs inside Monitoring; Detection, Coverage, and By source are now 3 of the 4 tabs inside the Detect hub (Assurance is new).</li>
             </ul>
           </div>
           <div class="gbox add">
@@ -410,10 +410,14 @@
               <li><b>A History tab on Sources</b> — every past scan per source, with what changed run to run, plus a deduplicated "consolidated" total so re-finding the same items across scans doesn't get counted twice.</li>
               <li><b>View results knows where it's going</b> — clicking it from Sources now lands on Findings scoped to that one source, with a banner and a one-click way back to Sources instead of the full unfiltered list.</li>
               <li><b>No more project names</b> — CITADEL, RANGER, SENTRY, LEGION, SHIELD are gone from the product. The sidebar is one flat list grouped by what each stage does.</li>
-              <li><b>One seamless journey, now 10 steps</b> — the same connect-to-manage flow, re-counted so a hub's tabs ride along inside its one step instead of each counting separately, and with Connect a source no longer occupying a step of its own.</li>
               <li><b>Plain persona names</b> — Compliance and IT Admin became Compliance Ops and Platform Ops, matching Privacy Ops.</li>
               <li><b>Full-bleed layout</b> — the shell now fills the screen edge to edge instead of sitting centered with margins.</li>
-              <li><b>A version dropdown</b> — v1.0 through v3.2, one control instead of a growing row of buttons.</li>
+              <li><b>A real guided walkthrough, not just a list</b> — a "▶ Start walkthrough" button in the sidebar launches an actual product tour: Previous/Next walk the real 19-step sequence, a running "Pipeline so far" checklist tracks genuine progress (it only checks off "Source connected" once you actually complete the wizard), and the first four steps start from a real empty state — nothing connected, nothing to report — instead of jumping straight into the fully populated demo.</li>
+              <li><b>A "Manual only" schedule</b> — connecting a source no longer forces a recurring schedule; you can say "I'll check it myself" and nothing runs automatically after the first check.</li>
+              <li><b>Tenants &amp; roles, with a real second-approver flow</b> — Platform admin gained a Tenants tab where creating a tenant (or rotating an encryption key) needs a <i>different</i> admin to approve it before it takes effect, logged automatically to a new platform-wide Audit log.</li>
+              <li><b>Bring-your-own-key</b> — the connect wizard now has an optional field to attach a customer-managed encryption key instead of the platform-managed default.</li>
+              <li><b>PII, PHI, PI, PFI, Other — consistently, everywhere</b> — PHI (health data) used to be buried inside "Other"; it's now its own category, shown identically on both Findings and Elements, including a Category column and filter on Findings that didn't exist before.</li>
+              <li><b>Removed the version dropdown</b> — v1.0 through v3.2 no longer sits in the header; this is simply the current build.</li>
             </ul>
           </div>
         </div>
