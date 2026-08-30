@@ -264,6 +264,41 @@
         </div>
         <p class="sub" style="margin-top:-6px;">Usage has been climbing since detection started running slower on Tuesday. Requesting more capacity adds processing power within a few hours &mdash; it does not fix the underlying slowdown.</p>
         <button class="btn-primary" id="reqBtn">Request more capacity</button>
+
+        <h3 class="section-h" style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-2);margin:26px 0 12px;">Capacity by pipeline</h3>
+        <div class="twrap" style="border:1px solid #E7EAF2;border-radius:12px;overflow-x:auto;"><table style="border-collapse:collapse;width:100%;font-size:13px;">
+          <thead><tr><th style="text-align:left;padding:11px 15px;border-bottom:1px solid #F0F1F6;background:#FBFCFE;font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-3);font-weight:700;">Pipeline</th><th style="text-align:left;padding:11px 15px;border-bottom:1px solid #F0F1F6;background:#FBFCFE;font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-3);font-weight:700;">Nodes (current / max)</th><th style="text-align:left;padding:11px 15px;border-bottom:1px solid #F0F1F6;background:#FBFCFE;font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-3);font-weight:700;">Usage</th></tr></thead>
+          <tbody id="capacityPipelineRows"></tbody>
+        </table></div>
+        <script>
+        (function () {
+          var SH_COLORS = ["#3979BD", "#7C3AED", "#0FA3A3", "#DB2777"];
+          function shGetShared() { try { return JSON.parse(localStorage.getItem("cdd_pipeline_shared") || "null"); } catch (e) { return null; } }
+          function shGetDedicated() { try { return JSON.parse(localStorage.getItem("cdd_pipeline_dedicated") || "null") || {}; } catch (e) { return {}; } }
+          var pipelines = [];
+          var shared = shGetShared();
+          if (shared) pipelines.push({ label: "Shared (default)", cfg: shared });
+          var ded = shGetDedicated();
+          Object.keys(ded).forEach(function (name) { if (ded[name]) pipelines.push({ label: name + " (dedicated)", cfg: ded[name] }); });
+          var tbody = document.getElementById("capacityPipelineRows");
+          if (!pipelines.length) {
+            tbody.innerHTML = '<tr><td colspan="3" style="padding:11px 15px;color:var(--ink-3);">No pipeline provisioned yet — see <a href="pipeline.html">Pipeline</a>.</td></tr>';
+            return;
+          }
+          /* Deterministic usage estimate — a pipeline nearer its ceiling shows a higher %, same
+             logic direction as this tab's own headline 83% figure, just per pipeline instead of
+             one aggregate number. */
+          tbody.innerHTML = pipelines.map(function (p, i) {
+            var current = Math.round(p.cfg.min + (p.cfg.max - p.cfg.min) * 0.72);
+            var pct = Math.round((current / p.cfg.max) * 100);
+            var color = SH_COLORS[i % SH_COLORS.length];
+            var barColor = pct >= 80 ? "var(--warn)" : "var(--sidebar-active)";
+            return '<tr><td style="padding:11px 15px;border-bottom:1px solid #F0F1F6;"><span style="display:inline-flex;align-items:center;gap:7px;"><span style="width:8px;height:8px;border-radius:50%;background:' + color + ';"></span>' + p.label + '</span></td>' +
+              '<td style="padding:11px 15px;border-bottom:1px solid #F0F1F6;font-variant-numeric:tabular-nums;">' + current + ' / ' + p.cfg.max + '</td>' +
+              '<td style="padding:11px 15px;border-bottom:1px solid #F0F1F6;"><div style="display:flex;align-items:center;gap:8px;"><div style="flex:1;max-width:140px;height:6px;border-radius:3px;background:#EEF1F7;overflow:hidden;"><div style="width:' + pct + '%;height:100%;background:' + barColor + ';"></div></div><span style="font-weight:700;font-size:12px;">' + pct + '%</span></div></td></tr>';
+          }).join("");
+        })();
+        </script>
       </div>
 
     </section>

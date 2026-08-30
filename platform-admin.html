@@ -181,6 +181,136 @@
 </head>
 <body>
 <script>document.body.setAttribute("data-role", localStorage.getItem("cdd_role") || "dpo");</script>
+<script>
+/* ---- Shared pipeline scope — read by Encryption, Notifications, Deployment, and SLA & cost ----
+   The pipeline model itself (shared vs. dedicated) is owned by pipeline.html; this just reads the
+   same localStorage facts (cdd_pipeline_shared, cdd_pipeline_dedicated) so every tab that manages
+   something PER pipeline — keys, routing, region/version, cost — lists the real pipelines instead
+   of assuming there's exactly one. Fixed-order categorical colors so a pipeline keeps its color
+   across tabs and across a filter changing which ones are visible. Defined up here, before any
+   tab panel's own inline script runs, since those scripts execute at parse time. */
+var PIPELINE_SHARED_KEY = "__shared__";
+var PIPELINE_COLORS = ["#3979BD", "#7C3AED", "#0FA3A3", "#DB2777"];
+var PIPELINE_COLOR_FALLBACK = "#8A93A6";
+function pgGetShared() {
+  try { return JSON.parse(localStorage.getItem("cdd_pipeline_shared") || "null"); } catch (e) { return null; }
+}
+function pgGetDedicatedMap() {
+  try { return JSON.parse(localStorage.getItem("cdd_pipeline_dedicated") || "null") || {}; } catch (e) { return {}; }
+}
+/* Every real pipeline that exists right now — the shared one (only if provisioned) plus every
+   dedicated tenant that's been provisioned. Order is fixed: shared first, then dedicated tenants
+   in the order they were promoted (object key order), so color assignment stays stable. */
+function pgListPipelines() {
+  var out = [];
+  var shared = pgGetShared();
+  if (shared) out.push({ id: PIPELINE_SHARED_KEY, label: "Shared (default)", cfg: shared });
+  var ded = pgGetDedicatedMap();
+  Object.keys(ded).forEach(function (name) {
+    if (ded[name]) out.push({ id: name, label: name + " (dedicated)", cfg: ded[name] });
+  });
+  return out;
+}
+function pgColorFor(id, allPipelines) {
+  var idx = allPipelines.map(function (p) { return p.id; }).indexOf(id);
+  return idx >= 0 && idx < PIPELINE_COLORS.length ? PIPELINE_COLORS[idx] : PIPELINE_COLOR_FALLBACK;
+}
+function pgTierLabel(tier) {
+  return { small: "Small (dev/test)", medium: "Medium (production)", large: "Large (high volume)" }[tier] || tier || "—";
+}
+/* One encryption key per pipeline, created automatically the first time that pipeline's key row
+   is looked at — a dedicated tenant's isolation story depends on having its own key (ADR-011), so
+   there's no "set one up manually" step; it exists the moment the pipeline does. */
+function pgGetKeys() {
+  try { return JSON.parse(localStorage.getItem("cdd_pipeline_keys") || "null") || {}; } catch (e) { return {}; }
+}
+function pgSaveKeys(obj) {
+  try { localStorage.setItem("cdd_pipeline_keys", JSON.stringify(obj)); } catch (e) {}
+}
+function pgEnsureKeysSeeded() {
+  var pipelines = pgListPipelines();
+  var all = pgGetKeys();
+  var changed = false;
+  pipelines.forEach(function (p) {
+    if (!all[p.id]) {
+      var prefix = p.id === PIPELINE_SHARED_KEY ? "shared" : p.id;
+      all[p.id] = [{ id: prefix + "-primary", usedBy: "All sources on this pipeline", due: "in 90 days", status: "ok" }];
+      changed = true;
+    }
+  });
+  if (changed) pgSaveKeys(all);
+  return all;
+}
+/* Same auto-provisioned pattern for notification routing — every pipeline starts with a sensible
+   in-app default the moment it's provisioned, then Platform Ops can add/adjust from there. */
+function pgGetNotifications() {
+  try { return JSON.parse(localStorage.getItem("cdd_pipeline_notifications") || "null") || {}; } catch (e) { return {}; }
+}
+function pgSaveNotifications(obj) {
+  try { localStorage.setItem("cdd_pipeline_notifications", JSON.stringify(obj)); } catch (e) {}
+}
+function pgEnsureNotificationsSeeded() {
+  var pipelines = pgListPipelines();
+  var all = pgGetNotifications();
+  var changed = false;
+  pipelines.forEach(function (p) {
+    if (!all[p.id]) {
+      all[p.id] = [
+        { channel: "In-app only", recipient: "All Platform Ops", events: "Alerts, capacity warnings", enabled: true }
+      ];
+      changed = true;
+    }
+  });
+  if (changed) pgSaveNotifications(all);
+  return all;
+}
+/* Deterministic cost estimate from a pipeline's own real config (tier + max nodes) — not a random
+   number, so it stays consistent across reloads and actually reflects what you provisioned. */
+var PG_TIER_COST = { small: 1200, medium: 3200, large: 6800 };
+function pgEstMonthlyCost(cfg) {
+  var base = PG_TIER_COST[cfg.tier] || PG_TIER_COST.medium;
+  var scale = (cfg.max || 60) / 60;
+  return Math.round((base * scale) / 10) * 10;
+}
+/* One small, dependency-free SVG bar chart, reused by SLA & cost and Scan economics. Flat
+   baseline, 4px-rounded top only, a direct value label above and a category label below each
+   bar — no separate legend needed since every bar already names itself. Native <title> gives a
+   hover tooltip for free. */
+function pgRoundedTopBarPath(x, y, w, h, r) {
+  r = Math.max(0, Math.min(r, w / 2, h));
+  return "M" + x + "," + (y + h) +
+    " L" + x + "," + (y + r) +
+    " Q" + x + "," + y + " " + (x + r) + "," + y +
+    " L" + (x + w - r) + "," + y +
+    " Q" + (x + w) + "," + y + " " + (x + w) + "," + (y + r) +
+    " L" + (x + w) + "," + (y + h) + " Z";
+}
+function pgBarChart(items, opts) {
+  opts = opts || {};
+  if (!items.length) return '<p style="color:var(--ink-3);font-size:12.5px;">Nothing to chart yet.</p>';
+  var height = opts.height || 168;
+  var barW = 42, gap = 30, padTop = 26, padBottom = 30, padX = 14;
+  var maxVal = Math.max.apply(null, items.map(function (i) { return i.value; })) || 1;
+  var innerH = height - padTop - padBottom;
+  var width = padX * 2 + items.length * (barW + gap) - gap;
+  var fmt = opts.formatValue || function (v) { return String(v); };
+  var bars = items.map(function (it, i) {
+    var x = padX + i * (barW + gap);
+    var h = Math.max(3, Math.round((it.value / maxVal) * innerH));
+    var y = padTop + (innerH - h);
+    var label = fmt(it.value);
+    return '<g>' +
+      '<path d="' + pgRoundedTopBarPath(x, y, barW, h, 4) + '" fill="' + it.color + '"><title>' + it.label + ': ' + label + '</title></path>' +
+      '<text x="' + (x + barW / 2) + '" y="' + (y - 7) + '" text-anchor="middle" font-size="11" font-weight="700" fill="#092339" font-family="Segoe UI, sans-serif">' + label + '</text>' +
+      '<text x="' + (x + barW / 2) + '" y="' + (height - 10) + '" text-anchor="middle" font-size="10.5" fill="#8A93A6" font-family="Segoe UI, sans-serif">' + it.label + '</text>' +
+    '</g>';
+  }).join("");
+  return '<svg viewBox="0 0 ' + width + ' ' + height + '" width="100%" height="' + height + '" preserveAspectRatio="xMinYMid meet" role="img" aria-label="' + (opts.ariaLabel || "Bar chart") + '">' +
+    '<line x1="' + padX + '" y1="' + (padTop + innerH) + '" x2="' + (width - padX) + '" y2="' + (padTop + innerH) + '" stroke="#E7EAF2" stroke-width="1"/>' +
+    bars +
+  '</svg>';
+}
+</script>
 <div class="shell">
 
   <aside class="sidebar">
@@ -376,106 +506,263 @@
       </div>
       <div class="tabpanel" id="panel-encryption">
         <h3 class="tabh">Encryption keys &amp; lifecycle (BYOK)</h3>
-        <p class="tabd">Which keys protect which sources, and when they're due to rotate. Rotating a key needs a second admin's approval, same as creating a tenant.</p>
+        <p class="tabd">Every pipeline gets its own key the moment it's provisioned &mdash; one DEK per pipeline is what makes crypto-erasure possible for a dedicated tenant (ADR-011). Rotating a key needs a second admin's approval, same as creating a tenant.</p>
+        <div class="cfgfield" id="keyPipelineWrap" style="max-width:280px;margin-bottom:16px;">
+          <label for="keyPipelineSelect">Pipeline</label>
+          <select id="keyPipelineSelect"></select>
+        </div>
         <div class="twrap"><table>
           <thead><tr><th>Key</th><th>Used by</th><th>Rotation due</th><th>Status</th><th></th></tr></thead>
-          <tbody id="keyRows">
-            <tr data-key="acme-eu-primary"><td>acme-eu-primary</td><td>Sales database, Billing database</td><td class="due">in 41 days</td><td><span class="status ok"><span class="dot"></span>OK</span></td><td><button class="btn-sm" data-rotate="acme-eu-primary">Rotate now</button></td></tr>
-            <tr data-key="acme-eu-files"><td>acme-eu-files</td><td>HR files, Marketing files</td><td class="due">in 6 days</td><td><span class="status warn"><span class="dot"></span>Rotate soon</span></td><td><button class="btn-sm" data-rotate="acme-eu-files">Rotate now</button></td></tr>
-            <tr data-key="acme-eu-apps"><td>acme-eu-apps</td><td>Sales data (Salesforce), Legacy CRM</td><td class="due">in 89 days</td><td><span class="status ok"><span class="dot"></span>OK</span></td><td><button class="btn-sm" data-rotate="acme-eu-apps">Rotate now</button></td></tr>
-          </tbody>
+          <tbody id="keyRows"></tbody>
         </table></div>
         <div id="keyApprovalRows"></div>
         <script>
         (function () {
           var pendingKey = [];
           var wrap = document.getElementById("keyApprovalRows");
+          var sel = document.getElementById("keyPipelineSelect");
+
+          function currentPipelineId() { return sel.value || PIPELINE_SHARED_KEY; }
+
+          function renderKeySelect() {
+            var pipelines = pgListPipelines();
+            var keep = sel.value;
+            if (!pipelines.length) {
+              sel.innerHTML = '<option value="">No pipeline provisioned yet</option>';
+              document.getElementById("keyRows").innerHTML = '<tr><td colspan="5" style="color:var(--ink-3);">Provision a pipeline on <a href="pipeline.html">Pipeline</a> first.</td></tr>';
+              return;
+            }
+            sel.innerHTML = pipelines.map(function (p) { return '<option value="' + p.id + '">' + p.label + '</option>'; }).join("");
+            var stillValid = pipelines.some(function (p) { return p.id === keep; });
+            sel.value = stillValid ? keep : pipelines[0].id;
+          }
+
+          function renderKeyRows() {
+            var pid = currentPipelineId();
+            if (!pid) return;
+            var all = pgEnsureKeysSeeded();
+            var keys = all[pid] || [];
+            document.getElementById("keyRows").innerHTML = keys.map(function (k) {
+              var statusHtml = k.status === "warn"
+                ? '<span class="status warn"><span class="dot"></span>Rotate soon</span>'
+                : '<span class="status ok"><span class="dot"></span>OK</span>';
+              return '<tr data-key="' + k.id + '"><td>' + k.id + '</td><td>' + k.usedBy + '</td><td class="due">' + k.due + '</td><td>' + statusHtml + '</td>' +
+                '<td><button class="btn-sm" data-rotate="' + k.id + '">Rotate now</button></td></tr>';
+            }).join("");
+          }
+
           function renderPendingKey() {
             wrap.innerHTML = pendingKey.map(function (k, i) {
               return '<div class="note" style="border-color:#F3E0B8;background:#FEF9EE;margin-top:14px;">' +
-                '<b>&#128274; Waiting on a second approver &mdash; rotate "' + k + '"</b><br>' +
+                '<b>&#128274; Waiting on a second approver &mdash; rotate "' + k.id + '" (' + k.pipelineLabel + ')</b><br>' +
                 'Requested by Sam R. just now. A different admin needs to confirm before the new key takes effect.' +
                 '<div style="margin-top:10px;"><button type="button" class="btn-sm" data-approve-key="' + i + '">Approve as Marcus T. (second admin)</button></div>' +
               '</div>';
             }).join("");
           }
+
+          sel.addEventListener("change", renderKeyRows);
           document.getElementById("keyRows").addEventListener("click", function (e) {
             var btn = e.target.closest("button[data-rotate]");
             if (!btn) return;
-            var key = btn.getAttribute("data-rotate");
-            if (pendingKey.indexOf(key) !== -1) return;
-            pendingKey.push(key);
+            var keyId = btn.getAttribute("data-rotate");
+            var pid = currentPipelineId();
+            if (pendingKey.some(function (k) { return k.id === keyId && k.pipelineId === pid; })) return;
+            var pipelines = pgListPipelines();
+            var pLabel = (pipelines.filter(function (p) { return p.id === pid; })[0] || {}).label || pid;
+            pendingKey.push({ id: keyId, pipelineId: pid, pipelineLabel: pLabel });
             renderPendingKey();
-            toast('Rotation for "' + key + '" requested — needs a second admin\\u2019s approval');
+            toast('Rotation for "' + keyId + '" requested — needs a second admin’s approval');
           });
           wrap.addEventListener("click", function (e) {
             var btn = e.target.closest("button[data-approve-key]");
             if (!btn) return;
             var idx = parseInt(btn.getAttribute("data-approve-key"), 10);
-            var key = pendingKey[idx];
-            if (!key) return;
+            var req = pendingKey[idx];
+            if (!req) return;
             pendingKey.splice(idx, 1);
             renderPendingKey();
-            var row = document.querySelector('#keyRows tr[data-key="' + key + '"]');
-            if (row) row.querySelector(".due").textContent = "in 90 days";
-            toast('Key "' + key + '" rotated — approved by two admins');
+            var all = pgGetKeys();
+            var keys = all[req.pipelineId] || [];
+            var key = keys.filter(function (k) { return k.id === req.id; })[0];
+            if (key) { key.due = "in 90 days"; key.status = "ok"; pgSaveKeys(all); }
+            if (currentPipelineId() === req.pipelineId) renderKeyRows();
+            toast('Key "' + req.id + '" rotated — approved by two admins');
             if (window.cddLogAuditAction) {
-              window.cddLogAuditAction({ type: "encryption", admin: "Sam R.", action: "Rotated encryption key", target: key, approver: "Marcus T." });
+              window.cddLogAuditAction({ type: "encryption", admin: "Sam R.", action: "Rotated encryption key", target: req.id + " (" + req.pipelineLabel + ")", approver: "Marcus T." });
             }
           });
+
+          renderKeySelect();
+          renderKeyRows();
         })();
         </script>
       </div>
       <div class="tabpanel" id="panel-notifications">
         <h3 class="tabh">Notification routing</h3>
-        <p class="tabd">Where check-finished and alert notifications actually go &mdash; including the email addresses collected in the connect wizard.</p>
+        <p class="tabd">Where check-finished and alert notifications actually go &mdash; scoped per pipeline, since a dedicated tenant's alerts shouldn't route to the same inbox as the shared pipeline's.</p>
+        <div class="cfgfield" id="notifyPipelineWrap" style="max-width:280px;margin-bottom:16px;">
+          <label for="notifyPipelineSelect">Pipeline</label>
+          <select id="notifyPipelineSelect"></select>
+        </div>
         <div class="twrap"><table>
           <thead><tr><th>Channel</th><th>Recipient</th><th>Events</th><th>Enabled</th></tr></thead>
-          <tbody>
-            <tr><td>Email</td><td id="notifyEmailCell">priya@acme-eu.com</td><td>Check finished, source broken</td><td><label class="toggle-sw"><input type="checkbox" checked><span class="tk"></span></label></td></tr>
-            <tr><td>Email</td><td>marcus@acme-eu.com</td><td>Compliance report ready</td><td><label class="toggle-sw"><input type="checkbox" checked><span class="tk"></span></label></td></tr>
-            <tr><td>In-app only</td><td>All Platform Ops</td><td>Alerts, capacity warnings</td><td><label class="toggle-sw"><input type="checkbox" checked><span class="tk"></span></label></td></tr>
-          </tbody>
+          <tbody id="notifyRows"></tbody>
         </table></div>
-        <div class="note">This is the settings home the IA &amp; Requirements report flagged as missing &mdash; the connect wizard collects an email, this is where it's actually managed.</div>
+        <div style="margin-top:14px;"><button type="button" class="btn" id="addNotifyBtn">+ Add a route</button></div>
+        <div class="note">This is the settings home the IA &amp; Requirements report flagged as missing &mdash; the connect wizard collects an email, this is where it's actually managed. A newly provisioned pipeline starts with one in-app default route; add more per pipeline as needed.</div>
         <script>
         (function () {
-          try {
-            var m = JSON.parse(localStorage.getItem("cdd_new_source") || "null");
-          } catch (e) {}
+          var sel = document.getElementById("notifyPipelineSelect");
+          function currentPipelineId() { return sel.value || PIPELINE_SHARED_KEY; }
+
+          function renderNotifySelect() {
+            var pipelines = pgListPipelines();
+            var keep = sel.value;
+            if (!pipelines.length) {
+              sel.innerHTML = '<option value="">No pipeline provisioned yet</option>';
+              document.getElementById("notifyRows").innerHTML = '<tr><td colspan="4" style="color:var(--ink-3);">Provision a pipeline on <a href="pipeline.html">Pipeline</a> first.</td></tr>';
+              document.getElementById("addNotifyBtn").disabled = true;
+              return;
+            }
+            document.getElementById("addNotifyBtn").disabled = false;
+            sel.innerHTML = pipelines.map(function (p) { return '<option value="' + p.id + '">' + p.label + '</option>'; }).join("");
+            var stillValid = pipelines.some(function (p) { return p.id === keep; });
+            sel.value = stillValid ? keep : pipelines[0].id;
+          }
+
+          function renderNotifyRows() {
+            var pid = currentPipelineId();
+            if (!pid) return;
+            var all = pgEnsureNotificationsSeeded();
+            var rows = all[pid] || [];
+            document.getElementById("notifyRows").innerHTML = rows.map(function (r, i) {
+              return '<tr><td>' + r.channel + '</td><td>' + r.recipient + '</td><td>' + r.events + '</td>' +
+                '<td><label class="toggle-sw"><input type="checkbox" data-notify-toggle="' + i + '" ' + (r.enabled ? "checked" : "") + '><span class="tk"></span></label></td></tr>';
+            }).join("");
+          }
+
+          sel.addEventListener("change", renderNotifyRows);
+          document.getElementById("notifyRows").addEventListener("change", function (e) {
+            var input = e.target.closest("input[data-notify-toggle]");
+            if (!input) return;
+            var pid = currentPipelineId();
+            var all = pgGetNotifications();
+            var idx = parseInt(input.getAttribute("data-notify-toggle"), 10);
+            if (all[pid] && all[pid][idx]) {
+              all[pid][idx].enabled = input.checked;
+              pgSaveNotifications(all);
+              toast((input.checked ? "Enabled" : "Disabled") + ' "' + all[pid][idx].channel + '" for ' + pid);
+            }
+          });
+          document.getElementById("addNotifyBtn").addEventListener("click", function () {
+            var pid = currentPipelineId();
+            if (!pid) return;
+            var all = pgGetNotifications();
+            if (!all[pid]) all[pid] = [];
+            all[pid].push({ channel: "Email", recipient: "you@example.com", events: "Check finished", enabled: true });
+            pgSaveNotifications(all);
+            renderNotifyRows();
+            toast("Route added — edit the recipient inline as needed");
+          });
+
+          renderNotifySelect();
+          renderNotifyRows();
         })();
         </script>
       </div>
       <div class="tabpanel" id="panel-deployment">
         <h3 class="tabh">Deployment topology &amp; air-gap posture</h3>
-        <p class="tabd">Where this tenant actually runs.</p>
-        <div class="kpis">
-          <div class="kpi"><div class="l">Region</div><div class="v" style="font-size:18px;">eu-west-1</div><div class="d">acme-eu tenant</div></div>
-          <div class="kpi"><div class="l">Mode</div><div class="v ok" style="font-size:18px;">Connected</div><div class="d">not air-gapped</div></div>
-          <div class="kpi"><div class="l">Platform version</div><div class="v" style="font-size:18px;">v6.5</div><div class="d">up to date</div></div>
-        </div>
+        <p class="tabd">Where every pipeline actually runs &mdash; one row per pipeline, since the shared pipeline and each dedicated tenant can sit in different regions.</p>
+        <div class="twrap"><table>
+          <thead><tr><th>Pipeline</th><th>Region</th><th>Mode</th><th>Platform version</th></tr></thead>
+          <tbody id="deploymentRows"></tbody>
+        </table></div>
+        <div class="note">Every pipeline runs connected, not air-gapped, on the current release &mdash; that changes per pipeline only if one is deliberately isolated. Provision a pipeline on <a href="pipeline.html">Pipeline</a> to see it here.</div>
+        <script>
+        (function () {
+          var pipelines = pgListPipelines();
+          var tbody = document.getElementById("deploymentRows");
+          if (!pipelines.length) {
+            tbody.innerHTML = '<tr><td colspan="4" style="color:var(--ink-3);">No pipeline provisioned yet — see <a href="pipeline.html">Pipeline</a>.</td></tr>';
+            return;
+          }
+          tbody.innerHTML = pipelines.map(function (p) {
+            return '<tr><td><span style="display:inline-flex;align-items:center;gap:7px;"><span style="width:8px;height:8px;border-radius:50%;background:' + pgColorFor(p.id, pipelines) + ';"></span>' + p.label + '</span></td>' +
+              '<td>' + p.cfg.region + '</td>' +
+              '<td><span class="status ok"><span class="dot"></span>Connected</span></td>' +
+              '<td>v6.5</td></tr>';
+          }).join("");
+        })();
+        </script>
       </div>
       <div class="tabpanel" id="panel-sla">
         <h3 class="tabh">SLA &amp; cost scorecard</h3>
-        <p class="tabd">Whether the platform is holding to its own commitments.</p>
+        <p class="tabd">Whether the platform is holding to its own commitments, and what each pipeline actually costs.</p>
         <div class="kpis">
           <div class="kpi"><div class="l">Uptime SLA</div><div class="v ok">99.94%</div><div class="d">target 99.9% &mdash; met</div></div>
           <div class="kpi"><div class="l">Detection latency SLA</div><div class="v ok">40 sec</div><div class="d">target 60 sec &mdash; met</div></div>
-          <div class="kpi"><div class="l">Cost per tenant / month</div><div class="v">$4,920</div><div class="d">GPU cost, see Detection infra</div></div>
+          <div class="kpi"><div class="l">Total across pipelines / month</div><div class="v" id="slaTotalCost">&mdash;</div><div class="d" id="slaTotalCostD">GPU cost, see Detection infra</div></div>
         </div>
+
+        <h4 class="tabh" style="font-size:14px;">Monthly cost by pipeline</h4>
+        <p class="tabd">Estimated from each pipeline's own capacity tier and autoscaling ceiling &mdash; provision or promote a pipeline on <a href="pipeline.html">Pipeline</a> to see it here.</p>
+        <div id="costChart" style="margin-bottom:24px;"></div>
+
+        <h4 class="tabh" style="font-size:14px;">Uptime — last 7 days</h4>
+        <div class="bars" id="uptimeBars"></div>
+        <script>
+        (function () {
+          var pipelines = pgListPipelines();
+          var costEl = document.getElementById("costChart");
+          if (!pipelines.length) {
+            costEl.innerHTML = '<p style="color:var(--ink-3);font-size:12.5px;">No pipeline provisioned yet.</p>';
+            document.getElementById("slaTotalCost").textContent = "$0";
+          } else {
+            var items = pipelines.map(function (p) {
+              return { label: p.id === PIPELINE_SHARED_KEY ? "Shared" : p.id, value: pgEstMonthlyCost(p.cfg), color: pgColorFor(p.id, pipelines) };
+            });
+            costEl.innerHTML = pgBarChart(items, { ariaLabel: "Monthly cost by pipeline", formatValue: function (v) { return "$" + v.toLocaleString(); } });
+            var total = items.reduce(function (s, i) { return s + i.value; }, 0);
+            document.getElementById("slaTotalCost").textContent = "$" + total.toLocaleString();
+            document.getElementById("slaTotalCostD").textContent = "across " + pipelines.length + " pipeline" + (pipelines.length === 1 ? "" : "s") + " · GPU cost separate, see Detection infra";
+          }
+
+          var uptimeData = [{ w: "Mon", v: 99.98 }, { w: "Tue", v: 99.91 }, { w: "Wed", v: 99.95 }, { w: "Thu", v: 100 }, { w: "Fri", v: 99.86 }, { w: "Sat", v: 99.99 }, { w: "Sun", v: 99.97 }];
+          var el = document.getElementById("uptimeBars");
+          var min = 99.8;
+          uptimeData.forEach(function (d) {
+            var c = document.createElement("div"); c.className = "bcol";
+            var h = Math.round(((d.v - min) / (100 - min)) * 90) + 10;
+            c.innerHTML = '<div class="val">' + d.v.toFixed(2) + '%</div><div class="bar" style="height:' + h + 'px"></div><div class="lbl">' + d.w + '</div>';
+            el.appendChild(c);
+          });
+        })();
+        </script>
       </div>
       <div class="tabpanel" id="panel-scaneconomics">
         <h3 class="tabh">Per-source scan economics</h3>
         <p class="tabd">What each source actually costs to keep checking.</p>
+        <div id="scanCostChart" style="margin-bottom:20px;"></div>
         <div class="twrap"><table>
           <thead><tr><th>Source</th><th>Cost per scan</th><th>Frequency</th><th>Monthly cost</th></tr></thead>
-          <tbody>
+          <tbody id="scanEconRows">
             <tr><td>Sales database</td><td class="num">$3.10</td><td>Every hour</td><td class="num">$2,232</td></tr>
             <tr><td>Billing database</td><td class="num">$2.40</td><td>Daily</td><td class="num">$72</td></tr>
             <tr><td>HR files (SharePoint)</td><td class="num">$4.80</td><td>Every hour</td><td class="num">$3,456</td></tr>
             <tr><td>Marketing files (S3)</td><td class="num">$1.90</td><td>Daily</td><td class="num">$57</td></tr>
           </tbody>
         </table></div>
+        <script>
+        (function () {
+          var rows = Array.prototype.slice.call(document.querySelectorAll("#scanEconRows tr")).map(function (tr) {
+            var tds = tr.querySelectorAll("td");
+            return { label: tds[0].textContent, value: parseInt(tds[3].textContent.replace(/[^0-9]/g, ""), 10) };
+          });
+          var items = rows.map(function (r) { return { label: r.label, value: r.value, color: "#3979BD" }; });
+          document.getElementById("scanCostChart").innerHTML = pgBarChart(items, { ariaLabel: "Monthly cost by source", formatValue: function (v) { return "$" + v.toLocaleString(); } });
+        })();
+        </script>
       </div>
       <div class="tabpanel" id="panel-ownership">
         <h3 class="tabh">Source ownership &amp; stewardship</h3>
