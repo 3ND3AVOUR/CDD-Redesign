@@ -685,10 +685,15 @@ renderTiles();
 </script>
 <script>
 (function () {
-  // Platform Ops starts from the pipeline, not a source — once it's provisioned this CTA has
-  // done its job, so it steps aside and "+ Connect a source" becomes the lead action again.
+  // Platform Ops starts from the pipeline, not a source — once acme-eu's pipeline is
+  // provisioned this CTA has done its job, so it steps aside and "+ Connect a source"
+  // becomes the lead action again. Pipeline is provisioned per tenant (see pipeline.html);
+  // this dashboard implicitly works within acme-eu, same as Deployment posture elsewhere.
   var provisioned = false;
-  try { provisioned = localStorage.getItem("cdd_pipeline_provisioned") === "1"; } catch (e) {}
+  try {
+    var tenants = JSON.parse(localStorage.getItem("cdd_pipeline_tenants") || "null") || {};
+    provisioned = !!tenants["acme-eu"];
+  } catch (e) {}
   if (provisioned) {
     var cta = document.getElementById("provisionCta");
     if (cta) cta.style.display = "none";
