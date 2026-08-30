@@ -266,8 +266,8 @@
     <section class="content">
 <div class="walk-empty" id="pipelineNudge" style="display:none;border-color:#F3D9A8;background:#FFFBF3;">
         <div class="we-ico">&#9888;&#65039;</div>
-        <h3>Provision acme-eu's pipeline first?</h3>
-        <p>Every source you connect here flows through this tenant's own pipeline. It doesn't look provisioned yet &mdash; that's a one-minute setup on the Pipeline page, and it only needs doing once per tenant.</p>
+        <h3>Provision the pipeline first?</h3>
+        <p>Every source you connect here flows through the shared pipeline every tenant uses by default. It doesn't look provisioned yet &mdash; that's a one-minute setup on the Pipeline page, and it only needs doing once, ever.</p>
         <a class="btn btn-primary" href="../pipeline.html#setup">Go provision the pipeline &rarr;</a>
         <button type="button" class="btn" id="nudgeDismiss" style="margin-left:8px;">Not now</button>
       </div>
@@ -943,12 +943,11 @@ function updatePipelineNudge() {
   var el = document.getElementById("pipelineNudge");
   if (!el) return;
   var isPlatformOps = document.body.getAttribute("data-role") === "admin";
-  // Pipeline is provisioned per tenant (see pipeline.html); Sources implicitly works within
-  // acme-eu, same tenant Deployment posture and notification routing assume elsewhere.
+  // One shared pipeline serves every tenant automatically (see pipeline.html) — this just
+  // checks whether that shared pipeline exists yet, not any specific tenant.
   var provisioned = false, dismissed = false;
   try {
-    var tenants = JSON.parse(localStorage.getItem("cdd_pipeline_tenants") || "null") || {};
-    provisioned = !!tenants["acme-eu"];
+    provisioned = !!JSON.parse(localStorage.getItem("cdd_pipeline_shared") || "null");
     dismissed = localStorage.getItem("cdd_pipeline_nudge_dismissed") === "1";
   } catch (e) {}
   el.style.display = (isPlatformOps && !provisioned && !dismissed) ? "" : "none";

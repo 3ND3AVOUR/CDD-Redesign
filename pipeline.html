@@ -232,17 +232,31 @@
         <button class="tabbtn" data-tab="autoscaling">Autoscaling</button>
       </div>
       <div class="cfgfield" id="tenantSelectWrap" style="max-width:260px;margin-bottom:18px;">
-        <label for="pipelineTenantSelect">Viewing tenant</label>
+        <label for="pipelineTenantSelect">Viewing</label>
         <select id="pipelineTenantSelect"></select>
       </div>
       <div class="tabpanel" id="panel-setup">
-        <h3 class="tabh">Provision the pipeline, per tenant</h3>
-        <p class="tabd">Each tenant runs its own pipeline &mdash; its own region, capacity, and autoscaling. This is the Platform Ops starting point: provision a tenant's pipeline here before connecting any of its sources.</p>
-        <div class="glossary" style="margin-bottom:20px;"><b>Why per tenant, not one shared pipeline:</b> acme-eu, acme-us, and acme-apac (see Platform admin &rarr; Tenants &amp; roles) run in different regions at different volumes &mdash; one config wouldn't fit all three. New tenants get added there first, then show up here to provision.</div>
-        <div class="twrap"><table>
-          <thead><tr><th>Tenant</th><th>Status</th><th>Configuration</th><th></th></tr></thead>
-          <tbody id="tenantPipelineRows"></tbody>
+        <h3 class="tabh">Provision the pipeline</h3>
+        <p class="tabd">One shared pipeline serves every tenant automatically &mdash; provision it once, and any tenant, new or existing, just works with no per-tenant setup. This is the Platform Ops starting point, before any source is connected.</p>
+
+        <h3 class="tabh" style="font-size:14.5px;margin-top:26px;">Shared pipeline</h3>
+        <p class="tabd">What every tenant uses unless it's been promoted to dedicated below.</p>
+        <div class="twrap" style="margin-bottom:24px;"><table>
+          <thead><tr><th>Status</th><th>Configuration</th><th></th></tr></thead>
+          <tbody id="sharedPipelineRow"></tbody>
         </table></div>
+
+        <h3 class="tabh" style="font-size:14.5px;">Dedicated pipelines <span style="font-weight:600;color:var(--ink-3);font-size:11.5px;text-transform:none;letter-spacing:0;">&mdash; the exception, not the default</span></h3>
+        <div class="glossary" style="margin-bottom:14px;"><b>When a tenant needs its own:</b> a residency requirement, contractual isolation, or BYOK-erasure &mdash; not just "it's a bigger customer." Real deployments cap this well below the tenant count (ADR-009: &le;25 dedicated even on the largest profile), because each one adds its own autoscaling and monitoring, not just a config row.</div>
+        <div class="twrap" style="margin-bottom:14px;"><table>
+          <thead><tr><th>Tenant</th><th>Status</th><th>Configuration</th><th></th></tr></thead>
+          <tbody id="dedicatedPipelineRows"><tr><td colspan="4" style="color:var(--ink-3);">No tenant has been promoted to dedicated &mdash; everyone is on the shared pipeline.</td></tr></tbody>
+        </table></div>
+        <div style="display:flex;gap:8px;align-items:flex-end;max-width:420px;">
+          <div class="cfgfield" style="flex:1;"><label for="promoteTenantSelect">Promote a tenant to dedicated</label><select id="promoteTenantSelect"></select></div>
+          <button type="button" class="btn" id="promoteBtn">Add</button>
+        </div>
+
         <div id="cfgFormWrap" style="display:none;margin-top:22px;border-top:1px solid #EEF1F7;padding-top:20px;">
           <h3 class="tabh" id="cfgFormTitle" style="font-size:14.5px;"></h3>
           <div class="cfggrid">
@@ -441,17 +455,18 @@ document.querySelectorAll(".tabbtn").forEach(function (b) {
 })();
 </script>
 <script>
-// Pipeline is provisioned per tenant. The tenant list itself isn't owned here — it's read live
-// from Platform admin's Tenants & roles tab (cdd_tenants in localStorage), so a tenant created
-// and approved there shows up here to provision without any extra step. Each tenant's pipeline
-// config lives under its own key in one JSON object, so Health/Topology/Queues/Jobs/Autoscaling
-// can be scoped by the tenant selector.
+// One shared pipeline serves every tenant by default — provision it once and any tenant, new or
+// existing, just works. A tenant only gets its own pipeline if it's explicitly promoted to
+// "dedicated" (residency, contractual isolation, BYOK-erasure — see ADR-009), not as a routine
+// step. The tenant list itself isn't owned here — it's read live from Platform admin's Tenants &
+// roles tab (cdd_tenants in localStorage), so the promote dropdown always reflects who actually
+// exists.
+var SHARED_KEY = "__shared__";
 var SEED_PIPELINE_TENANTS = [
   { name: "acme-eu", region: "eu-west-1" },
   { name: "acme-us", region: "us-east-1" },
   { name: "acme-apac", region: "ap-southeast-1" }
 ];
-var DEFAULT_TENANT = "acme-eu";
 function getKnownTenants() {
   try {
     var raw = localStorage.getItem("cdd_tenants");
@@ -465,20 +480,29 @@ function getKnownTenants() {
   return SEED_PIPELINE_TENANTS.slice();
 }
 var LOCKED_TABS = ["health", "topology", "queues", "jobs", "autoscaling"];
-var activeCfgTenant = null;
+var activeCfgTarget = null; // SHARED_KEY, or a tenant name for a dedicated pipeline
 
 function tierLabel(tier) {
   return { small: "Small (dev/test)", medium: "Medium (production)", large: "Large (high volume)" }[tier] || tier;
 }
-function getAllTenantConfigs() {
-  try { return JSON.parse(localStorage.getItem("cdd_pipeline_tenants") || "null") || {}; } catch (e) { return {}; }
+function getSharedConfig() {
+  try { return JSON.parse(localStorage.getItem("cdd_pipeline_shared") || "null"); } catch (e) { return null; }
 }
-function saveAllTenantConfigs(obj) {
-  try { localStorage.setItem("cdd_pipeline_tenants", JSON.stringify(obj)); } catch (e) {}
+function saveSharedConfig(cfg) {
+  try { localStorage.setItem("cdd_pipeline_shared", JSON.stringify(cfg)); } catch (e) {}
 }
-function getSelectedTenant() {
+function getDedicatedMap() {
+  try { return JSON.parse(localStorage.getItem("cdd_pipeline_dedicated") || "null") || {}; } catch (e) { return {}; }
+}
+function saveDedicatedMap(obj) {
+  try { localStorage.setItem("cdd_pipeline_dedicated", JSON.stringify(obj)); } catch (e) {}
+}
+function getSelectedTarget() {
   var sel = document.getElementById("pipelineTenantSelect");
-  return (sel && sel.value) || DEFAULT_TENANT;
+  return (sel && sel.value) || SHARED_KEY;
+}
+function configFor(target) {
+  return target === SHARED_KEY ? getSharedConfig() : getDedicatedMap()[target];
 }
 function setLockedTabsVisible(visible) {
   LOCKED_TABS.forEach(function (t) {
@@ -491,26 +515,61 @@ function setLockedTabsVisible(visible) {
   });
 }
 function refreshTenantScopedView() {
-  var tenant = getSelectedTenant();
-  var cfg = getAllTenantConfigs()[tenant];
+  var target = getSelectedTarget();
+  var cfg = configFor(target);
   setLockedTabsVisible(!!cfg);
   var rangeNote = document.getElementById("autoscaleRangeNote");
   if (cfg && rangeNote) rangeNote.textContent = "target range " + cfg.min + "–" + cfg.max;
-  try { localStorage.setItem("cdd_pipeline_selected_tenant", tenant); } catch (e) {}
+  try { localStorage.setItem("cdd_pipeline_selected_target", target); } catch (e) {}
 }
 function populateTenantSelect() {
   var sel = document.getElementById("pipelineTenantSelect");
   var keep = sel.value;
-  sel.innerHTML = getKnownTenants().map(function (t) { return '<option value="' + t.name + '">' + t.name + '</option>'; }).join("");
+  var dedicated = Object.keys(getDedicatedMap());
+  var opts = ['<option value="' + SHARED_KEY + '">Shared (default)</option>'].concat(
+    dedicated.map(function (n) { return '<option value="' + n + '">' + n + ' (dedicated)</option>'; })
+  );
+  sel.innerHTML = opts.join("");
   var stored = null;
-  try { stored = localStorage.getItem("cdd_pipeline_selected_tenant"); } catch (e) {}
-  sel.value = keep || stored || DEFAULT_TENANT;
+  try { stored = localStorage.getItem("cdd_pipeline_selected_target"); } catch (e) {}
+  var want = keep || stored || SHARED_KEY;
+  sel.value = Array.prototype.some.call(sel.options, function (o) { return o.value === want; }) ? want : SHARED_KEY;
 }
-function renderTenantRows() {
-  var data = getAllTenantConfigs();
-  var tbody = document.getElementById("tenantPipelineRows");
-  tbody.innerHTML = getKnownTenants().map(function (t) {
-    var cfg = data[t.name];
+function populatePromoteSelect() {
+  var sel = document.getElementById("promoteTenantSelect");
+  var dedicated = Object.keys(getDedicatedMap());
+  var candidates = getKnownTenants().filter(function (t) { return dedicated.indexOf(t.name) === -1; });
+  if (!candidates.length) {
+    sel.innerHTML = '<option value="">All tenants are already dedicated or shared-only</option>';
+    document.getElementById("promoteBtn").disabled = true;
+    return;
+  }
+  document.getElementById("promoteBtn").disabled = false;
+  sel.innerHTML = candidates.map(function (t) { return '<option value="' + t.name + '">' + t.name + '</option>'; }).join("");
+}
+function renderSharedRow() {
+  var cfg = getSharedConfig();
+  var statusHtml = cfg
+    ? '<span class="status ok"><span class="dot"></span>Provisioned</span>'
+    : '<span class="status warn"><span class="dot"></span>Not provisioned</span>';
+  var cfgHtml = cfg
+    ? cfg.region + " · " + tierLabel(cfg.tier) + " · " + cfg.min + "–" + cfg.max + " nodes · " + cfg.partitions + " partitions"
+    : "&mdash;";
+  var actionLabel = cfg ? "Edit configuration" : "Provision";
+  document.getElementById("sharedPipelineRow").innerHTML =
+    '<tr><td>' + statusHtml + '</td><td>' + cfgHtml + '</td>' +
+    '<td><button type="button" class="btn-sm" data-provision="' + SHARED_KEY + '">' + actionLabel + '</button></td></tr>';
+}
+function renderDedicatedRows() {
+  var map = getDedicatedMap();
+  var names = Object.keys(map);
+  var tbody = document.getElementById("dedicatedPipelineRows");
+  if (!names.length) {
+    tbody.innerHTML = '<tr><td colspan="4" style="color:var(--ink-3);">No tenant has been promoted to dedicated — everyone is on the shared pipeline.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = names.map(function (name) {
+    var cfg = map[name];
     var statusHtml = cfg
       ? '<span class="status ok"><span class="dot"></span>Provisioned</span>'
       : '<span class="status warn"><span class="dot"></span>Not provisioned</span>';
@@ -518,15 +577,17 @@ function renderTenantRows() {
       ? cfg.region + " · " + tierLabel(cfg.tier) + " · " + cfg.min + "–" + cfg.max + " nodes · " + cfg.partitions + " partitions"
       : "&mdash;";
     var actionLabel = cfg ? "Edit configuration" : "Provision";
-    return '<tr><td>' + t.name + '</td><td>' + statusHtml + '</td><td>' + cfgHtml + '</td>' +
-      '<td><button type="button" class="btn-sm" data-provision="' + t.name + '">' + actionLabel + '</button></td></tr>';
+    return '<tr><td>' + name + '</td><td>' + statusHtml + '</td><td>' + cfgHtml + '</td>' +
+      '<td><button type="button" class="btn-sm" data-provision="' + name + '">' + actionLabel + '</button> ' +
+      '<button type="button" class="btn-sm" data-unpromote="' + name + '">Move to shared</button></td></tr>';
   }).join("");
 }
-function openCfgForm(tenantName) {
-  activeCfgTenant = tenantName;
-  var cfg = getAllTenantConfigs()[tenantName];
-  var def = getKnownTenants().filter(function (t) { return t.name === tenantName; })[0] || { region: "eu-west-1" };
-  document.getElementById("cfgFormTitle").textContent = (cfg ? "Reconfigure " : "Provision ") + tenantName;
+function openCfgForm(target) {
+  activeCfgTarget = target;
+  var isShared = target === SHARED_KEY;
+  var cfg = configFor(target);
+  var def = isShared ? { region: "eu-west-1" } : (getKnownTenants().filter(function (t) { return t.name === target; })[0] || { region: "eu-west-1" });
+  document.getElementById("cfgFormTitle").textContent = (cfg ? "Reconfigure " : "Provision ") + (isShared ? "the shared pipeline" : target + "'s dedicated pipeline");
   document.getElementById("cfgRegion").value = cfg ? cfg.region : def.region;
   document.getElementById("cfgTier").value = cfg ? cfg.tier : "medium";
   document.getElementById("cfgMin").value = cfg ? cfg.min : 20;
@@ -536,17 +597,45 @@ function openCfgForm(tenantName) {
   document.getElementById("cfgFormWrap").style.display = "block";
   document.getElementById("cfgFormWrap").scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
-document.getElementById("tenantPipelineRows").addEventListener("click", function (e) {
+document.getElementById("sharedPipelineRow").addEventListener("click", function (e) {
   var btn = e.target.closest("button[data-provision]");
   if (!btn) return;
   openCfgForm(btn.getAttribute("data-provision"));
 });
+document.getElementById("dedicatedPipelineRows").addEventListener("click", function (e) {
+  var provBtn = e.target.closest("button[data-provision]");
+  if (provBtn) { openCfgForm(provBtn.getAttribute("data-provision")); return; }
+  var unBtn = e.target.closest("button[data-unpromote]");
+  if (unBtn) {
+    var name = unBtn.getAttribute("data-unpromote");
+    var map = getDedicatedMap();
+    delete map[name];
+    saveDedicatedMap(map);
+    renderDedicatedRows();
+    populateTenantSelect();
+    populatePromoteSelect();
+    refreshTenantScopedView();
+    toast('"' + name + '" moved back to the shared pipeline');
+  }
+});
+document.getElementById("promoteBtn").addEventListener("click", function () {
+  var sel = document.getElementById("promoteTenantSelect");
+  var name = sel.value;
+  if (!name) return;
+  var map = getDedicatedMap();
+  map[name] = null; // promoted, not yet provisioned
+  saveDedicatedMap(map);
+  renderDedicatedRows();
+  populateTenantSelect();
+  populatePromoteSelect();
+  toast('"' + name + '" promoted to dedicated — provision its pipeline below');
+});
 document.getElementById("cfgCancel").addEventListener("click", function () {
   document.getElementById("cfgFormWrap").style.display = "none";
-  activeCfgTenant = null;
+  activeCfgTarget = null;
 });
 document.getElementById("provisionBtn").addEventListener("click", function () {
-  if (!activeCfgTenant) return;
+  if (!activeCfgTarget) return;
   var min = parseInt(document.getElementById("cfgMin").value, 10);
   var max = parseInt(document.getElementById("cfgMax").value, 10);
   var part = parseInt(document.getElementById("cfgPartitions").value, 10);
@@ -562,30 +651,39 @@ document.getElementById("provisionBtn").addEventListener("click", function () {
     return;
   }
   errEl.style.display = "none";
-  var data = getAllTenantConfigs();
-  data[activeCfgTenant] = {
+  var cfgObj = {
     region: document.getElementById("cfgRegion").value,
     tier: document.getElementById("cfgTier").value,
     min: min, max: max, partitions: part
   };
-  saveAllTenantConfigs(data);
+  if (activeCfgTarget === SHARED_KEY) {
+    saveSharedConfig(cfgObj);
+    toast("Shared pipeline provisioned — every tenant now has somewhere to flow through.");
+  } else {
+    var map = getDedicatedMap();
+    map[activeCfgTarget] = cfgObj;
+    saveDedicatedMap(map);
+    toast('Dedicated pipeline provisioned for "' + activeCfgTarget + '"');
+  }
   document.getElementById("cfgFormWrap").style.display = "none";
-  renderTenantRows();
-  toast('Pipeline provisioned for "' + activeCfgTenant + '"');
+  renderSharedRow();
+  renderDedicatedRows();
   populateTenantSelect();
-  document.getElementById("pipelineTenantSelect").value = activeCfgTenant;
+  document.getElementById("pipelineTenantSelect").value = activeCfgTarget;
   refreshTenantScopedView();
-  var provisionedTenant = activeCfgTenant;
-  activeCfgTenant = null;
-  if (getSelectedTenant() === provisionedTenant) showTab("health");
+  var provisionedTarget = activeCfgTarget;
+  activeCfgTarget = null;
+  if (getSelectedTarget() === provisionedTarget) showTab("health");
 });
 document.getElementById("pipelineTenantSelect").addEventListener("change", refreshTenantScopedView);
 (function () {
-  renderTenantRows();
+  renderSharedRow();
+  renderDedicatedRows();
   populateTenantSelect();
+  populatePromoteSelect();
   refreshTenantScopedView();
-  var defaultTenantProvisioned = !!getAllTenantConfigs()[DEFAULT_TENANT];
-  if (!defaultTenantProvisioned && !location.hash) showTab("setup");
+  var sharedProvisioned = !!getSharedConfig();
+  if (!sharedProvisioned && !location.hash) showTab("setup");
 })();
 </script>
 <script>
@@ -605,7 +703,7 @@ var STEP_NOTES = {
   "compliance.html": "Turns \u2018we checked your data\u2019 into a plain-language guarantee, then maps that guarantee onto the specific regulations you're actually covered under.",
   "reports.html": "Where a finished check becomes something you can hand someone \u2014 a one-page summary report, or a full evidence package built for an auditor.",
   "system-health.html": "Everything across the whole platform that needs attention, in one feed \u2014 plus whether there's enough processing capacity for what's coming in next.",
-  "pipeline.html": "The technical layer under System health \u2014 per-stage pipeline health, service topology, queue depth, and the lifecycle of every ingestion job. Its new Setup tab is also where Platform Ops actually starts: provision a tenant's pipeline here before any of its sources are connected. Platform Ops only.",
+  "pipeline.html": "The technical layer under System health \u2014 per-stage pipeline health, service topology, queue depth, and the lifecycle of every ingestion job. Its new Setup tab is also where Platform Ops actually starts: provision the one shared pipeline here, before any source is connected \u2014 every tenant uses it automatically, no per-tenant setup needed unless one is promoted to its own dedicated pipeline. Platform Ops only.",
   "platform-admin.html": "The technical layer under Admin \u2014 tenant administration, encryption key rotation, notification routing, deployment posture, and what each source actually costs to keep checking. Platform Ops only.",
   "admin.html": "Where the three roles you've been switching between actually come from, plus how long each type of data is kept. The last stop \u2014 everything before this was what the product does; this is who's allowed to see it."
 };
