@@ -252,6 +252,7 @@
                 <option value="us-east-1">us-east-1 (N. Virginia)</option>
                 <option value="ap-southeast-1">ap-southeast-1 (Singapore)</option>
                 <option value="ap-south-1">ap-south-1 (Mumbai)</option>
+                <option value="uk-south-1">uk-south-1 (London)</option>
               </select>
             </div>
             <div class="cfgfield"><label for="cfgTier">Capacity tier</label>
@@ -440,15 +441,29 @@ document.querySelectorAll(".tabbtn").forEach(function (b) {
 })();
 </script>
 <script>
-// Pipeline is provisioned per tenant — acme-eu, acme-us, acme-apac match the seed tenants on
-// Platform admin's Tenants & roles tab. Each tenant's config lives under its own key in one
-// JSON object, so Health/Topology/Queues/Jobs/Autoscaling can be scoped by the tenant selector.
-var PIPELINE_TENANTS = [
+// Pipeline is provisioned per tenant. The tenant list itself isn't owned here — it's read live
+// from Platform admin's Tenants & roles tab (cdd_tenants in localStorage), so a tenant created
+// and approved there shows up here to provision without any extra step. Each tenant's pipeline
+// config lives under its own key in one JSON object, so Health/Topology/Queues/Jobs/Autoscaling
+// can be scoped by the tenant selector.
+var SEED_PIPELINE_TENANTS = [
   { name: "acme-eu", region: "eu-west-1" },
   { name: "acme-us", region: "us-east-1" },
   { name: "acme-apac", region: "ap-southeast-1" }
 ];
 var DEFAULT_TENANT = "acme-eu";
+function getKnownTenants() {
+  try {
+    var raw = localStorage.getItem("cdd_tenants");
+    if (raw) {
+      var list = JSON.parse(raw);
+      if (Array.isArray(list) && list.length) {
+        return list.map(function (t) { return { name: t.name, region: t.region || "eu-west-1" }; });
+      }
+    }
+  } catch (e) {}
+  return SEED_PIPELINE_TENANTS.slice();
+}
 var LOCKED_TABS = ["health", "topology", "queues", "jobs", "autoscaling"];
 var activeCfgTenant = null;
 
@@ -486,7 +501,7 @@ function refreshTenantScopedView() {
 function populateTenantSelect() {
   var sel = document.getElementById("pipelineTenantSelect");
   var keep = sel.value;
-  sel.innerHTML = PIPELINE_TENANTS.map(function (t) { return '<option value="' + t.name + '">' + t.name + '</option>'; }).join("");
+  sel.innerHTML = getKnownTenants().map(function (t) { return '<option value="' + t.name + '">' + t.name + '</option>'; }).join("");
   var stored = null;
   try { stored = localStorage.getItem("cdd_pipeline_selected_tenant"); } catch (e) {}
   sel.value = keep || stored || DEFAULT_TENANT;
@@ -494,7 +509,7 @@ function populateTenantSelect() {
 function renderTenantRows() {
   var data = getAllTenantConfigs();
   var tbody = document.getElementById("tenantPipelineRows");
-  tbody.innerHTML = PIPELINE_TENANTS.map(function (t) {
+  tbody.innerHTML = getKnownTenants().map(function (t) {
     var cfg = data[t.name];
     var statusHtml = cfg
       ? '<span class="status ok"><span class="dot"></span>Provisioned</span>'
@@ -510,7 +525,7 @@ function renderTenantRows() {
 function openCfgForm(tenantName) {
   activeCfgTenant = tenantName;
   var cfg = getAllTenantConfigs()[tenantName];
-  var def = PIPELINE_TENANTS.filter(function (t) { return t.name === tenantName; })[0];
+  var def = getKnownTenants().filter(function (t) { return t.name === tenantName; })[0] || { region: "eu-west-1" };
   document.getElementById("cfgFormTitle").textContent = (cfg ? "Reconfigure " : "Provision ") + tenantName;
   document.getElementById("cfgRegion").value = cfg ? cfg.region : def.region;
   document.getElementById("cfgTier").value = cfg ? cfg.tier : "medium";

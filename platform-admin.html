@@ -263,7 +263,7 @@
         <h3 class="tabh">Tenants &amp; roles (RBAC)</h3>
         <p class="tabd">Every tenant this platform hosts, and who can administer each one. Admin's Roles &amp; permissions tab covers what a role can see inside one tenant — this is the layer above it: which tenants exist at all.</p>
         <div class="kpis">
-          <div class="kpi"><div class="l">Active tenants</div><div class="v">3</div><div class="d">across 2 regions</div></div>
+          <div class="kpi"><div class="l">Active tenants</div><div class="v" id="activeTenantsKpi">3</div><div class="d">across 2 regions</div></div>
           <div class="kpi"><div class="l">Pending approval</div><div class="v warn" id="tenantPendingCount">0</div><div class="d">waiting on a second admin</div></div>
           <div class="kpi"><div class="l">Platform admins</div><div class="v">2</div><div class="d">can approve tenant changes</div></div>
         </div>
@@ -300,6 +300,34 @@
           var pendingCountEl = document.getElementById("tenantPendingCount");
           var pending = [];
 
+          // Tenants persist to localStorage so other pages — Pipeline's per-tenant Setup tab,
+          // most directly — can see what's actually been created here instead of each page
+          // carrying its own disconnected seed list.
+          var TENANT_KEY = "cdd_tenants";
+          var SEED_TENANTS = [
+            { name: "acme-eu", region: "eu-west-1", status: "Active", created: "14 months ago", owner: "Priya N." },
+            { name: "acme-us", region: "us-east-1", status: "Active", created: "9 months ago", owner: "Sam R." },
+            { name: "acme-apac", region: "ap-southeast-1", status: "Active", created: "3 months ago", owner: "Marcus T." }
+          ];
+          function loadTenants() {
+            try {
+              var raw = localStorage.getItem(TENANT_KEY);
+              if (raw) { var parsed = JSON.parse(raw); if (Array.isArray(parsed)) return parsed; }
+            } catch (e) {}
+            return SEED_TENANTS.slice();
+          }
+          function saveTenants(list) {
+            try { localStorage.setItem(TENANT_KEY, JSON.stringify(list)); } catch (e) {}
+          }
+          function renderTenantTable() {
+            var list = loadTenants();
+            document.getElementById("tenantRows").innerHTML = list.map(function (t) {
+              return '<tr><td>' + t.name + '</td><td>' + t.region + '</td><td><span class="status ok"><span class="dot"></span>' + t.status + '</span></td><td>' + t.created + '</td><td>' + t.owner + '</td></tr>';
+            }).join("");
+            document.getElementById("activeTenantsKpi").textContent = list.length;
+          }
+          renderTenantTable();
+
           newBtn.addEventListener("click", function () { form.style.display = "block"; newBtn.style.display = "none"; });
           document.getElementById("ntCancel").addEventListener("click", function () { form.style.display = "none"; newBtn.style.display = ""; });
 
@@ -334,9 +362,10 @@
             if (!p) return;
             pending.splice(idx, 1);
             renderPending();
-            var tr = document.createElement("tr");
-            tr.innerHTML = '<td>' + p.name + '</td><td>' + p.region + '</td><td><span class="status ok"><span class="dot"></span>Active</span></td><td>just now</td><td>Sam R.</td>';
-            document.getElementById("tenantRows").insertBefore(tr, document.getElementById("tenantRows").firstChild);
+            var list = loadTenants();
+            list.unshift({ name: p.name, region: p.region, status: "Active", created: "just now", owner: "Sam R." });
+            saveTenants(list);
+            renderTenantTable();
             toast('Tenant "' + p.name + '" created — approved by two admins');
             if (window.cddLogAuditAction) {
               window.cddLogAuditAction({ type: "tenant", admin: "Sam R.", action: "Created tenant", target: p.name, approver: "Marcus T." });
