@@ -247,14 +247,14 @@
         </table></div>
 
         <h3 class="tabh" style="font-size:14.5px;">Dedicated pipelines <span style="font-weight:600;color:var(--ink-3);font-size:11.5px;text-transform:none;letter-spacing:0;">&mdash; the exception, not the default</span></h3>
-        <div class="glossary" style="margin-bottom:14px;"><b>When a tenant needs its own:</b> a residency requirement, contractual isolation, or BYOK-erasure &mdash; not just "it's a bigger customer." Real deployments cap this well below the tenant count (ADR-009: &le;25 dedicated even on the largest profile), because each one adds its own autoscaling and monitoring, not just a config row.</div>
+        <p class="tabd">Only for a real isolation need &mdash; residency, contractual, or BYOK-erasure. Most tenants should stay on the shared pipeline above.</p>
         <div class="twrap" style="margin-bottom:14px;"><table>
-          <thead><tr><th>Tenant</th><th>Status</th><th>Configuration</th><th></th></tr></thead>
-          <tbody id="dedicatedPipelineRows"><tr><td colspan="4" style="color:var(--ink-3);">No tenant has been promoted to dedicated &mdash; everyone is on the shared pipeline.</td></tr></tbody>
+          <thead><tr><th>Tenant</th><th>Configuration</th><th></th></tr></thead>
+          <tbody id="dedicatedPipelineRows"><tr><td colspan="3" style="color:var(--ink-3);">Everyone is on the shared pipeline &mdash; give a tenant its own below if it needs one.</td></tr></tbody>
         </table></div>
         <div style="display:flex;gap:8px;align-items:flex-end;max-width:420px;">
-          <div class="cfgfield" style="flex:1;"><label for="promoteTenantSelect">Promote a tenant to dedicated</label><select id="promoteTenantSelect"></select></div>
-          <button type="button" class="btn" id="promoteBtn">Add</button>
+          <div class="cfgfield" style="flex:1;"><label for="promoteTenantSelect">Give a tenant its own pipeline</label><select id="promoteTenantSelect"></select></div>
+          <button type="button" class="btn" id="promoteBtn">Provision</button>
         </div>
 
         <div id="cfgFormWrap" style="display:none;margin-top:22px;border-top:1px solid #EEF1F7;padding-top:20px;">
@@ -565,20 +565,16 @@ function renderDedicatedRows() {
   var names = Object.keys(map);
   var tbody = document.getElementById("dedicatedPipelineRows");
   if (!names.length) {
-    tbody.innerHTML = '<tr><td colspan="4" style="color:var(--ink-3);">No tenant has been promoted to dedicated — everyone is on the shared pipeline.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="3" style="color:var(--ink-3);">Everyone is on the shared pipeline — give a tenant its own below if it needs one.</td></tr>';
     return;
   }
+  // A tenant only appears here once it's actually configured — no "promoted but empty" row to
+  // manage, so every row shown is already provisioned.
   tbody.innerHTML = names.map(function (name) {
     var cfg = map[name];
-    var statusHtml = cfg
-      ? '<span class="status ok"><span class="dot"></span>Provisioned</span>'
-      : '<span class="status warn"><span class="dot"></span>Not provisioned</span>';
-    var cfgHtml = cfg
-      ? cfg.region + " · " + tierLabel(cfg.tier) + " · " + cfg.min + "–" + cfg.max + " nodes · " + cfg.partitions + " partitions"
-      : "&mdash;";
-    var actionLabel = cfg ? "Edit configuration" : "Provision";
-    return '<tr><td>' + name + '</td><td>' + statusHtml + '</td><td>' + cfgHtml + '</td>' +
-      '<td><button type="button" class="btn-sm" data-provision="' + name + '">' + actionLabel + '</button> ' +
+    var cfgHtml = cfg.region + " · " + tierLabel(cfg.tier) + " · " + cfg.min + "–" + cfg.max + " nodes · " + cfg.partitions + " partitions";
+    return '<tr><td>' + name + '</td><td>' + cfgHtml + '</td>' +
+      '<td><button type="button" class="btn-sm" data-provision="' + name + '">Edit configuration</button> ' +
       '<button type="button" class="btn-sm" data-unpromote="' + name + '">Move to shared</button></td></tr>';
   }).join("");
 }
@@ -619,16 +615,11 @@ document.getElementById("dedicatedPipelineRows").addEventListener("click", funct
   }
 });
 document.getElementById("promoteBtn").addEventListener("click", function () {
-  var sel = document.getElementById("promoteTenantSelect");
-  var name = sel.value;
+  var name = document.getElementById("promoteTenantSelect").value;
   if (!name) return;
-  var map = getDedicatedMap();
-  map[name] = null; // promoted, not yet provisioned
-  saveDedicatedMap(map);
-  renderDedicatedRows();
-  populateTenantSelect();
-  populatePromoteSelect();
-  toast('"' + name + '" promoted to dedicated — provision its pipeline below');
+  // One step: pick the tenant, land straight in its config form. Nothing is saved — and the
+  // tenant doesn't show up in the dedicated table — until that form is actually submitted.
+  openCfgForm(name);
 });
 document.getElementById("cfgCancel").addEventListener("click", function () {
   document.getElementById("cfgFormWrap").style.display = "none";
@@ -669,6 +660,7 @@ document.getElementById("provisionBtn").addEventListener("click", function () {
   renderSharedRow();
   renderDedicatedRows();
   populateTenantSelect();
+  populatePromoteSelect();
   document.getElementById("pipelineTenantSelect").value = activeCfgTarget;
   refreshTenantScopedView();
   var provisionedTarget = activeCfgTarget;
