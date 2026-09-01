@@ -243,58 +243,35 @@
   .trendcard .thead2 b{font-size:14px;color:var(--ink);}
   .trendcard .thead2 span{font-size:12px;color:var(--ink-3);}
   .bars{display:block;height:140px;padding:0;}
-  .bcol{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;}
-  .bcol .bar{width:100%;max-width:44px;background:linear-gradient(180deg,#4EA1E8,var(--sidebar-active));border-radius:5px 5px 0 0;}
-  .bcol .val{font-size:11px;font-weight:700;color:var(--ink);margin-bottom:4px;}
-  .bcol .lbl{font-size:11px;color:var(--ink-3);margin-top:8px;}
 
-  /* ---- data ecosystem ---- */
+  /* ---- data ecosystem: the source map, one card per source type. Rendered from the SOURCES
+     data below rather than hand-written markup, so it can never drift from the donuts and
+     tables that read the same array. ---- */
   .ecopanel{border:1px solid #E7EAF2;border-radius:14px;padding:20px 22px 22px;margin-bottom:26px;}
-  .ecohead{margin-bottom:16px;}
-  .ecosub{margin:2px 0 0;font-size:12.5px;color:var(--ink-2);max-width:70ch;}
-  .ecogrid{display:grid;grid-template-columns:1.3fr 1fr;gap:22px;align-items:start;}
-  .ecocol{display:flex;flex-direction:column;gap:14px;}
-  .ecogroup{border:1px solid #EEF1F7;border-radius:11px;overflow:hidden;}
-  .ecogroup-h{display:flex;align-items:center;gap:9px;padding:10px 14px;background:#FAFBFD;border-bottom:1px solid #EEF1F7;}
+  .ecohead{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:16px;}
+  .ecolink{font-size:12px;font-weight:700;color:var(--sidebar-active);text-decoration:none;white-space:nowrap;}
+  .ecolink:hover{text-decoration:underline;}
+  .ecosub{margin:2px 0 0;font-size:12.5px;color:var(--ink-2);max-width:70ch;flex-basis:100%;}
+  .ecogrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;align-items:start;}
+  .ecogroup{border:1px solid #EEF1F7;border-radius:11px;overflow:hidden;background:#FCFDFF;}
+  .ecogroup-h{display:flex;align-items:center;gap:9px;padding:11px 14px;background:#FAFBFD;border-bottom:1px solid #EEF1F7;}
   .ecogroup-h b{font-size:13px;color:var(--ink);}
-  .ecogroup-h span{font-size:11px;color:var(--ink-3);margin-left:auto;}
+  .ecogroup-h .ecometa{font-size:10.5px;color:var(--ink-3);margin-left:auto;text-align:right;line-height:1.4;white-space:nowrap;}
   .ecoicon{width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;background:var(--tint);color:var(--tintc);flex:0 0 auto;}
   .econodes{display:flex;flex-direction:column;}
-  .econode{display:flex;align-items:center;gap:10px;padding:9px 14px;text-decoration:none;border-bottom:1px solid #F5F6F9;}
+  .econode{display:block;padding:11px 14px;text-decoration:none;border-bottom:1px solid #F5F6F9;transition:background .12s;}
   .econode:last-child{border-bottom:none;}
-  .econode:hover{background:#FAFBFD;}
+  .econode:hover{background:#F5F9FE;}
+  .econode-top{display:flex;align-items:center;gap:9px;}
   .econode .dot{width:8px;height:8px;border-radius:50%;flex:0 0 auto;}
   .econode .dot.ok{background:var(--ok);} .econode .dot.warn{background:var(--warn);} .econode .dot.run{background:var(--sidebar-active);} .econode .dot.bad{background:var(--bad);}
-  .econode .nm{flex:1;font-size:12.5px;font-weight:600;color:var(--ink);display:flex;flex-direction:column;min-width:0;}
-  .econode .nm em{font-style:normal;font-weight:500;font-size:10.5px;color:var(--ink-3);}
+  .econode .nm{flex:1;font-size:12.5px;font-weight:600;color:var(--ink);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .econode .ct{font-size:12px;font-weight:700;color:var(--ink-2);font-variant-numeric:tabular-nums;white-space:nowrap;}
-  .elechart{border:1px solid #EEF1F7;border-radius:11px;padding:14px 16px 16px;}
-  .elrows{display:flex;flex-direction:column;gap:11px;margin-top:10px;}
-  .elrow{display:grid;grid-template-columns:128px 1fr 46px;align-items:center;gap:10px;text-decoration:none;}
-  .elrow .ellbl{font-size:12px;font-weight:600;color:var(--ink);}
-  .elbar{height:8px;border-radius:4px;background:#EEF1F7;overflow:hidden;}
-  .elbar > span{display:block;height:100%;border-radius:4px;}
-  .elrow .elct{font-size:12px;font-weight:700;color:var(--ink-2);text-align:right;font-variant-numeric:tabular-nums;}
-  .ellegend{display:flex;gap:16px;margin-top:14px;padding-top:12px;border-top:1px solid #F0F1F6;}
-  .ellegend span{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--ink-2);}
-  .ellegend i{width:8px;height:8px;border-radius:50%;display:inline-block;}
-  .ecoplaceholder{display:none;flex-direction:column;align-items:flex-start;gap:8px;border:1px dashed #D6DAE4;border-radius:11px;padding:22px 20px;background:#FAFBFD;height:100%;min-height:180px;box-sizing:border-box;}
-  .ecoplaceholder .lockicon{width:30px;height:30px;border-radius:9px;background:#EEF1F7;color:var(--ink-3);display:flex;align-items:center;justify-content:center;}
-  .ecoplaceholder b{font-size:13px;color:var(--ink);}
-  .ecoplaceholder span{font-size:12px;color:var(--ink-2);line-height:1.5;}
-  .elechart{display:flex;flex-direction:column;}
-  .elechart .ecoplaceholder{border:none;background:none;padding:4px 2px;min-height:auto;}
-  @media (max-width:980px){ .ecogrid{grid-template-columns:1fr;} }
-  @media (max-width:760px){ .elrow{grid-template-columns:96px 1fr 40px;} }
-
-  /* activity feed */
-  .feed{display:flex;flex-direction:column;gap:2px;}
-  .fitem{display:flex;align-items:flex-start;gap:12px;padding:12px 4px;border-bottom:1px solid #F0F1F6;}
-  .fitem:last-child{border-bottom:none;}
-  .fitem .dot{width:8px;height:8px;border-radius:50%;margin-top:6px;flex:0 0 auto;}
-  .fitem .dot.ok{background:var(--ok);} .fitem .dot.run{background:var(--sidebar-active);} .fitem .dot.warn{background:var(--warn);}
-  .fitem .t{font-size:13.5px;color:var(--ink);font-weight:500;}
-  .fitem .w{font-size:11.5px;color:var(--ink-3);margin-top:2px;}
+  .econode .ct.none{font-weight:600;color:var(--ink-3);}
+  .econode .sub{display:block;font-size:10.5px;color:var(--ink-3);margin:3px 0 0 17px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .ecoshare{height:4px;border-radius:2px;background:#EEF1F7;overflow:hidden;margin:8px 0 0 17px;}
+  .ecoshare > span{display:block;height:100%;border-radius:2px;background:var(--sidebar-active);}
+  @media (max-width:1080px){ .ecogrid{grid-template-columns:1fr;} }
 
   @media (max-width:1200px){ .tgrid{grid-template-columns:repeat(3,1fr);} }
   @media (max-width:900px){ .tgrid{grid-template-columns:repeat(2,1fr);} }
@@ -449,17 +426,17 @@
           <div class="thead2"><b>Estate coverage over time</b><span id="trendRangeNote">% of connected data checked</span></div>
           <div class="bars" id="trendBars"></div>
         </div>
-        <div class="chartcard">
+        <div class="chartcard role-gate" data-role="dpo compliance">
           <div class="thead2"><b>Findings by category</b><span id="findingsDonutTotal"></span></div>
           <div class="donutwrap"><div id="findingsDonut"></div><div class="donutlegend" id="findingsLegend"></div></div>
         </div>
-        <div class="chartcard">
+        <div class="chartcard role-gate" data-role="dpo admin">
           <div class="thead2"><b>Source health</b><span id="sourceDonutTotal"></span></div>
           <div class="donutwrap"><div id="sourceDonut"></div><div class="donutlegend" id="sourceLegend"></div></div>
         </div>
       </div>
 
-      <div class="chartsgrid two">
+      <div class="chartsgrid two role-gate" data-role="dpo compliance">
         <div class="chartcard">
           <div class="thead2"><b>New findings vs. reviewed</b><span id="flowNote">are we keeping up?</span></div>
           <div id="flowChart" style="margin-top:6px;"></div>
@@ -483,88 +460,13 @@
         </div>
       </div>
 
-      <div class="role-gate" data-role="dpo admin">
-        <h3 class="section-h">Sources at a glance</h3>
-        <div class="dtable-wrap">
-          <table class="dtable">
-            <thead><tr><th>Source</th><th>Type</th><th>Status</th><th>Records checked</th><th></th></tr></thead>
-            <tbody id="sourcesTableRows"></tbody>
-          </table>
-        </div>
-      </div>
-
-      <div class="ecopanel">
-        <div class="ecohead" style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+      <div class="ecopanel role-gate" data-role="dpo admin">
+        <div class="ecohead">
           <h3 class="section-h" style="margin-bottom:2px;">Data ecosystem</h3>
-          <a href="ecosystem.html" style="font-size:12px;font-weight:700;color:var(--sidebar-active);text-decoration:none;">View full ecosystem &rarr;</a>
-          <p class="ecosub" style="flex-basis:100%;">Every connected source, grouped by type, and what's actually inside them — the same numbers Sources and Findings report, in one place.</p>
+          <a class="ecolink" href="ecosystem.html">View full ecosystem &rarr;</a>
+          <p class="ecosub">Every connected source, grouped by type, with its share of everything found so far.</p>
         </div>
-        <div class="ecogrid">
-          <div class="ecocol">
-          <div class="ecoplaceholder" id="ecoLockedSources">
-            <div class="lockicon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="5" y="10" width="14" height="10" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M8 10V7a4 4 0 018 0v3" stroke="currentColor" stroke-width="1.6"/></svg></div>
-            <b>Source map isn't part of your role</b>
-            <span>The source-by-source view lives under Sources, which Privacy Ops and Platform Ops have access to. Switch role to see it.</span>
-          </div>
-          <div class="ecocol-body">
-            <div class="ecogroup">
-              <div class="ecogroup-h"><span class="ecoicon" style="--tint:#EEF3FC;--tintc:#2563EB;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M4 6c0-1.1 3.6-2 8-2s8 .9 8 2-3.6 2-8 2-8-.9-8-2z" stroke="currentColor" stroke-width="1.7"/><path d="M4 6v12c0 1.1 3.6 2 8 2s8-.9 8-2V6" stroke="currentColor" stroke-width="1.7"/><path d="M4 12c0 1.1 3.6 2 8 2s8-.9 8-2" stroke="currentColor" stroke-width="1.7"/></svg></span><b>Databases</b><span>3 sources</span></div>
-              <div class="econodes">
-                <a class="econode" data-src="Sales database" href="Sources/index.html#scans"><span class="dot ok"></span><span class="nm">Sales database<em>PostgreSQL &middot; healthy</em></span><span class="ct">2,389</span></a>
-                <a class="econode" data-src="Billing database" href="Sources/index.html#health"><span class="dot warn"></span><span class="nm">Billing database<em>Oracle &middot; delayed</em></span><span class="ct">1,420</span></a>
-                <a class="econode" data-src="Clinical database" href="Sources/index.html#scans"><span class="dot ok"></span><span class="nm">Clinical database<em>PostgreSQL &middot; healthy</em></span><span class="ct">1,644</span></a>
-              </div>
-            </div>
-            <div class="ecogroup">
-              <div class="ecogroup-h"><span class="ecoicon" style="--tint:#E8F6EE;--tintc:#1F9D55;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M4 7a3 3 0 013-3h3l2 2h5a3 3 0 013 3v7a3 3 0 01-3 3H7a3 3 0 01-3-3V7z" stroke="currentColor" stroke-width="1.6"/></svg></span><b>Files &amp; storage</b><span>2 sources</span></div>
-              <div class="econodes">
-                <a class="econode" data-src="HR files (SharePoint)" href="Sources/index.html#scans"><span class="dot ok"></span><span class="nm">HR files (SharePoint)<em>Files &amp; cloud storage &middot; healthy</em></span><span class="ct">2,401</span></a>
-                <a class="econode" data-src="Marketing files (S3)" href="Sources/index.html#scans"><span class="dot ok"></span><span class="nm">Marketing files (S3)<em>Files &amp; cloud storage &middot; healthy</em></span><span class="ct">1,102</span></a>
-              </div>
-            </div>
-            <div class="ecogroup">
-              <div class="ecogroup-h"><span class="ecoicon" style="--tint:#F3EEFD;--tintc:#7C3AED;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="4" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.6"/><rect x="13" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.6"/><rect x="4" y="13" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.6"/><rect x="13" y="13" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.6"/></svg></span><b>Business apps</b><span>2 sources</span></div>
-              <div class="econodes">
-                <a class="econode" data-src="Sales data (Salesforce)" href="Sources/index.html#scans"><span class="dot run"></span><span class="nm">Sales data (Salesforce)<em>Business app &middot; checking, 61%</em></span><span class="ct">&mdash;</span></a>
-                <a class="econode" data-src="Legacy CRM" href="Sources/index.html#health"><span class="dot bad"></span><span class="nm">Legacy CRM<em>Business app &middot; broken</em></span><span class="ct">not checked</span></a>
-              </div>
-            </div>
-          </div>
-          </div>
-          <div class="elechart">
-          <div class="ecoplaceholder" id="ecoLockedElements">
-            <div class="lockicon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="5" y="10" width="14" height="10" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M8 10V7a4 4 0 018 0v3" stroke="currentColor" stroke-width="1.6"/></svg></div>
-            <b>Element chart isn't part of your role</b>
-            <span>This breaks down findings by data type, which lives under Findings — Privacy Ops and Compliance Ops have access. Switch role to see it.</span>
-          </div>
-          <div class="elechart-body">
-            <div class="ecogroup-h" style="border:none;background:none;padding:0;"><b>Sensitive data elements found</b><span id="elechartTotal">10,336 total</span></div>
-            <a href="elements.html" style="display:inline-block;margin-top:2px;font-size:12px;font-weight:700;color:var(--sidebar-active);text-decoration:none;">View full breakdown by PII / PI / PFI &rarr;</a>
-            <div class="elrows">
-              <a class="elrow" data-src="Sales database" href="findings.html"><span class="ellbl">Government ID numbers</span><div class="elbar"><span style="width:99%;background:var(--sev-high)"></span></div><span class="elct">2,389</span></a>
-              <a class="elrow" data-src="HR files (SharePoint)" href="findings.html"><span class="ellbl">People's names</span><div class="elbar"><span style="width:100%;background:var(--sev-med)"></span></div><span class="elct">2,401</span></a>
-              <a class="elrow" data-src="Clinical database" href="findings.html"><span class="ellbl">Health records</span><div class="elbar"><span style="width:68%;background:var(--sev-high)"></span></div><span class="elct">1,644</span></a>
-              <a class="elrow" data-src="Billing database" href="findings.html"><span class="ellbl">Credit card numbers</span><div class="elbar"><span style="width:59%;background:var(--sev-high)"></span></div><span class="elct">1,420</span></a>
-              <a class="elrow" data-src="Sales data (Salesforce)" href="findings.html"><span class="ellbl">Email addresses</span><div class="elbar"><span style="width:57%;background:var(--sev-med)"></span></div><span class="elct">1,380</span></a>
-              <a class="elrow" data-src="Marketing files (S3)" href="findings.html"><span class="ellbl">Phone numbers</span><div class="elbar"><span style="width:46%;background:var(--sev-low)"></span></div><span class="elct">1,102</span></a>
-            </div>
-            <div class="ellegend">
-              <span><i style="background:var(--sev-high)"></i>High</span>
-              <span><i style="background:var(--sev-med)"></i>Medium</span>
-              <span><i style="background:var(--sev-low)"></i>Low</span>
-            </div>
-          </div>
-          </div>
-        </div>
-      </div>
-
-      <h3 class="section-h">Recent activity</h3>
-      <div class="feed">
-        <div class="fitem"><span class="dot ok"></span><div><div class="t">Finished checking <b>HR files (SharePoint)</b> — found 42 sensitive items</div><div class="w">2 hours ago</div></div></div>
-        <div class="fitem"><span class="dot run"></span><div><div class="t">Checking <b>Salesforce data</b> — 61% complete</div><div class="w">started 20 minutes ago</div></div></div>
-        <div class="fitem"><span class="dot warn"></span><div><div class="t"><b>Billing database</b> hasn't been checked in 30 days</div><div class="w">needs attention</div></div></div>
-        <div class="fitem"><span class="dot ok"></span><div><div class="t">Connected a new source: <b>Marketing files (S3)</b></div><div class="w">yesterday</div></div></div>
-        <div class="fitem"><span class="dot ok"></span><div><div class="t">Finished checking <b>Sales database</b> — found 2,389 sensitive items</div><div class="w">2 days ago</div></div></div>
+        <div class="ecogrid" id="ecoGroups"></div>
       </div>
       </div>
     </section>
@@ -597,7 +499,7 @@ var TILES = {
   accuracy:  { label:"Detection accuracy", val:"97.2%", trend:"up", trendv:"+0.7 pts", tint:"#F3EEFD", tintc:"#7C3AED", spark:[95.8,96.5,96.8,96.9,97.0,97.1,97.2], href:"Trust/index.html", ic:"acc", roles:["dpo","compliance","admin"] },
   compliance:{ label:"Regulation coverage", val:"87%", trend:"up", trendv:"avg across 3 regs",  tint:"#FCE7F0", tintc:"#DB2777", spark:[78,80,82,83,85,86,87], href:"compliance.html", ic:"comp", roles:["compliance"] },
   alerts:    { label:"Active alerts", val:"3", trend:"flat", trendv:"1 high severity", tint:"#FEF0EE", tintc:"#B42318", spark:[4,3,5,4,4,3,3], href:"system-health.html", ic:"bell", roles:["dpo","admin"] },
-  capacity:  { label:"Capacity used", val:"83%", trend:"up", trendv:"up from 61% last week", tint:"#FEF0EE", tintc:"#B42318", spark:[58,61,64,70,75,80,83], href:"system-health.html", ic:"cap", roles:["dpo","admin"] },
+  capacity:  { label:"Capacity used", val:"83%", trend:"up", trendv:"up from 61% last week", tint:"#FEF0EE", tintc:"#B42318", spark:[58,61,64,70,75,80,83], href:"system-health.html", ic:"cap", roles:["admin"] },
   evidence:  { label:"Evidence packs (quarter)", val:"4", trend:"flat", trendv:"same as last quarter", tint:"#E8F6EE", tintc:"#1F9D55", spark:[3,4,3,4,4,4,4], href:"reports.html", ic:"ev", roles:["dpo","compliance"] },
   team:      { label:"Team members", val:"3", trend:"flat", trendv:"no changes", tint:"#EEF3FC", tintc:"#2563EB", spark:[3,3,3,3,3,3,3], href:"admin.html", ic:"team", roles:["admin"] },
   failed:    { label:"Failed items today", val:"4", trend:"down", trendv:"−1 vs yesterday", tint:"#FEF0EE", tintc:"#B42318", spark:[6,5,7,5,6,5,4], href:"Sources/index.html", ic:"fail", roles:["dpo","admin"] },
@@ -609,7 +511,13 @@ var TILES = {
   gpucost:   { label:"GPU cost (month)", val:"$4,920", trend:"up", trendv:"on track for budget", tint:"#F3EEFD", tintc:"#7C3AED", spark:[4200,4400,4550,4700,4800,4880,4920], href:"detection-infra.html", ic:"gpu", roles:["admin"] },
   routing:   { label:"Records routed / hr", val:"1.2M", trend:"flat", trendv:"across 7 sources", tint:"#EEF3FC", tintc:"#2563EB", spark:[1.0,1.05,1.1,1.15,1.18,1.19,1.2], href:"ingestion-ops.html", ic:"route", roles:["admin"] }
 };
-var DEFAULT_LAYOUT = ["sources","coverage","findings","unreviewed","attention","accuracy","compliance","alerts","capacity","pipeuptime","queuedepth","gpucost","routing"];
+/* Key-metrics audit: "Data checked", "Unreviewed findings" and "Needs your attention" were each
+   restating a number the posture header or the attention panel already shows directly above, so
+   they're off the default layout — a KPI that repeats the headline is spent space, not a metric.
+   All three stay in the "Add a tile" pool, so anyone who wants them back is one click away.
+   What's left is the set that adds something new: estate size, total findings, model accuracy,
+   regulation coverage, and the platform-health numbers for Platform Ops. */
+var DEFAULT_LAYOUT = ["sources","findings","accuracy","compliance","alerts","pipeuptime","queuedepth","gpucost","routing","capacity"];
 
 /* ---- quick access: real destinations, not decoration — same role scoping as the tiles ---- */
 var QUICK_ACCESS = [
@@ -670,68 +578,100 @@ function renderDonutLegend(containerId, segments) {
   }).join("");
 }
 
-/* ---- findings-by-category donut: reads the same real element-breakdown rows the posture strip
-   does, classified into the app's own PII/PHI/PFI taxonomy (see findings.html/elements.html). ---- */
-var FINDING_CATEGORY = {
-  "Government ID numbers": "PII", "People's names": "PII", "Email addresses": "PII", "Phone numbers": "PII",
-  "Health records": "PHI", "Credit card numbers": "PFI"
-};
+/* ============================================================================================
+   SINGLE SOURCE OF TRUTH.
+   Previously the ecosystem panel's hand-written markup doubled as the data store, and the
+   donuts / posture / tables all scraped it back out of the DOM. That made every consumer
+   fragile (a markup tweak silently changed the numbers) and made role-based hiding impossible
+   without breaking the maths. These two arrays are now the only place the facts live; every
+   chart, table and KPI below is derived from them, so nothing can drift.
+
+   They reconcile by construction: per-source counts and per-element counts each total 10,336.
+   ============================================================================================ */
+var SOURCES = [
+  { name:"Sales database",         type:"PostgreSQL",           group:"Databases",      status:"ok",   statusText:"healthy",       count:2389, href:"Sources/index.html#scans" },
+  { name:"Billing database",       type:"Oracle",               group:"Databases",      status:"warn", statusText:"delayed 30 days", count:1420, href:"Sources/index.html#health" },
+  { name:"Clinical database",      type:"PostgreSQL",           group:"Databases",      status:"ok",   statusText:"healthy",       count:1644, href:"Sources/index.html#scans" },
+  { name:"HR files (SharePoint)",  type:"Files & cloud storage", group:"Files & storage", status:"ok",  statusText:"healthy",       count:2401, href:"Sources/index.html#scans" },
+  { name:"Marketing files (S3)",   type:"Files & cloud storage", group:"Files & storage", status:"ok",  statusText:"healthy",       count:1102, href:"Sources/index.html#scans" },
+  { name:"Sales data (Salesforce)",type:"Business app",         group:"Business apps",  status:"run",  statusText:"re-checking, 61%", count:1380, href:"Sources/index.html#scans" },
+  { name:"Legacy CRM",             type:"Business app",         group:"Business apps",  status:"bad",  statusText:"broken — sign-in expired", count:null, href:"Sources/index.html#health" }
+];
+/* Each element type, the source it came from, its severity, how many are still UNREVIEWED and
+   who owns clearing them — the "unprotected data + ownership" dimension every reference DSPM
+   product leads with, which a bare findings count can never express. */
+var ELEMENTS = [
+  { label:"Health records",        source:"Clinical database",       category:"PHI", severity:"high",   count:1644, open:1644, owner:null,       href:"findings.html" },
+  { label:"Credit card numbers",   source:"Billing database",        category:"PFI", severity:"high",   count:1420, open:1420, owner:"Sam R.",   href:"findings.html" },
+  { label:"Government ID numbers", source:"Sales database",          category:"PII", severity:"high",   count:2389, open:412,  owner:"Priya N.", href:"findings.html" },
+  { label:"Email addresses",       source:"Sales data (Salesforce)", category:"PII", severity:"medium", count:1380, open:220,  owner:"Priya N.", href:"findings.html" },
+  { label:"People's names",        source:"HR files (SharePoint)",   category:"PII", severity:"medium", count:2401, open:88,   owner:"Priya N.", href:"findings.html" },
+  { label:"Phone numbers",         source:"Marketing files (S3)",    category:"PII", severity:"low",    count:1102, open:0,    owner:"Priya N.", href:"findings.html" }
+];
 var CATEGORY_COLORS = { PII: "#3979BD", PHI: "#7C3AED", PFI: "#0FA3A3", Other: "#8A93A6" };
+var SOURCE_STATUS_LABEL = { ok: "Healthy", warn: "Delayed", run: "Checking", bad: "Broken" };
+var SOURCE_STATUS_COLOR = { ok: "#1F9D55", warn: "#B45309", run: "#3979BD", bad: "#B42318" };
+
+function totalFindings() { return ELEMENTS.reduce(function (n, e) { return n + e.count; }, 0); }
+function groupBy(arr, keyFn, valFn) {
+  var out = {};
+  arr.forEach(function (x) { var k = keyFn(x); out[k] = (out[k] || 0) + valFn(x); });
+  return out;
+}
+function brokenSourceCount() { return SOURCES.filter(function (s) { return s.status === "bad"; }).length; }
+function staleSourceCount()  { return SOURCES.filter(function (s) { return s.status === "warn"; }).length; }
+
+/* ---- findings-by-category donut (PII / PHI / PFI — the app's own taxonomy) ---- */
 function renderFindingsDonut() {
-  var totals = {};
-  document.querySelectorAll(".elrow").forEach(function (row) {
-    var label = row.querySelector(".ellbl").textContent;
-    var v = parseInt(row.querySelector(".elct").textContent.replace(/[^0-9]/g, ""), 10) || 0;
-    var cat = FINDING_CATEGORY[label] || "Other";
-    totals[cat] = (totals[cat] || 0) + v;
-  });
-  var order = ["PII", "PHI", "PFI", "Other"];
-  var segments = order.filter(function (c) { return totals[c]; }).map(function (c) { return { label: c, value: totals[c], color: CATEGORY_COLORS[c] }; });
+  var totals = groupBy(ELEMENTS, function (e) { return e.category; }, function (e) { return e.count; });
+  var segments = ["PII", "PHI", "PFI", "Other"].filter(function (c) { return totals[c]; })
+    .map(function (c) { return { label: c, value: totals[c], color: CATEGORY_COLORS[c] }; });
   var grand = segments.reduce(function (s, x) { return s + x.value; }, 0);
   document.getElementById("findingsDonut").innerHTML = donutSVG(segments, { ariaLabel: "Findings by category", centerValue: grand.toLocaleString(), centerLabel: "total" });
   renderDonutLegend("findingsLegend", segments);
   document.getElementById("findingsDonutTotal").textContent = grand.toLocaleString() + " items";
 }
 
-/* ---- source-health donut: reads the same real econode rows the ecosystem panel and the
-   sources table below both use. ---- */
-var SOURCE_STATUS_LABEL = { ok: "Healthy", warn: "Delayed", run: "Checking", bad: "Broken" };
-var SOURCE_STATUS_COLOR = { ok: "#1F9D55", warn: "#B45309", run: "#3979BD", bad: "#B42318" };
+/* ---- source-health donut ---- */
 function renderSourceDonut() {
-  var totals = {};
-  document.querySelectorAll(".econode[data-src]").forEach(function (a) {
-    var dotEl = a.querySelector(".dot");
-    var cls = dotEl ? dotEl.className.replace("dot", "").trim() : "ok";
-    totals[cls] = (totals[cls] || 0) + 1;
-  });
-  var order = ["ok", "run", "warn", "bad"];
-  var segments = order.filter(function (c) { return totals[c]; }).map(function (c) { return { label: SOURCE_STATUS_LABEL[c], value: totals[c], color: SOURCE_STATUS_COLOR[c] }; });
+  var totals = groupBy(SOURCES, function (s) { return s.status; }, function () { return 1; });
+  var segments = ["ok", "run", "warn", "bad"].filter(function (c) { return totals[c]; })
+    .map(function (c) { return { label: SOURCE_STATUS_LABEL[c], value: totals[c], color: SOURCE_STATUS_COLOR[c] }; });
   var grand = segments.reduce(function (s, x) { return s + x.value; }, 0);
   document.getElementById("sourceDonut").innerHTML = donutSVG(segments, { ariaLabel: "Source health", centerValue: grand, centerLabel: "sources" });
   renderDonutLegend("sourceLegend", segments);
   document.getElementById("sourceDonutTotal").textContent = grand + " sources";
 }
 
-/* ---- sources-at-a-glance table: reads the same real econode rows, no second copy of the data. */
-function renderSourcesTable() {
-  var rows = Array.prototype.slice.call(document.querySelectorAll(".econode[data-src]"));
-  var tbody = document.getElementById("sourcesTableRows");
-  if (!tbody) return;
-  if (!rows.length) { tbody.innerHTML = '<tr><td colspan="5" style="color:var(--ink-3);">No sources connected yet.</td></tr>'; return; }
-  tbody.innerHTML = rows.map(function (a) {
-    var name = a.getAttribute("data-src");
-    var dotEl = a.querySelector(".dot");
-    var cls = dotEl ? dotEl.className.replace("dot", "").trim() : "ok";
-    var emText = a.querySelector(".nm em") ? a.querySelector(".nm em").textContent : "";
-    var parts = emText.split("·");
-    var type = (parts[0] || "").trim();
-    var statusText = (parts[1] || SOURCE_STATUS_LABEL[cls] || "").trim();
-    var count = a.querySelector(".ct") ? a.querySelector(".ct").textContent : "—";
-    var badgeCls = (cls === "bad" || cls === "warn" || cls === "run") ? cls : "ok";
-    return '<tr><td>' + name + '</td><td>' + type + '</td>' +
-      '<td><span class="status ' + badgeCls + '"><span class="dot"></span>' + statusText + '</span></td>' +
-      '<td class="num">' + count + '</td>' +
-      '<td><a class="rowgo" href="' + a.getAttribute("href") + '">View &rarr;</a></td></tr>';
+/* ---- data ecosystem: one card per source type, each source showing its share of the estate ---- */
+var ECO_GROUPS = [
+  { name:"Databases", tint:"#EEF3FC", tintc:"#2563EB", icon:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M4 6c0-1.1 3.6-2 8-2s8 .9 8 2-3.6 2-8 2-8-.9-8-2z" stroke="currentColor" stroke-width="1.7"/><path d="M4 6v12c0 1.1 3.6 2 8 2s8-.9 8-2V6" stroke="currentColor" stroke-width="1.7"/><path d="M4 12c0 1.1 3.6 2 8 2s8-.9 8-2" stroke="currentColor" stroke-width="1.7"/></svg>' },
+  { name:"Files & storage", tint:"#E8F6EE", tintc:"#1F9D55", icon:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M4 7a3 3 0 013-3h3l2 2h5a3 3 0 013 3v7a3 3 0 01-3 3H7a3 3 0 01-3-3V7z" stroke="currentColor" stroke-width="1.6"/></svg>' },
+  { name:"Business apps", tint:"#F3EEFD", tintc:"#7C3AED", icon:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="4" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.6"/><rect x="13" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.6"/><rect x="4" y="13" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.6"/><rect x="13" y="13" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.6"/></svg>' }
+];
+function renderEcosystem() {
+  var host = document.getElementById("ecoGroups");
+  if (!host) return;
+  var maxCount = Math.max.apply(null, SOURCES.map(function (s) { return s.count || 0; })) || 1;
+  host.innerHTML = ECO_GROUPS.map(function (g) {
+    var items = SOURCES.filter(function (s) { return s.group === g.name; });
+    if (!items.length) return "";
+    var total = items.reduce(function (n, s) { return n + (s.count || 0); }, 0);
+    var rows = items.map(function (s) {
+      var hasCount = typeof s.count === "number";
+      var share = hasCount ? Math.max(3, Math.round((s.count / maxCount) * 100)) : 0;
+      return '<a class="econode" href="' + s.href + '" title="' + s.name + " — " + s.type + ", " + s.statusText + '">' +
+        '<span class="econode-top"><span class="dot ' + s.status + '"></span>' +
+        '<span class="nm">' + s.name + "</span>" +
+        '<span class="ct' + (hasCount ? "" : " none") + '">' + (hasCount ? s.count.toLocaleString() : "not checked") + "</span></span>" +
+        '<span class="sub">' + s.type + " &middot; " + s.statusText + "</span>" +
+        (share ? '<div class="ecoshare"><span style="width:' + share + '%"></span></div>' : "") +
+      "</a>";
+    }).join("");
+    return '<div class="ecogroup">' +
+      '<div class="ecogroup-h"><span class="ecoicon" style="--tint:' + g.tint + ";--tintc:" + g.tintc + '">' + g.icon + "</span><b>" + g.name + "</b>" +
+      '<span class="ecometa">' + items.length + " source" + (items.length === 1 ? "" : "s") + "<br>" + total.toLocaleString() + " items</span></div>" +
+      '<div class="econodes">' + rows + "</div></div>";
   }).join("");
 }
 function currentRole() { return document.body.getAttribute("data-role") || "dpo"; }
@@ -796,36 +736,31 @@ function saveLayout(layout) {
 }
 
 // F-7 (partial): rescanning a source on Sources used to leave every other page showing the old
-// number. This picks up whatever was last written there and applies it here on load.
+// number. This picks up whatever was last written there and applies it here on load. Now it
+// mutates the SOURCES/ELEMENTS data before anything renders, so every chart, table and KPI
+// derived from them picks the new number up automatically rather than each being patched.
 (function applySourceCountOverrides() {
   var overrides = {};
   try { overrides = JSON.parse(localStorage.getItem("cdd_source_counts") || "{}"); } catch (e) {}
   if (!Object.keys(overrides).length) return;
 
-  document.querySelectorAll(".econode[data-src]").forEach(function (a) {
-    var src = a.getAttribute("data-src");
-    if (src in overrides) a.querySelector(".ct").textContent = overrides[src].toLocaleString();
-  });
-
-  var elrows = Array.prototype.slice.call(document.querySelectorAll(".elrow[data-src]"));
-  if (elrows.length) {
-    var values = elrows.map(function (a) {
-      var src = a.getAttribute("data-src");
-      var v = src in overrides ? overrides[src] : parseInt(a.querySelector(".elct").textContent.replace(/,/g, ""), 10);
-      return { el: a, v: v };
-    });
-    var max = Math.max.apply(null, values.map(function (x) { return x.v; }));
-    var total = values.reduce(function (s, x) { return s + x.v; }, 0);
-    values.forEach(function (x) {
-      x.el.querySelector(".elct").textContent = x.v.toLocaleString();
-      x.el.querySelector(".elbar span").style.width = Math.round((x.v / max) * 100) + "%";
-    });
-    var totalEl = document.getElementById("elechartTotal");
-    if (totalEl) totalEl.textContent = total.toLocaleString() + " total";
-    if (TILES.findings) {
-      TILES.findings.val = total.toLocaleString();
-      TILES.findings.spark[TILES.findings.spark.length - 1] = total;
+  SOURCES.forEach(function (s) { if (s.name in overrides) s.count = overrides[s.name]; });
+  ELEMENTS.forEach(function (e) {
+    if (e.source in overrides) {
+      e.count = overrides[e.source];
+      // Never let "unreviewed" exceed what was actually found after a rescan resets the total.
+      e.open = Math.min(e.open, e.count);
     }
+  });
+  var total = totalFindings();
+  if (TILES.findings) {
+    TILES.findings.val = total.toLocaleString();
+    TILES.findings.spark[TILES.findings.spark.length - 1] = total;
+  }
+  if (TILES.unreviewed) {
+    var open = ELEMENTS.reduce(function (n, e) { return n + e.open; }, 0);
+    TILES.unreviewed.val = open.toLocaleString();
+    TILES.unreviewed.spark[TILES.unreviewed.spark.length - 1] = open;
   }
 })();
 
@@ -860,19 +795,9 @@ function visibleLayout() {
   return layout.filter(function (id) { return TILES[id] && TILES[id].roles.indexOf(role) !== -1; });
 }
 
-function updateEcoVisibility() {
-  var role = currentRole();
-  [
-    { body: ".ecocol-body", ph: "#ecoLockedSources", roles: ["dpo", "admin"] },
-    { body: ".elechart-body", ph: "#ecoLockedElements", roles: ["dpo", "compliance"] }
-  ].forEach(function (p) {
-    var show = p.roles.indexOf(role) !== -1;
-    var body = document.querySelector(p.body), ph = document.querySelector(p.ph);
-    if (body) body.style.display = show ? "" : "none";
-    if (ph) ph.style.display = show ? "none" : "flex";
-  });
-}
-updateEcoVisibility();
+/* updateEcoVisibility() is gone: panels that don't belong to a role are now removed outright
+   via the shared .role-gate mechanism, instead of being replaced by a "this isn't part of your
+   role" placeholder. Telling someone what they can't see is noise, not information. */
 
 function renderTiles() {
   var grid = document.getElementById("tileGrid");
@@ -964,24 +889,6 @@ renderTiles();
    nothing invented. Severity totals come straight from the element-breakdown rows below — those
    rows stay in the DOM (just visually hidden) even when a role's placeholder is showing, so this
    works for every role. ---- */
-/* ============================================================================================
-   Risk model. Every reference data-discovery product (Purview DSPM, Compliance Manager) leads
-   with the same thing: not "how much did we find" but "how much of what we found is still
-   UNPROTECTED / unreviewed, and who owns fixing it". These rows carry that missing dimension —
-   each element type, the source it came from, its severity, how many are still unreviewed, and
-   an owner. The found[] totals are deliberately identical to the element-breakdown rows in the
-   ecosystem panel below (2,389 + 2,401 + 1,644 + 1,420 + 1,380 + 1,102 = 10,336) so the whole
-   dashboard reconciles to one number.
-   ============================================================================================ */
-var RISK_ROWS = [
-  { source:"Clinical database",       element:"Health records",        category:"PHI", severity:"high",   found:1644, open:1644, owner:null,       href:"findings.html" },
-  { source:"Billing database",        element:"Credit card numbers",   category:"PFI", severity:"high",   found:1420, open:1420, owner:"Sam R.",   href:"findings.html" },
-  { source:"Sales database",          element:"Government ID numbers", category:"PII", severity:"high",   found:2389, open:412,  owner:"Priya N.", href:"findings.html" },
-  { source:"Sales data (Salesforce)", element:"Email addresses",       category:"PII", severity:"medium", found:1380, open:220,  owner:"Priya N.", href:"findings.html" },
-  { source:"HR files (SharePoint)",   element:"People's names",        category:"PII", severity:"medium", found:2401, open:88,   owner:"Priya N.", href:"findings.html" },
-  { source:"Marketing files (S3)",    element:"Phone numbers",         category:"PII", severity:"low",    found:1102, open:0,    owner:"Priya N.", href:"findings.html" }
-];
-
 /* Regulation coverage — the compliance dimension every reference product puts on its overview.
    Averages to the 87% the "Regulation coverage" KPI tile already reports. */
 var REGULATIONS = [
@@ -1006,15 +913,13 @@ var activeRange = "30d";
 
 function riskTotals() {
   var t = { found:0, open:0, highFound:0, highOpen:0, unowned:0 };
-  RISK_ROWS.forEach(function (r) {
-    t.found += r.found; t.open += r.open;
-    if (r.severity === "high") { t.highFound += r.found; t.highOpen += r.open; }
+  ELEMENTS.forEach(function (r) {
+    t.found += r.count; t.open += r.open;
+    if (r.severity === "high") { t.highFound += r.count; t.highOpen += r.open; }
     if (!r.owner && r.open > 0) t.unowned++;
   });
   return t;
 }
-function brokenSourceCount() { return document.querySelectorAll(".econode .dot.bad").length; }
-function staleSourceCount()  { return document.querySelectorAll(".econode .dot.warn").length; }
 
 /* A single transparent risk score, the pattern Compliance Manager and DSPM both lead with.
    Deliberately NOT a black box — every deduction is shown as a chip under the score, so the
@@ -1054,16 +959,8 @@ function scoreRingSVG(score, color) {
 }
 
 function renderPosture() {
-  var sev = { high: 0, med: 0, low: 0 };
-  document.querySelectorAll(".elrow").forEach(function (row) {
-    var ctEl = row.querySelector(".elct"), barEl = row.querySelector(".elbar span");
-    if (!ctEl || !barEl) return;
-    var v = parseInt(ctEl.textContent.replace(/[^0-9]/g, ""), 10) || 0;
-    var bg = barEl.style.background || "";
-    if (bg.indexOf("sev-high") !== -1) sev.high += v;
-    else if (bg.indexOf("sev-med") !== -1) sev.med += v;
-    else if (bg.indexOf("sev-low") !== -1) sev.low += v;
-  });
+  var bySev = groupBy(ELEMENTS, function (e) { return e.severity; }, function (e) { return e.count; });
+  var sev = { high: bySev.high || 0, med: bySev.medium || 0, low: bySev.low || 0 };
   var R = computeRiskScore(), band = scoreBand(R.score);
   document.getElementById("pmHigh").textContent = sev.high.toLocaleString();
   document.getElementById("pmMed").textContent = sev.med.toLocaleString();
@@ -1189,17 +1086,17 @@ function renderRiskTable() {
   var tbody = document.getElementById("riskTableRows");
   if (!tbody) return;
   var sevRank = { high: 0, medium: 1, low: 2 };
-  var sorted = RISK_ROWS.slice().sort(function (a, b) {
+  var sorted = ELEMENTS.slice().sort(function (a, b) {
     if (sevRank[a.severity] !== sevRank[b.severity]) return sevRank[a.severity] - sevRank[b.severity];
     return b.open - a.open;
   });
   tbody.innerHTML = sorted.map(function (r) {
     return "<tr>" +
       "<td>" + r.source + "</td>" +
-      "<td>" + r.element + "</td>" +
+      "<td>" + r.label + "</td>" +
       "<td>" + r.category + "</td>" +
       '<td><span class="sevpill ' + r.severity + '">' + r.severity + "</span></td>" +
-      '<td class="num">' + r.found.toLocaleString() + "</td>" +
+      '<td class="num">' + r.count.toLocaleString() + "</td>" +
       '<td class="num"><span class="openbadge' + (r.open === 0 ? " zero" : "") + '">' + (r.open === 0 ? "All reviewed" : r.open.toLocaleString()) + "</span></td>" +
       "<td>" + (r.owner ? r.owner : '<span class="unowned">Unassigned</span>') + "</td>" +
       '<td><a class="rowgo" href="' + r.href + '">Review &rarr;</a></td>' +
@@ -1212,8 +1109,8 @@ function renderRiskTable() {
 function exportRisksCSV() {
   var header = ["Source", "What was found", "Category", "Severity", "Found", "Unreviewed", "Owner"];
   var esc = function (v) { var s = String(v); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
-  var lines = [header.join(",")].concat(RISK_ROWS.map(function (r) {
-    return [r.source, r.element, r.category, r.severity, r.found, r.open, r.owner || "Unassigned"].map(esc).join(",");
+  var lines = [header.join(",")].concat(ELEMENTS.map(function (r) {
+    return [r.source, r.label, r.category, r.severity, r.count, r.open, r.owner || "Unassigned"].map(esc).join(",");
   }));
   var blob = new Blob([lines.join("\r\n")], { type: "text/csv;charset=utf-8;" });
   var url = URL.createObjectURL(blob);
@@ -1221,14 +1118,14 @@ function exportRisksCSV() {
   a.href = url; a.download = "cdd-top-data-risks.csv";
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   URL.revokeObjectURL(url);
-  toast("Exported " + RISK_ROWS.length + " rows to CSV");
+  toast("Exported " + ELEMENTS.length + " rows to CSV");
 }
 
 renderPosture();
 renderQuickAccess();
 renderFindingsDonut();
 renderSourceDonut();
-renderSourcesTable();
+renderEcosystem();
 renderTrend();
 renderFlow();
 renderRegulations();
@@ -1261,7 +1158,6 @@ document.getElementById("exportRisksBtn").addEventListener("click", exportRisksC
       h1.textContent = "Welcome back, " + GREET[sel.value];
     }
     if (typeof renderTiles === "function") renderTiles();
-    if (typeof updateEcoVisibility === "function") updateEcoVisibility();
     if (typeof renderQuickAccess === "function") renderQuickAccess();
   });
 })();
