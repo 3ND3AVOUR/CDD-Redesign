@@ -700,6 +700,7 @@ renderTiles();
 </script>
 <script>
 var CDD_STAGES = [{n:"Overview",p:["index.html","ecosystem.html"]},{n:"Connect",p:["Sources/index.html","ingestion-ops.html"]},{n:"Watch",p:["Monitoring/index.html","delta-ops.html"]},{n:"Detect",p:["Detect/index.html","findings.html","elements.html","detection-infra.html"]},{n:"Trust",p:["Trust/index.html","model-ops.html"]},{n:"Comply",p:["compliance.html","reports.html"]},{n:"Manage",p:["system-health.html","pipeline.html","platform-admin.html","admin.html"]}];
+var ADMIN_STAGES = [{n:"Pipeline",p:["pipeline.html"]},{n:"Overview",p:["index.html","ecosystem.html"]},{n:"Connect",p:["Sources/index.html","ingestion-ops.html"]},{n:"Watch",p:["Monitoring/index.html","delta-ops.html"]},{n:"Detect",p:["Detect/index.html","findings.html","elements.html","detection-infra.html"]},{n:"Trust",p:["Trust/index.html","model-ops.html"]},{n:"Comply",p:["compliance.html","reports.html"]},{n:"Manage",p:["system-health.html","platform-admin.html","admin.html"]}];
 var STEP_NOTES = {
   "index.html": "Home base \u2014 right now it\u2019s showing what day one actually looks like: nothing connected, nothing to report. Every tile you\u2019ll see later is a live KPI pulled from a real page; connect a source and this same screen starts filling in.",
   "ecosystem.html": "Once sources exist, this groups them by type \u2014 database vs. files vs. business app \u2014 with the exact same counts Sources and Findings report. It\u2019s empty right now for the same reason everything else is: nothing\u2019s connected yet.",  "Sources/index.html": "This is the step. Click \u2018Connect your first source\u2019 below and watch it actually happen \u2014 a real wizard, then a real row that starts checking live. Everything from here on assumes you did.",
@@ -723,8 +724,10 @@ var STEP_NOTES = {
   var MY_PATH = "index.html";
   var DEPTH = "";
   var flat = [];
-  for (var s = 0; s < CDD_STAGES.length; s++) {
-    for (var i = 0; i < CDD_STAGES[s].p.length; i++) { flat.push({path: CDD_STAGES[s].p[i], stageIdx: s}); }
+  var CUR_ROLE = document.body.getAttribute("data-role") || "dpo";
+  var ACTIVE_STAGES = (CUR_ROLE === "admin") ? ADMIN_STAGES : CDD_STAGES;
+  for (var s = 0; s < ACTIVE_STAGES.length; s++) {
+    for (var i = 0; i < ACTIVE_STAGES[s].p.length; i++) { flat.push({path: ACTIVE_STAGES[s].p[i], stageIdx: s}); }
   }
   var idx = -1;
   for (var k = 0; k < flat.length; k++) { if (flat[k].path === MY_PATH) { idx = k; break; } }
@@ -738,7 +741,7 @@ var STEP_NOTES = {
   for (var vk = 0; vk < visFlat.length; vk++) { if (visFlat[vk].path === MY_PATH) { vidx = vk; break; } }
   var useList = vidx !== -1 ? visFlat : flat;
   var useIdx = vidx !== -1 ? vidx : idx;
-  var stage = CDD_STAGES[useList[useIdx].stageIdx];
+  var stage = ACTIVE_STAGES[useList[useIdx].stageIdx];
   var isWalk = false;
   try { isWalk = localStorage.getItem("cdd_walkthrough_active") === "1"; } catch (e) {}
   var isLast = useIdx === useList.length - 1;
@@ -772,7 +775,7 @@ var STEP_NOTES = {
     try { emptyFlag = localStorage.getItem("cdd_walkthrough_empty"); } catch (e) {}
     var chips = CHECKLIST_STAGES.map(function (item) {
       var sIdx = -1;
-      for (var si = 0; si < CDD_STAGES.length; si++) { if (CDD_STAGES[si].n === item.n) { sIdx = si; break; } }
+      for (var si = 0; si < ACTIVE_STAGES.length; si++) { if (ACTIVE_STAGES[si].n === item.n) { sIdx = si; break; } }
       var state;
       if (item.n === "Connect") {
         state = (emptyFlag !== "1") ? "done" : (curStageIdx === sIdx ? "current" : "upcoming");

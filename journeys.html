@@ -261,6 +261,45 @@ var JOURNEY_STAGES = [
     { path: "admin.html", label: "Admin", tabs: 3 }
   ] }
 ];
+// Platform Ops walks a different order: the pipeline has to exist before there's anything to
+// connect a source to, so it's the literal first stage — not a separate button, the real step 1.
+// Every other role keeps JOURNEY_STAGES above unchanged.
+var ADMIN_JOURNEY_STAGES = [
+  { name: "Pipeline", desc: "provision it, before anything else", steps: [
+    { path: "pipeline.html", label: "Pipeline", tabs: 5 }
+  ] },
+  { name: "Overview", desc: "land here first", steps: [
+    { path: "index.html", label: "Dashboard" },
+    { path: "ecosystem.html", label: "Data ecosystem" }
+  ] },
+  { name: "Connect", desc: "bring a source in and watch it", steps: [
+    { path: "Sources/index.html", label: "Sources", tabs: 6 },
+    { path: "ingestion-ops.html", label: "Ingestion ops", tabs: 4 }
+  ] },
+  { name: "Watch", desc: "catch what changed", steps: [
+    { path: "Monitoring/index.html", label: "Changes", tabs: 2 },
+    { path: "delta-ops.html", label: "Delta ops", tabs: 6 }
+  ] },
+  { name: "Detect", desc: "find what's sensitive", steps: [
+    { path: "Detect/index.html", label: "Detection", tabs: 4 },
+    { path: "findings.html", label: "Findings", tabs: 2 },
+    { path: "elements.html", label: "Elements", tabs: 2 },
+    { path: "detection-infra.html", label: "Detection infra", tabs: 6 }
+  ] },
+  { name: "Trust", desc: "can you rely on it", steps: [
+    { path: "Trust/index.html", label: "Trust", tabs: 3 },
+    { path: "model-ops.html", label: "Model ops", tabs: 5 }
+  ] },
+  { name: "Comply", desc: "prove it to an auditor", steps: [
+    { path: "compliance.html", label: "Compliance", tabs: 2 },
+    { path: "reports.html", label: "Reports & evidence", tabs: 2 }
+  ] },
+  { name: "Manage", desc: "keep it healthy and secure", steps: [
+    { path: "system-health.html", label: "System health", tabs: 2 },
+    { path: "platform-admin.html", label: "Platform admin", tabs: 8 },
+    { path: "admin.html", label: "Admin", tabs: 3 }
+  ] }
+];
 var TOTAL_STEPS = JOURNEY_STAGES.reduce(function (n, s) { return n + s.steps.length; }, 0);
 
 function loadHiddenSteps() {
@@ -275,15 +314,17 @@ function saveHiddenSteps(arr) {
 var hiddenSteps = loadHiddenSteps();
 
 function renderJourney() {
+  var isPlatformOps = document.body.getAttribute("data-role") === "admin";
+  var STAGES = isPlatformOps ? ADMIN_JOURNEY_STAGES : JOURNEY_STAGES;
   var list = document.getElementById("stagelist");
   list.innerHTML = "";
   var globalIdx = 0;
   var visibleCount = TOTAL_STEPS - hiddenSteps.filter(function (p) {
-    return JOURNEY_STAGES.some(function (s) { return s.steps.some(function (st) { return st.path === p; }); });
+    return STAGES.some(function (s) { return s.steps.some(function (st) { return st.path === p; }); });
   }).length;
   var firstVisible = null, firstVisibleNonDashboard = null;
 
-  JOURNEY_STAGES.forEach(function (stage, si) {
+  STAGES.forEach(function (stage, si) {
     var allHidden = stage.steps.every(function (st) { return hiddenSteps.indexOf(st.path) !== -1; });
     var stageEl = document.createElement("div");
     stageEl.className = "stage" + (allHidden ? " all-hidden" : "");
@@ -305,18 +346,13 @@ function renderJourney() {
     list.appendChild(stageEl);
   });
 
-  document.getElementById("heroStat").textContent = visibleCount + (visibleCount === 1 ? " screen" : " screens") + " · " + JOURNEY_STAGES.length + " stages" + (visibleCount < TOTAL_STEPS ? " (" + (TOTAL_STEPS - visibleCount) + " hidden)" : "");
-  // Platform Ops doesn't start at Dashboard like everyone else — the pipeline has to exist
-  // before there's a source to connect, so their "Start" goes to Pipeline's Setup tab instead.
-  var isPlatformOps = document.body.getAttribute("data-role") === "admin";
+  document.getElementById("heroStat").textContent = visibleCount + (visibleCount === 1 ? " screen" : " screens") + " · " + STAGES.length + " stages" + (visibleCount < TOTAL_STEPS ? " (" + (TOTAL_STEPS - visibleCount) + " hidden)" : "");
+  // No more special-casing needed here — Pipeline is the real first stage in
+  // ADMIN_JOURNEY_STAGES now, so "Start" just goes to whatever's actually first for this role.
   var heroStartEl = document.getElementById("heroStart");
-  if (isPlatformOps) {
-    heroStartEl.setAttribute("href", "pipeline.html#setup");
-    heroStartEl.textContent = "Start — provision the pipeline →";
-  } else {
-    heroStartEl.setAttribute("href", firstVisible || "index.html");
-    heroStartEl.textContent = "Start →";
-  }
+  var startHref = firstVisible || (isPlatformOps ? "pipeline.html" : "index.html");
+  heroStartEl.setAttribute("href", startHref);
+  heroStartEl.textContent = isPlatformOps && startHref.indexOf("pipeline.html") === 0 ? "Start — provision the pipeline →" : "Start →";
 }
 
 document.getElementById("stagelist").addEventListener("click", function (e) {
@@ -345,9 +381,8 @@ document.getElementById("journeyCustomizeBtn").addEventListener("click", functio
 });
 
 document.getElementById("heroStart").addEventListener("click", function () {
-  // Platform Ops jumps straight to Pipeline Setup, outside the shared 18-step tour — that tour
-  // assumes you start at Dashboard, and Pipeline sits near the end of its sequence.
-  if (document.body.getAttribute("data-role") === "admin") return;
+  // Every role can use the shared guided tour now — Pipeline is a genuine first stage in
+  // ADMIN_JOURNEY_STAGES / ADMIN_STAGES for Platform Ops, not a step borrowed out of order.
   try {
     localStorage.setItem("cdd_walkthrough_active", "1");
     localStorage.setItem("cdd_walkthrough_empty", "1");
