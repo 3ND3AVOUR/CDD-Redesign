@@ -721,10 +721,16 @@ function trendArrow(trend) {
   return "&#9679;";
 }
 
+/* Bump this whenever DEFAULT_LAYOUT changes meaningfully. Without it, anyone who had ever
+   customised their tiles kept a saved layout that silently outranked the new defaults — so a
+   change to DEFAULT_LAYOUT appeared to "not deploy" for exactly the people who use the page
+   most. A version mismatch drops the stale layout once; customisations after that stick. */
+var LAYOUT_VERSION = "2026-09-audit";
 function loadLayout() {
   try {
     var raw = localStorage.getItem("cdd_dashboard_tiles");
-    if (raw) {
+    var ver = localStorage.getItem("cdd_dashboard_tiles_v");
+    if (raw && ver === LAYOUT_VERSION) {
       var arr = JSON.parse(raw);
       if (Array.isArray(arr) && arr.length) return arr.filter(function (id) { return TILES[id]; });
     }
@@ -732,7 +738,10 @@ function loadLayout() {
   return DEFAULT_LAYOUT.slice();
 }
 function saveLayout(layout) {
-  try { localStorage.setItem("cdd_dashboard_tiles", JSON.stringify(layout)); } catch (e) {}
+  try {
+    localStorage.setItem("cdd_dashboard_tiles", JSON.stringify(layout));
+    localStorage.setItem("cdd_dashboard_tiles_v", LAYOUT_VERSION);
+  } catch (e) {}
 }
 
 // F-7 (partial): rescanning a source on Sources used to leave every other page showing the old
