@@ -92,6 +92,35 @@
   .flowbar .fdo{font-size:12.5px;color:#4C3A7A;line-height:1.5;}
   .flowbar .fdo b{color:#3A2A63;}
 
+  /* ---- posture strip: risk-first summary, the first thing you see ---- */
+  .posture{display:flex;align-items:center;gap:22px;flex-wrap:wrap;padding:18px 24px;border-radius:14px;margin-bottom:16px;border:1px solid #CFE3D3;background:linear-gradient(135deg,#F7FBF8,#F1F8F3);}
+  .posture.attn{border-color:#F3D6B8;background:linear-gradient(135deg,#FFFBF5,#FEF6EA);}
+  .posture-main{display:flex;align-items:center;gap:14px;flex:1;min-width:230px;}
+  .posture-icon{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex:0 0 auto;background:var(--ok-soft);color:var(--ok);}
+  .posture.attn .posture-icon{background:var(--warn-soft);color:var(--warn);}
+  .posture-title{font-size:16.5px;font-weight:800;color:var(--ink);letter-spacing:-.005em;}
+  .posture-sub{font-size:12.5px;color:var(--ink-2);margin-top:2px;}
+  .posture-metrics{display:flex;align-items:center;gap:24px;flex-wrap:wrap;}
+  .pmetric{display:flex;flex-direction:column;align-items:center;min-width:54px;}
+  .pmetric-v{font-size:19px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--ink);}
+  .pmetric-l{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-3);margin-top:2px;white-space:nowrap;}
+  .pmetric-div{width:1px;align-self:stretch;background:#DCE4E0;}
+  .posture.attn .pmetric-div{background:#EFDCC0;}
+
+  /* ---- needs-attention panel ---- */
+  .attnpanel{border:1px solid #F3D6B8;background:#FFFBF5;border-radius:14px;padding:15px 20px 12px;margin-bottom:22px;}
+  .attnpanel .attnhead{display:flex;align-items:center;gap:9px;margin-bottom:8px;}
+  .attnpanel .attnhead b{font-size:13.5px;color:var(--ink);}
+  .attnpanel .attnhead span{font-size:11px;font-weight:800;color:var(--warn);background:var(--warn-soft);padding:2px 9px;border-radius:20px;}
+  .attnlist{display:flex;flex-direction:column;}
+  .attnitem{display:flex;align-items:center;gap:12px;padding:9px 4px;border-bottom:1px solid #F3E4CE;text-decoration:none;}
+  .attnitem:last-child{border-bottom:none;}
+  .attnitem:hover .attnitem-t{color:var(--sidebar-active);}
+  .attnitem .sev-dot{width:8px;height:8px;border-radius:50%;flex:0 0 auto;}
+  .attnitem-t{flex:1;font-size:13px;font-weight:600;color:var(--ink);min-width:0;}
+  .attnitem-w{font-size:11.5px;color:var(--ink-3);white-space:nowrap;}
+  .attnitem-go{font-size:11.5px;font-weight:700;color:var(--sidebar-active);white-space:nowrap;}
+
   /* ---- dashboard toolbar ---- */
   .dtoolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px;}
   .dtoolbar .actions{display:flex;gap:10px;flex-wrap:wrap;}
@@ -142,7 +171,7 @@
   .trendcard .thead2{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;}
   .trendcard .thead2 b{font-size:14px;color:var(--ink);}
   .trendcard .thead2 span{font-size:12px;color:var(--ink-3);}
-  .bars{display:flex;align-items:flex-end;gap:16px;height:130px;padding:0 4px;}
+  .bars{display:block;height:140px;padding:0;}
   .bcol{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;}
   .bcol .bar{width:100%;max-width:44px;background:linear-gradient(180deg,#4EA1E8,var(--sidebar-active));border-radius:5px 5px 0 0;}
   .bcol .val{font-size:11px;font-weight:700;color:var(--ink);margin-bottom:4px;}
@@ -273,7 +302,7 @@
 
   <main class="main">
     <header class="header">
-      <div><h1>Welcome back, Priya</h1><p>Your dashboard — customize it to show what matters to you.</p></div>
+      <div><h1>Welcome back, Priya</h1><p>Confidential data discovery across your estate — customize this view to show what matters to you.</p></div>
       <div class="header-right"><select class="role-select" id="roleSelect" aria-label="Switch role">
           <option value="dpo">Priya N. · Privacy Ops</option>
           <option value="compliance">Marcus T. · Compliance Ops</option>
@@ -284,6 +313,32 @@
     </header>
 
     <section class="content">
+<div class="posture" id="postureStrip">
+        <div class="posture-main">
+          <div class="posture-icon" id="postureIcon"></div>
+          <div>
+            <div class="posture-title" id="postureTitle">&nbsp;</div>
+            <div class="posture-sub" id="postureSub">&nbsp;</div>
+          </div>
+        </div>
+        <div class="posture-metrics">
+          <div class="pmetric"><span class="pmetric-v" id="pmHigh" style="color:var(--sev-high)">&mdash;</span><span class="pmetric-l">High</span></div>
+          <div class="pmetric"><span class="pmetric-v" id="pmMed" style="color:var(--sev-med)">&mdash;</span><span class="pmetric-l">Medium</span></div>
+          <div class="pmetric"><span class="pmetric-v" id="pmLow" style="color:var(--sev-low)">&mdash;</span><span class="pmetric-l">Low</span></div>
+          <div class="pmetric-div"></div>
+          <div class="pmetric"><span class="pmetric-v" id="pmCoverage">&mdash;</span><span class="pmetric-l">Coverage</span></div>
+        </div>
+      </div>
+
+      <div class="attnpanel role-gate" data-role="dpo admin" id="attnPanel">
+        <div class="attnhead"><b>Needs attention</b><span id="attnCountBadge">3</span></div>
+        <div class="attnlist">
+          <a class="attnitem" href="Sources/index.html#health"><span class="sev-dot" style="background:var(--bad)"></span><span class="attnitem-t">Legacy CRM connection failed — sign-in expired</span><span class="attnitem-w">3 hours ago</span><span class="attnitem-go">Fix &rarr;</span></a>
+          <a class="attnitem" href="Sources/index.html#health"><span class="sev-dot" style="background:var(--warn)"></span><span class="attnitem-t">Billing database hasn't synced in 30 days</span><span class="attnitem-w">needs a look</span><span class="attnitem-go">Review &rarr;</span></a>
+          <a class="attnitem" href="system-health.html"><span class="sev-dot" style="background:var(--warn)"></span><span class="attnitem-t">1 high-severity alert is still active</span><span class="attnitem-w">platform capacity</span><span class="attnitem-go">Open &rarr;</span></a>
+        </div>
+      </div>
+
 <div class="dtoolbar">
         <div class="actions">
           <a class="btn btn-primary role-gate" data-role="admin" href="pipeline.html#setup" id="provisionCta">&#9881; Provision the pipeline</a>
@@ -537,8 +592,12 @@ function saveLayout(layout) {
   if (isWalk && isEmpty) {
     var es = document.getElementById("dashEmptyState");
     var rc = document.getElementById("dashRealContent");
+    var ps = document.getElementById("postureStrip");
+    var ap = document.getElementById("attnPanel");
     if (es) es.style.display = "block";
     if (rc) rc.style.display = "none";
+    if (ps) ps.style.display = "none";
+    if (ap) ap.style.display = "none";
   }
 })();
 
@@ -649,17 +708,79 @@ document.getElementById("customizeBtn").addEventListener("click", function () {
 
 renderTiles();
 
-/* ---- trend chart ---- */
+/* ---- posture strip: reads the same real numbers the tiles and ecosystem panel already show,
+   nothing invented. Severity totals come straight from the element-breakdown rows below — those
+   rows stay in the DOM (just visually hidden) even when a role's placeholder is showing, so this
+   works for every role. ---- */
+function renderPosture() {
+  var sev = { high: 0, med: 0, low: 0 };
+  document.querySelectorAll(".elrow").forEach(function (row) {
+    var ctEl = row.querySelector(".elct"), barEl = row.querySelector(".elbar span");
+    if (!ctEl || !barEl) return;
+    var v = parseInt(ctEl.textContent.replace(/[^0-9]/g, ""), 10) || 0;
+    var bg = barEl.style.background || "";
+    if (bg.indexOf("sev-high") !== -1) sev.high += v;
+    else if (bg.indexOf("sev-med") !== -1) sev.med += v;
+    else if (bg.indexOf("sev-low") !== -1) sev.low += v;
+  });
+  document.getElementById("pmHigh").textContent = sev.high.toLocaleString();
+  document.getElementById("pmMed").textContent = sev.med.toLocaleString();
+  document.getElementById("pmLow").textContent = sev.low.toLocaleString();
+  document.getElementById("pmCoverage").textContent = TILES.coverage ? TILES.coverage.val : "—";
+
+  var attnCount = TILES.attention ? (parseInt(TILES.attention.val, 10) || 0) : 0;
+  var strip = document.getElementById("postureStrip");
+  var icon = document.getElementById("postureIcon");
+  var title = document.getElementById("postureTitle");
+  var sub = document.getElementById("postureSub");
+  var ICON_WARN = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 3l9 16H3l9-16z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 10v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="17" r="1.1" fill="currentColor"/></svg>';
+  var ICON_OK = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  if (attnCount > 0) {
+    strip.classList.add("attn");
+    icon.innerHTML = ICON_WARN;
+    title.textContent = attnCount + (attnCount === 1 ? " item needs" : " items need") + " your attention";
+    sub.textContent = "Estate coverage holding at " + (TILES.coverage ? TILES.coverage.val : "—") + " — see what's below.";
+  } else {
+    strip.classList.remove("attn");
+    icon.innerHTML = ICON_OK;
+    title.textContent = "Everything is on track";
+    sub.textContent = "Estate coverage at " + (TILES.coverage ? TILES.coverage.val : "—") + ", nothing needs attention right now.";
+  }
+  var badge = document.getElementById("attnCountBadge");
+  if (badge) badge.textContent = attnCount;
+}
+renderPosture();
+
+/* ---- trend chart: a real area chart, not flexbox bars — thin line, gradient fill, endpoint
+   called out directly since it's the number that matters, native <title> tooltips per point. ---- */
 (function () {
   var WEEKS = [ { w: "W35", v: 74 }, { w: "W36", v: 77 }, { w: "W37", v: 79 }, { w: "W38", v: 82 }, { w: "W39", v: 84 }, { w: "W40", v: 85 }, { w: "W41", v: 87 } ];
-  var bars = document.getElementById("trendBars");
-  WEEKS.forEach(function (d) {
-    var col = document.createElement("div");
-    col.className = "bcol";
-    var h = Math.round((d.v / 100) * 110);
-    col.innerHTML = '<div class="val">' + d.v + '%</div><div class="bar" style="height:' + h + 'px"></div><div class="lbl">' + d.w + '</div>';
-    bars.appendChild(col);
+  var w = 640, h = 140, padX = 6, padT = 20, padB = 24;
+  var innerW = w - padX * 2, innerH = h - padT - padB;
+  var min = 65, max = 100; // fixed floor/ceiling so week-to-week shape is comparable, not rescaled
+  var step = innerW / (WEEKS.length - 1);
+  var pts = WEEKS.map(function (d, i) {
+    return { x: padX + i * step, y: padT + innerH - ((d.v - min) / (max - min)) * innerH, v: d.v, w: d.w };
   });
+  var line = pts.map(function (p, i) { return (i === 0 ? "M" : "L") + p.x.toFixed(1) + "," + p.y.toFixed(1); }).join(" ");
+  var last = pts[pts.length - 1];
+  var area = line + " L" + last.x.toFixed(1) + "," + (padT + innerH) + " L" + pts[0].x.toFixed(1) + "," + (padT + innerH) + " Z";
+  var dots = pts.map(function (p, i) {
+    var isLast = i === pts.length - 1;
+    return '<circle cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="' + (isLast ? 4.5 : 3) + '" fill="' + (isLast ? "#3979BD" : "#fff") + '" stroke="#3979BD" stroke-width="1.8"><title>' + p.w + ": " + p.v + "%</title></circle>";
+  }).join("");
+  var axisLabels = pts.map(function (p) {
+    return '<text x="' + p.x.toFixed(1) + '" y="' + (h - 6) + '" text-anchor="middle" font-size="10.5" fill="#8A93A6" font-family="Segoe UI, sans-serif">' + p.w + "</text>";
+  }).join("");
+  var lastLabel = '<text x="' + last.x.toFixed(1) + '" y="' + (last.y - 11).toFixed(1) + '" text-anchor="end" font-size="13" font-weight="800" fill="#092339" font-family="Segoe UI, sans-serif">' + last.v + "%</text>";
+  document.getElementById("trendBars").innerHTML =
+    '<svg viewBox="0 0 ' + w + " " + h + '" width="100%" height="' + h + '" preserveAspectRatio="none" role="img" aria-label="Estate coverage over the last 7 weeks">' +
+      '<defs><linearGradient id="trendFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#3979BD" stop-opacity="0.22"/><stop offset="100%" stop-color="#3979BD" stop-opacity="0"/></linearGradient></defs>' +
+      '<line x1="' + padX + '" y1="' + (padT + innerH) + '" x2="' + (w - padX) + '" y2="' + (padT + innerH) + '" stroke="#EEF1F7" stroke-width="1"/>' +
+      '<path d="' + area + '" fill="url(#trendFill)"/>' +
+      '<path d="' + line + '" fill="none" stroke="#3979BD" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/>' +
+      dots + axisLabels + lastLabel +
+    "</svg>";
 })();
 </script>
 
