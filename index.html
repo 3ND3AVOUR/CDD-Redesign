@@ -92,20 +92,52 @@
   .flowbar .fdo{font-size:12.5px;color:#4C3A7A;line-height:1.5;}
   .flowbar .fdo b{color:#3A2A63;}
 
-  /* ---- posture strip: risk-first summary, the first thing you see ---- */
-  .posture{display:flex;align-items:center;gap:22px;flex-wrap:wrap;padding:18px 24px;border-radius:14px;margin-bottom:16px;border:1px solid #CFE3D3;background:linear-gradient(135deg,#F7FBF8,#F1F8F3);}
+  /* ---- posture header: a single risk score + what drives it, the first thing you see.
+     Pattern follows Purview DSPM's "Posture" page and Compliance Manager's compliance score:
+     one headline number, then the factors behind it, then the severity split. ---- */
+  .posture{display:flex;align-items:center;gap:26px;flex-wrap:wrap;padding:20px 24px 18px;border-radius:14px;margin-bottom:16px;border:1px solid #CFE3D3;background:linear-gradient(135deg,#F7FBF8,#F1F8F3);}
   .posture.attn{border-color:#F3D6B8;background:linear-gradient(135deg,#FFFBF5,#FEF6EA);}
-  .posture-main{display:flex;align-items:center;gap:14px;flex:1;min-width:230px;}
-  .posture-icon{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex:0 0 auto;background:var(--ok-soft);color:var(--ok);}
-  .posture.attn .posture-icon{background:var(--warn-soft);color:var(--warn);}
-  .posture-title{font-size:16.5px;font-weight:800;color:var(--ink);letter-spacing:-.005em;}
-  .posture-sub{font-size:12.5px;color:var(--ink-2);margin-top:2px;}
+  .posture.bad{border-color:#F3B7AE;background:linear-gradient(135deg,#FFFAF9,#FEF1EF);}
+  .posture-main{display:flex;align-items:center;gap:18px;flex:1;min-width:290px;}
+  .posture-ring{flex:0 0 auto;line-height:0;}
+  .posture-title{font-size:17px;font-weight:800;color:var(--ink);letter-spacing:-.005em;}
+  .posture-sub{font-size:12.5px;color:var(--ink-2);margin-top:3px;line-height:1.5;}
   .posture-metrics{display:flex;align-items:center;gap:24px;flex-wrap:wrap;}
   .pmetric{display:flex;flex-direction:column;align-items:center;min-width:54px;}
   .pmetric-v{font-size:19px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--ink);}
   .pmetric-l{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-3);margin-top:2px;white-space:nowrap;}
   .pmetric-div{width:1px;align-self:stretch;background:#DCE4E0;}
   .posture.attn .pmetric-div{background:#EFDCC0;}
+  .posture.bad .pmetric-div{background:#F1D3CE;}
+  .posture-factors{flex-basis:100%;margin-top:4px;padding-top:12px;border-top:1px solid rgba(9,35,57,.08);display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
+  .posture-factors .flabel{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-3);margin-right:2px;}
+  .factorchip{font-size:11.5px;font-weight:600;color:var(--ink-2);background:rgba(255,255,255,.75);border:1px solid rgba(9,35,57,.09);border-radius:20px;padding:4px 11px;white-space:nowrap;}
+  .factorchip b{color:var(--ink);font-weight:800;}
+  .factorchip.hit{color:var(--bad);border-color:#F3C9C2;}
+
+  /* ---- time-range selector (segmented control) ---- */
+  .rangesel{display:inline-flex;border:1px solid var(--card-border);border-radius:8px;overflow:hidden;background:#fff;}
+  .rangesel button{font:inherit;font-size:12px;font-weight:700;color:var(--ink-2);background:none;border:none;padding:6px 12px;cursor:pointer;border-right:1px solid var(--card-border);}
+  .rangesel button:last-child{border-right:none;}
+  .rangesel button:hover{color:var(--ink);background:#F7F9FC;}
+  .rangesel button.on{background:var(--sidebar-active);color:#fff;}
+
+  /* ---- regulation coverage bars ---- */
+  .regrows{display:flex;flex-direction:column;gap:13px;margin-top:12px;}
+  .regrow{display:grid;grid-template-columns:104px 1fr 42px;align-items:center;gap:11px;text-decoration:none;}
+  .regrow .reglbl{font-size:12.5px;font-weight:600;color:var(--ink);}
+  .regbar{height:9px;border-radius:5px;background:#EEF1F7;overflow:hidden;}
+  .regbar > span{display:block;height:100%;border-radius:5px;}
+  .regrow .regct{font-size:12.5px;font-weight:700;color:var(--ink-2);text-align:right;font-variant-numeric:tabular-nums;}
+
+  /* ---- severity pills (used in the risk table) ---- */
+  .sevpill{display:inline-block;font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.03em;padding:3px 9px;border-radius:20px;}
+  .sevpill.high{background:#FDEBE9;color:#B42318;}
+  .sevpill.medium{background:var(--warn-soft);color:var(--warn);}
+  .sevpill.low{background:#EAF1FB;color:#2563EB;}
+  .openbadge{font-variant-numeric:tabular-nums;font-weight:700;}
+  .openbadge.zero{color:var(--ok);}
+  .unowned{color:var(--ink-3);font-style:italic;}
 
   /* ---- needs-attention panel ---- */
   .attnpanel{border:1px solid #F3D6B8;background:#FFFBF5;border-radius:14px;padding:15px 20px 12px;margin-bottom:22px;}
@@ -140,7 +172,10 @@
   .donutlegend span{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:600;color:var(--ink-2);white-space:nowrap;}
   .donutlegend i{width:9px;height:9px;border-radius:2.5px;display:inline-block;flex:0 0 auto;}
   .donutlegend b{color:var(--ink);font-variant-numeric:tabular-nums;margin-left:auto;padding-left:8px;}
-  @media (max-width:1180px){ .chartsgrid{grid-template-columns:1fr;} .qagrid{grid-template-columns:repeat(2,1fr);} }
+  .chartsgrid.two{grid-template-columns:1.6fr 1fr;}
+  /* Both variants must collapse together — set via class, never an inline style, or the inline
+     declaration outranks this media query and the card keeps its narrow grid share. */
+  @media (max-width:1180px){ .chartsgrid,.chartsgrid.two{grid-template-columns:1fr;} .qagrid{grid-template-columns:repeat(2,1fr);} }
 
   /* ---- sources-at-a-glance table (status/dot badges match the rest of the app) ---- */
   .status{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;}
@@ -351,7 +386,7 @@
     <section class="content">
 <div class="posture" id="postureStrip">
         <div class="posture-main">
-          <div class="posture-icon" id="postureIcon"></div>
+          <div class="posture-ring" id="postureRing"></div>
           <div>
             <div class="posture-title" id="postureTitle">&nbsp;</div>
             <div class="posture-sub" id="postureSub">&nbsp;</div>
@@ -362,8 +397,10 @@
           <div class="pmetric"><span class="pmetric-v" id="pmMed" style="color:var(--sev-med)">&mdash;</span><span class="pmetric-l">Medium</span></div>
           <div class="pmetric"><span class="pmetric-v" id="pmLow" style="color:var(--sev-low)">&mdash;</span><span class="pmetric-l">Low</span></div>
           <div class="pmetric-div"></div>
+          <div class="pmetric"><span class="pmetric-v" id="pmOpen" style="color:var(--warn)">&mdash;</span><span class="pmetric-l">Unreviewed</span></div>
           <div class="pmetric"><span class="pmetric-v" id="pmCoverage">&mdash;</span><span class="pmetric-l">Coverage</span></div>
         </div>
+        <div class="posture-factors" id="postureFactors"></div>
       </div>
 
       <div class="attnpanel role-gate" data-role="dpo admin" id="attnPanel">
@@ -375,8 +412,10 @@
         </div>
       </div>
 
-<h3 class="section-h">Quick access</h3>
-      <div class="qagrid" id="quickAccess"></div>
+<div id="quickAccessSection">
+        <h3 class="section-h">Quick access</h3>
+        <div class="qagrid" id="quickAccess"></div>
+      </div>
 
       <div class="walk-empty" id="dashEmptyState" style="display:none;">
         <div class="we-ico">🗂️</div>
@@ -397,10 +436,17 @@
         <div class="apool-list" id="apoolList"></div>
       </div>
 
-      <h3 class="section-h">Trends &amp; breakdown</h3>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:10px;">
+        <h3 class="section-h" style="margin-bottom:0;">Trends &amp; breakdown</h3>
+        <div class="rangesel" id="rangeSel" role="group" aria-label="Time range">
+          <button type="button" data-range="7d">7 days</button>
+          <button type="button" data-range="30d" class="on">30 days</button>
+          <button type="button" data-range="90d">90 days</button>
+        </div>
+      </div>
       <div class="chartsgrid">
         <div class="chartcard">
-          <div class="thead2"><b>Estate coverage over time</b><span>% of connected data checked, by week</span></div>
+          <div class="thead2"><b>Estate coverage over time</b><span id="trendRangeNote">% of connected data checked</span></div>
           <div class="bars" id="trendBars"></div>
         </div>
         <div class="chartcard">
@@ -410,6 +456,30 @@
         <div class="chartcard">
           <div class="thead2"><b>Source health</b><span id="sourceDonutTotal"></span></div>
           <div class="donutwrap"><div id="sourceDonut"></div><div class="donutlegend" id="sourceLegend"></div></div>
+        </div>
+      </div>
+
+      <div class="chartsgrid two">
+        <div class="chartcard">
+          <div class="thead2"><b>New findings vs. reviewed</b><span id="flowNote">are we keeping up?</span></div>
+          <div id="flowChart" style="margin-top:6px;"></div>
+        </div>
+        <div class="chartcard">
+          <div class="thead2"><b>Regulation coverage</b><span id="regAvgNote"></span></div>
+          <div class="regrows" id="regRows"></div>
+        </div>
+      </div>
+
+      <div class="role-gate" data-role="dpo compliance">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:10px;">
+          <h3 class="section-h" style="margin-bottom:0;">Top data risks</h3>
+          <button class="btn" id="exportRisksBtn" style="font-size:12px;padding:7px 13px;">&#8681; Export CSV</button>
+        </div>
+        <div class="dtable-wrap">
+          <table class="dtable">
+            <thead><tr><th>Source</th><th>What was found</th><th>Category</th><th>Severity</th><th>Found</th><th>Unreviewed</th><th>Owner</th><th></th></tr></thead>
+            <tbody id="riskTableRows"></tbody>
+          </table>
         </div>
       </div>
 
@@ -522,6 +592,7 @@ var TILES = {
   sources:   { label:"Sources connected", val:"7", trend:"up",   trendv:"+1 this week",        tint:"#EEF3FC", tintc:"#2563EB", spark:[4,5,5,6,6,7,7], href:"Sources/index.html", ic:"src", roles:["dpo","admin"] },
   coverage:  { label:"Data checked",      val:"87%", trend:"up",  trendv:"+5 pts this quarter", tint:"#E8F6EE", tintc:"#1F9D55", spark:[74,77,79,82,84,85,87], href:"Detect/index.html", ic:"chk", roles:["dpo","compliance","admin"] },
   findings:  { label:"Sensitive items found", val:"10,336", trend:"up", trendv:"+842 this week", tint:"#FEF3E2", tintc:"#B45309", spark:[8100,8600,9000,9400,9800,10100,10336], href:"findings.html", ic:"find", roles:["dpo","compliance"] },
+  unreviewed:{ label:"Unreviewed findings", val:"3,784", trend:"up", trendv:"+752 this month", tint:"#FEF0EE", tintc:"#B42318", spark:[2600,2800,3000,3200,3400,3600,3784], href:"findings.html", ic:"warn", attn:true, roles:["dpo","compliance"] },
   attention: { label:"Needs your attention", val:"3", trend:"down", trendv:"−2 vs last week",   tint:"#FEF3E2", tintc:"#B45309", spark:[6,6,5,5,4,4,3], href:"Sources/index.html", ic:"warn", attn:true, roles:["dpo","admin"] },
   accuracy:  { label:"Detection accuracy", val:"97.2%", trend:"up", trendv:"+0.7 pts", tint:"#F3EEFD", tintc:"#7C3AED", spark:[95.8,96.5,96.8,96.9,97.0,97.1,97.2], href:"Trust/index.html", ic:"acc", roles:["dpo","compliance","admin"] },
   compliance:{ label:"Regulation coverage", val:"87%", trend:"up", trendv:"avg across 3 regs",  tint:"#FCE7F0", tintc:"#DB2777", spark:[78,80,82,83,85,86,87], href:"compliance.html", ic:"comp", roles:["compliance"] },
@@ -538,7 +609,7 @@ var TILES = {
   gpucost:   { label:"GPU cost (month)", val:"$4,920", trend:"up", trendv:"on track for budget", tint:"#F3EEFD", tintc:"#7C3AED", spark:[4200,4400,4550,4700,4800,4880,4920], href:"detection-infra.html", ic:"gpu", roles:["admin"] },
   routing:   { label:"Records routed / hr", val:"1.2M", trend:"flat", trendv:"across 7 sources", tint:"#EEF3FC", tintc:"#2563EB", spark:[1.0,1.05,1.1,1.15,1.18,1.19,1.2], href:"ingestion-ops.html", ic:"route", roles:["admin"] }
 };
-var DEFAULT_LAYOUT = ["sources","coverage","findings","attention","accuracy","compliance","alerts","capacity","pipeuptime","queuedepth","gpucost","routing"];
+var DEFAULT_LAYOUT = ["sources","coverage","findings","unreviewed","attention","accuracy","compliance","alerts","capacity","pipeuptime","queuedepth","gpucost","routing"];
 
 /* ---- quick access: real destinations, not decoration — same role scoping as the tiles ---- */
 var QUICK_ACCESS = [
@@ -771,10 +842,14 @@ function saveLayout(layout) {
     var rc = document.getElementById("dashRealContent");
     var ps = document.getElementById("postureStrip");
     var ap = document.getElementById("attnPanel");
+    var qa = document.getElementById("quickAccessSection");
     if (es) es.style.display = "block";
     if (rc) rc.style.display = "none";
     if (ps) ps.style.display = "none";
     if (ap) ap.style.display = "none";
+    // Quick access advertises "View findings" / "Download a report" — meaningless on day one,
+    // and the empty state carries its own "Connect your first source" call to action.
+    if (qa) qa.style.display = "none";
   }
 })();
 
@@ -889,6 +964,95 @@ renderTiles();
    nothing invented. Severity totals come straight from the element-breakdown rows below — those
    rows stay in the DOM (just visually hidden) even when a role's placeholder is showing, so this
    works for every role. ---- */
+/* ============================================================================================
+   Risk model. Every reference data-discovery product (Purview DSPM, Compliance Manager) leads
+   with the same thing: not "how much did we find" but "how much of what we found is still
+   UNPROTECTED / unreviewed, and who owns fixing it". These rows carry that missing dimension —
+   each element type, the source it came from, its severity, how many are still unreviewed, and
+   an owner. The found[] totals are deliberately identical to the element-breakdown rows in the
+   ecosystem panel below (2,389 + 2,401 + 1,644 + 1,420 + 1,380 + 1,102 = 10,336) so the whole
+   dashboard reconciles to one number.
+   ============================================================================================ */
+var RISK_ROWS = [
+  { source:"Clinical database",       element:"Health records",        category:"PHI", severity:"high",   found:1644, open:1644, owner:null,       href:"findings.html" },
+  { source:"Billing database",        element:"Credit card numbers",   category:"PFI", severity:"high",   found:1420, open:1420, owner:"Sam R.",   href:"findings.html" },
+  { source:"Sales database",          element:"Government ID numbers", category:"PII", severity:"high",   found:2389, open:412,  owner:"Priya N.", href:"findings.html" },
+  { source:"Sales data (Salesforce)", element:"Email addresses",       category:"PII", severity:"medium", found:1380, open:220,  owner:"Priya N.", href:"findings.html" },
+  { source:"HR files (SharePoint)",   element:"People's names",        category:"PII", severity:"medium", found:2401, open:88,   owner:"Priya N.", href:"findings.html" },
+  { source:"Marketing files (S3)",    element:"Phone numbers",         category:"PII", severity:"low",    found:1102, open:0,    owner:"Priya N.", href:"findings.html" }
+];
+
+/* Regulation coverage — the compliance dimension every reference product puts on its overview.
+   Averages to the 87% the "Regulation coverage" KPI tile already reports. */
+var REGULATIONS = [
+  { name:"GDPR",      pct:92, href:"compliance.html" },
+  { name:"HIPAA",     pct:78, href:"compliance.html" },
+  { name:"PCI-DSS",   pct:85, href:"compliance.html" },
+  { name:"CCPA",      pct:93, href:"compliance.html" }
+];
+
+/* Time-range datasets. "New findings vs. reviewed" is the data-discovery equivalent of Jira's
+   Created-vs-Resolved gadget: it answers "are we keeping up?", which a cumulative findings
+   count can never answer on its own. 7d new (842) matches the findings tile's "+842 this week". */
+var TREND_RANGES = {
+  "7d":  { labels:["Mon","Tue","Wed","Thu","Fri","Sat","Sun"], coverage:[85,85,86,86,86,87,87],
+           found:[120,140,95,160,130,110,87], reviewed:[90,100,130,95,140,110,80], unit:"day" },
+  "30d": { labels:["W38","W39","W40","W41"], coverage:[82,84,85,87],
+           found:[1040,880,950,842], reviewed:[690,900,760,610], unit:"week" },
+  "90d": { labels:["Jul","Aug","Sep"], coverage:[74,81,87],
+           found:[2900,3400,3200], reviewed:[2100,2300,2100], unit:"month" }
+};
+var activeRange = "30d";
+
+function riskTotals() {
+  var t = { found:0, open:0, highFound:0, highOpen:0, unowned:0 };
+  RISK_ROWS.forEach(function (r) {
+    t.found += r.found; t.open += r.open;
+    if (r.severity === "high") { t.highFound += r.found; t.highOpen += r.open; }
+    if (!r.owner && r.open > 0) t.unowned++;
+  });
+  return t;
+}
+function brokenSourceCount() { return document.querySelectorAll(".econode .dot.bad").length; }
+function staleSourceCount()  { return document.querySelectorAll(".econode .dot.warn").length; }
+
+/* A single transparent risk score, the pattern Compliance Manager and DSPM both lead with.
+   Deliberately NOT a black box — every deduction is shown as a chip under the score, so the
+   number is auditable rather than something the dashboard just asserts. */
+function computeRiskScore() {
+  var t = riskTotals();
+  var coverage = parseInt((TILES.coverage && TILES.coverage.val) || "0", 10) || 0;
+  var broken = brokenSourceCount(), stale = staleSourceCount();
+  var deductions = [];
+  var dHigh = t.highFound ? (t.highOpen / t.highFound) * 30 : 0;
+  var dAll  = t.found ? (t.open / t.found) * 15 : 0;
+  var dCov  = (100 - coverage) * 0.4;
+  var dBroken = broken * 8, dStale = stale * 5;
+  if (t.highOpen) deductions.push({ hit:true, text:"<b>" + t.highOpen.toLocaleString() + "</b> high-severity findings unreviewed" });
+  if (t.unowned)  deductions.push({ hit:true, text:"<b>" + t.unowned + "</b> high-risk group" + (t.unowned === 1 ? "" : "s") + " with no owner" });
+  if (broken)     deductions.push({ hit:true, text:"<b>" + broken + "</b> source" + (broken === 1 ? "" : "s") + " broken" });
+  if (stale)      deductions.push({ hit:true, text:"<b>" + stale + "</b> source" + (stale === 1 ? "" : "s") + " behind schedule" });
+  deductions.push({ hit:false, text:"Coverage <b>" + coverage + "%</b> &mdash; " + (100 - coverage) + " pts to full estate" });
+  var score = Math.max(0, Math.min(100, Math.round(100 - dHigh - dAll - dCov - dBroken - dStale)));
+  return { score:score, totals:t, coverage:coverage, deductions:deductions };
+}
+function scoreBand(score) {
+  if (score >= 90) return { label:"Strong",     color:"#1F9D55", cls:"" };
+  if (score >= 75) return { label:"Good",       color:"#1F9D55", cls:"" };
+  if (score >= 60) return { label:"Fair",       color:"#B45309", cls:"attn" };
+  return              { label:"Needs work",  color:"#B42318", cls:"bad" };
+}
+function scoreRingSVG(score, color) {
+  var size = 84, stroke = 9, r = (size - stroke) / 2, cx = size / 2, circ = 2 * Math.PI * r;
+  var dash = (score / 100) * circ;
+  return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 ' + size + " " + size + '" role="img" aria-label="Risk posture score ' + score + ' out of 100">' +
+    '<circle cx="' + cx + '" cy="' + cx + '" r="' + r + '" fill="none" stroke="rgba(9,35,57,.09)" stroke-width="' + stroke + '"/>' +
+    '<circle cx="' + cx + '" cy="' + cx + '" r="' + r + '" fill="none" stroke="' + color + '" stroke-width="' + stroke + '" stroke-linecap="round" stroke-dasharray="' + dash.toFixed(1) + " " + (circ - dash).toFixed(1) + '" transform="rotate(-90 ' + cx + " " + cx + ')"/>' +
+    '<text x="' + cx + '" y="' + (cx + 2) + '" text-anchor="middle" font-size="24" font-weight="800" fill="#092339" font-family="Segoe UI, sans-serif">' + score + '</text>' +
+    '<text x="' + cx + '" y="' + (cx + 16) + '" text-anchor="middle" font-size="9" fill="#8A93A6" font-family="Segoe UI, sans-serif">/ 100</text>' +
+  "</svg>";
+}
+
 function renderPosture() {
   var sev = { high: 0, med: 0, low: 0 };
   document.querySelectorAll(".elrow").forEach(function (row) {
@@ -900,48 +1064,40 @@ function renderPosture() {
     else if (bg.indexOf("sev-med") !== -1) sev.med += v;
     else if (bg.indexOf("sev-low") !== -1) sev.low += v;
   });
+  var R = computeRiskScore(), band = scoreBand(R.score);
   document.getElementById("pmHigh").textContent = sev.high.toLocaleString();
   document.getElementById("pmMed").textContent = sev.med.toLocaleString();
   document.getElementById("pmLow").textContent = sev.low.toLocaleString();
-  document.getElementById("pmCoverage").textContent = TILES.coverage ? TILES.coverage.val : "—";
+  document.getElementById("pmOpen").textContent = R.totals.open.toLocaleString();
+  document.getElementById("pmCoverage").textContent = R.coverage + "%";
+
+  var strip = document.getElementById("postureStrip");
+  strip.classList.remove("attn", "bad");
+  if (band.cls) strip.classList.add(band.cls);
+  document.getElementById("postureRing").innerHTML = scoreRingSVG(R.score, band.color);
+  document.getElementById("postureTitle").textContent = "Data risk posture: " + band.label;
+  document.getElementById("postureSub").innerHTML =
+    "<b>" + R.totals.open.toLocaleString() + "</b> of " + R.totals.found.toLocaleString() +
+    " sensitive items are still unreviewed &mdash; that, plus source health and coverage, is what moves this score.";
+  document.getElementById("postureFactors").innerHTML =
+    '<span class="flabel">What\'s driving it</span>' +
+    R.deductions.map(function (d) { return '<span class="factorchip' + (d.hit ? " hit" : "") + '">' + d.text + "</span>"; }).join("");
 
   var attnCount = TILES.attention ? (parseInt(TILES.attention.val, 10) || 0) : 0;
-  var strip = document.getElementById("postureStrip");
-  var icon = document.getElementById("postureIcon");
-  var title = document.getElementById("postureTitle");
-  var sub = document.getElementById("postureSub");
-  var ICON_WARN = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 3l9 16H3l9-16z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 10v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="17" r="1.1" fill="currentColor"/></svg>';
-  var ICON_OK = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-  if (attnCount > 0) {
-    strip.classList.add("attn");
-    icon.innerHTML = ICON_WARN;
-    title.textContent = attnCount + (attnCount === 1 ? " item needs" : " items need") + " your attention";
-    sub.textContent = "Estate coverage holding at " + (TILES.coverage ? TILES.coverage.val : "—") + " — see what's below.";
-  } else {
-    strip.classList.remove("attn");
-    icon.innerHTML = ICON_OK;
-    title.textContent = "Everything is on track";
-    sub.textContent = "Estate coverage at " + (TILES.coverage ? TILES.coverage.val : "—") + ", nothing needs attention right now.";
-  }
   var badge = document.getElementById("attnCountBadge");
   if (badge) badge.textContent = attnCount;
 }
-renderPosture();
-renderQuickAccess();
-renderFindingsDonut();
-renderSourceDonut();
-renderSourcesTable();
 
-/* ---- trend chart: a real area chart, not flexbox bars — thin line, gradient fill, endpoint
-   called out directly since it's the number that matters, native <title> tooltips per point. ---- */
-(function () {
-  var WEEKS = [ { w: "W35", v: 74 }, { w: "W36", v: 77 }, { w: "W37", v: 79 }, { w: "W38", v: 82 }, { w: "W39", v: 84 }, { w: "W40", v: 85 }, { w: "W41", v: 87 } ];
+/* ---- coverage trend: a real area chart, range-driven — thin line, gradient fill, endpoint
+   called out directly since it's the number that matters, native <title> tooltips per point. */
+function renderTrend() {
+  var D = TREND_RANGES[activeRange];
   var w = 640, h = 140, padX = 6, padT = 20, padB = 24;
   var innerW = w - padX * 2, innerH = h - padT - padB;
-  var min = 65, max = 100; // fixed floor/ceiling so week-to-week shape is comparable, not rescaled
-  var step = innerW / (WEEKS.length - 1);
-  var pts = WEEKS.map(function (d, i) {
-    return { x: padX + i * step, y: padT + innerH - ((d.v - min) / (max - min)) * innerH, v: d.v, w: d.w };
+  var min = 65, max = 100; // fixed floor/ceiling so periods stay comparable, never rescaled
+  var step = D.labels.length > 1 ? innerW / (D.labels.length - 1) : 0;
+  var pts = D.coverage.map(function (v, i) {
+    return { x: padX + i * step, y: padT + innerH - ((v - min) / (max - min)) * innerH, v: v, w: D.labels[i] };
   });
   var line = pts.map(function (p, i) { return (i === 0 ? "M" : "L") + p.x.toFixed(1) + "," + p.y.toFixed(1); }).join(" ");
   var last = pts[pts.length - 1];
@@ -955,14 +1111,138 @@ renderSourcesTable();
   }).join("");
   var lastLabel = '<text x="' + last.x.toFixed(1) + '" y="' + (last.y - 11).toFixed(1) + '" text-anchor="end" font-size="13" font-weight="800" fill="#092339" font-family="Segoe UI, sans-serif">' + last.v + "%</text>";
   document.getElementById("trendBars").innerHTML =
-    '<svg viewBox="0 0 ' + w + " " + h + '" width="100%" height="' + h + '" preserveAspectRatio="none" role="img" aria-label="Estate coverage over the last 7 weeks">' +
+    '<svg viewBox="0 0 ' + w + " " + h + '" width="100%" height="' + h + '" preserveAspectRatio="none" role="img" aria-label="Estate coverage over time">' +
       '<defs><linearGradient id="trendFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#3979BD" stop-opacity="0.22"/><stop offset="100%" stop-color="#3979BD" stop-opacity="0"/></linearGradient></defs>' +
       '<line x1="' + padX + '" y1="' + (padT + innerH) + '" x2="' + (w - padX) + '" y2="' + (padT + innerH) + '" stroke="#EEF1F7" stroke-width="1"/>' +
       '<path d="' + area + '" fill="url(#trendFill)"/>' +
       '<path d="' + line + '" fill="none" stroke="#3979BD" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/>' +
       dots + axisLabels + lastLabel +
     "</svg>";
-})();
+  document.getElementById("trendRangeNote").textContent = "% of connected data checked, by " + D.unit;
+}
+
+/* ---- new-vs-reviewed grouped bars (the "are we keeping up?" chart) ---- */
+// Amber "arriving" vs green "done" reads right semantically, and this exact pair is CVD-safe
+// (ΔE 13.0 protan / 28.3 normal) where the more obvious #B45309+#1F9D55 pairing is not (ΔE 7.3).
+var FLOW_COLORS = { found: "#D97706", reviewed: "#146B3A" };
+function renderFlow() {
+  var D = TREND_RANGES[activeRange];
+  var w = 560, h = 160, padX = 10, padT = 18, padB = 40;
+  var innerW = w - padX * 2, innerH = h - padT - padB;
+  var n = D.labels.length;
+  var groupW = innerW / n, barW = Math.min(22, (groupW - 10) / 2);
+  var maxVal = Math.max.apply(null, D.found.concat(D.reviewed)) || 1;
+  var bars = "", labels = "";
+  for (var i = 0; i < n; i++) {
+    var gx = padX + i * groupW + groupW / 2;
+    [["found", D.found[i]], ["reviewed", D.reviewed[i]]].forEach(function (pair, k) {
+      var val = pair[1];
+      var bh = Math.max(2, (val / maxVal) * innerH);
+      var bx = gx - barW - 1 + k * (barW + 2);
+      var by = padT + innerH - bh;
+      bars += '<path d="' + pgRoundedTop(bx, by, barW, bh, 4) + '" fill="' + FLOW_COLORS[pair[0]] + '"><title>' +
+        D.labels[i] + " &middot; " + (pair[0] === "found" ? "New findings" : "Reviewed") + ": " + val.toLocaleString() + "</title></path>";
+    });
+    labels += '<text x="' + gx + '" y="' + (padT + innerH + 16) + '" text-anchor="middle" font-size="10.5" fill="#8A93A6" font-family="Segoe UI, sans-serif">' + D.labels[i] + "</text>";
+  }
+  var totF = D.found.reduce(function (a, b) { return a + b; }, 0);
+  var totR = D.reviewed.reduce(function (a, b) { return a + b; }, 0);
+  var legend =
+    '<g font-family="Segoe UI, sans-serif" font-size="10.5">' +
+      '<rect x="' + padX + '" y="' + (h - 13) + '" width="9" height="9" rx="2" fill="' + FLOW_COLORS.found + '"/>' +
+      '<text x="' + (padX + 14) + '" y="' + (h - 5) + '" fill="#64748B">New findings</text>' +
+      '<rect x="' + (padX + 96) + '" y="' + (h - 13) + '" width="9" height="9" rx="2" fill="' + FLOW_COLORS.reviewed + '"/>' +
+      '<text x="' + (padX + 110) + '" y="' + (h - 5) + '" fill="#64748B">Reviewed</text>' +
+    "</g>";
+  document.getElementById("flowChart").innerHTML =
+    '<svg viewBox="0 0 ' + w + " " + h + '" width="100%" height="' + h + '" preserveAspectRatio="xMidYMid meet" role="img" aria-label="New findings versus reviewed findings over time">' +
+      '<line x1="' + padX + '" y1="' + (padT + innerH) + '" x2="' + (w - padX) + '" y2="' + (padT + innerH) + '" stroke="#EEF1F7" stroke-width="1"/>' +
+      bars + labels + legend +
+    "</svg>";
+  var net = totF - totR;
+  document.getElementById("flowNote").textContent = net > 0
+    ? "backlog grew by " + net.toLocaleString() + " this period"
+    : "backlog shrank by " + Math.abs(net).toLocaleString() + " this period";
+}
+function pgRoundedTop(x, y, w, h, r) {
+  r = Math.max(0, Math.min(r, w / 2, h));
+  return "M" + x + "," + (y + h) + " L" + x + "," + (y + r) + " Q" + x + "," + y + " " + (x + r) + "," + y +
+    " L" + (x + w - r) + "," + y + " Q" + (x + w) + "," + y + " " + (x + w) + "," + (y + r) +
+    " L" + (x + w) + "," + (y + h) + " Z";
+}
+
+/* ---- regulation coverage: colour encodes status against the 80% floor, not identity ---- */
+function renderRegulations() {
+  var rows = REGULATIONS.map(function (r) {
+    var color = r.pct >= 90 ? "var(--ok)" : (r.pct >= 80 ? "var(--sidebar-active)" : "var(--warn)");
+    return '<a class="regrow" href="' + r.href + '"><span class="reglbl">' + r.name + '</span>' +
+      '<div class="regbar"><span style="width:' + r.pct + '%;background:' + color + '"></span></div>' +
+      '<span class="regct">' + r.pct + "%</span></a>";
+  }).join("");
+  document.getElementById("regRows").innerHTML = rows;
+  var avg = Math.round(REGULATIONS.reduce(function (s, r) { return s + r.pct; }, 0) / REGULATIONS.length);
+  document.getElementById("regAvgNote").textContent = avg + "% average";
+}
+
+/* ---- top data risks: ranked by unreviewed high-severity first — the actionable table ---- */
+function renderRiskTable() {
+  var tbody = document.getElementById("riskTableRows");
+  if (!tbody) return;
+  var sevRank = { high: 0, medium: 1, low: 2 };
+  var sorted = RISK_ROWS.slice().sort(function (a, b) {
+    if (sevRank[a.severity] !== sevRank[b.severity]) return sevRank[a.severity] - sevRank[b.severity];
+    return b.open - a.open;
+  });
+  tbody.innerHTML = sorted.map(function (r) {
+    return "<tr>" +
+      "<td>" + r.source + "</td>" +
+      "<td>" + r.element + "</td>" +
+      "<td>" + r.category + "</td>" +
+      '<td><span class="sevpill ' + r.severity + '">' + r.severity + "</span></td>" +
+      '<td class="num">' + r.found.toLocaleString() + "</td>" +
+      '<td class="num"><span class="openbadge' + (r.open === 0 ? " zero" : "") + '">' + (r.open === 0 ? "All reviewed" : r.open.toLocaleString()) + "</span></td>" +
+      "<td>" + (r.owner ? r.owner : '<span class="unowned">Unassigned</span>') + "</td>" +
+      '<td><a class="rowgo" href="' + r.href + '">Review &rarr;</a></td>' +
+    "</tr>";
+  }).join("");
+}
+
+/* CSV export — every reference product ships this, because a privacy officer eventually has to
+   hand these numbers to an auditor rather than screenshot them. */
+function exportRisksCSV() {
+  var header = ["Source", "What was found", "Category", "Severity", "Found", "Unreviewed", "Owner"];
+  var esc = function (v) { var s = String(v); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+  var lines = [header.join(",")].concat(RISK_ROWS.map(function (r) {
+    return [r.source, r.element, r.category, r.severity, r.found, r.open, r.owner || "Unassigned"].map(esc).join(",");
+  }));
+  var blob = new Blob([lines.join("\r\n")], { type: "text/csv;charset=utf-8;" });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement("a");
+  a.href = url; a.download = "cdd-top-data-risks.csv";
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast("Exported " + RISK_ROWS.length + " rows to CSV");
+}
+
+renderPosture();
+renderQuickAccess();
+renderFindingsDonut();
+renderSourceDonut();
+renderSourcesTable();
+renderTrend();
+renderFlow();
+renderRegulations();
+renderRiskTable();
+
+document.getElementById("rangeSel").addEventListener("click", function (e) {
+  var btn = e.target.closest("button[data-range]");
+  if (!btn) return;
+  activeRange = btn.getAttribute("data-range");
+  this.querySelectorAll("button").forEach(function (b) { b.classList.toggle("on", b === btn); });
+  renderTrend();
+  renderFlow();
+});
+document.getElementById("exportRisksBtn").addEventListener("click", exportRisksCSV);
 </script>
 
 <script>
