@@ -121,6 +121,42 @@
   .attnitem-w{font-size:11.5px;color:var(--ink-3);white-space:nowrap;}
   .attnitem-go{font-size:11.5px;font-weight:700;color:var(--sidebar-active);white-space:nowrap;}
 
+  /* ---- quick access ---- */
+  .qagrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px;}
+  .qacard{display:flex;align-items:center;gap:12px;border:1px solid #E7EAF2;border-radius:12px;padding:14px 15px;background:#FCFDFF;text-decoration:none;color:inherit;transition:border-color .15s,box-shadow .15s,transform .15s;}
+  .qacard:hover{border-color:var(--sidebar-active);box-shadow:0 4px 14px rgba(16,24,40,.07);transform:translateY(-1px);}
+  .qacard .qicon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex:0 0 auto;background:var(--tint);color:var(--tintc);}
+  .qacard .qt{font-size:13px;font-weight:700;color:var(--ink);}
+  .qacard .qd{font-size:11px;color:var(--ink-3);margin-top:1px;line-height:1.35;}
+
+  /* ---- charts row ---- */
+  .chartsgrid{display:grid;grid-template-columns:1.6fr 1fr 1fr;gap:16px;margin-bottom:26px;align-items:stretch;}
+  .chartcard{border:1px solid #E7EAF2;border-radius:14px;padding:18px 20px 16px;display:flex;flex-direction:column;}
+  .chartcard .thead2{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;flex-wrap:wrap;gap:6px;}
+  .chartcard .thead2 b{font-size:13.5px;color:var(--ink);}
+  .chartcard .thead2 span{font-size:11.5px;color:var(--ink-3);}
+  .donutwrap{display:flex;align-items:center;gap:16px;flex:1;margin-top:8px;}
+  .donutlegend{display:flex;flex-direction:column;gap:8px;}
+  .donutlegend span{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:600;color:var(--ink-2);white-space:nowrap;}
+  .donutlegend i{width:9px;height:9px;border-radius:2.5px;display:inline-block;flex:0 0 auto;}
+  .donutlegend b{color:var(--ink);font-variant-numeric:tabular-nums;margin-left:auto;padding-left:8px;}
+  @media (max-width:1180px){ .chartsgrid{grid-template-columns:1fr;} .qagrid{grid-template-columns:repeat(2,1fr);} }
+
+  /* ---- sources-at-a-glance table (status/dot badges match the rest of the app) ---- */
+  .status{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;}
+  .status .dot{width:7px;height:7px;border-radius:50%;}
+  .status.ok{color:var(--ok);} .status.ok .dot{background:var(--ok);}
+  .status.warn{color:var(--warn);} .status.warn .dot{background:var(--warn);}
+  .status.bad{color:var(--bad);} .status.bad .dot{background:var(--bad);}
+  .status.run{color:var(--sidebar-active);} .status.run .dot{background:var(--sidebar-active);}
+  .dtable-wrap{border:1px solid #E7EAF2;border-radius:12px;overflow-x:auto;margin-bottom:28px;}
+  .dtable{border-collapse:collapse;width:100%;font-size:13px;}
+  .dtable th,.dtable td{text-align:left;padding:11px 16px;border-bottom:1px solid #F0F1F6;white-space:nowrap;}
+  .dtable th{font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-3);font-weight:700;background:#FBFCFE;}
+  .dtable tr:last-child td{border-bottom:none;}
+  .dtable td.num{font-variant-numeric:tabular-nums;font-weight:600;}
+  .dtable a.rowgo{font-size:12px;font-weight:700;color:var(--sidebar-active);text-decoration:none;}
+
   /* ---- dashboard toolbar ---- */
   .dtoolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px;}
   .dtoolbar .actions{display:flex;gap:10px;flex-wrap:wrap;}
@@ -339,17 +375,8 @@
         </div>
       </div>
 
-<div class="dtoolbar">
-        <div class="actions">
-          <a class="btn btn-primary role-gate" data-role="admin" href="pipeline.html#setup" id="provisionCta">&#9881; Provision the pipeline</a>
-          <a class="btn btn-primary js-connect-open role-gate" data-role="dpo admin" href="connect-source.html">+ Connect a source</a>
-          <a class="btn role-gate" data-role="dpo compliance" href="findings.html">View findings</a>
-          <a class="btn role-gate" data-role="dpo compliance" href="reports.html">Download a report</a>
-          <a class="btn role-gate" data-role="admin" href="pipeline.html">View pipeline health</a>
-          <a class="btn role-gate" data-role="admin" href="ingestion-ops.html">Ingestion ops</a>
-        </div>
-        <button class="btn btn-customize" id="customizeBtn">✎ Customize tiles</button>
-      </div>
+<h3 class="section-h">Quick access</h3>
+      <div class="qagrid" id="quickAccess"></div>
 
       <div class="walk-empty" id="dashEmptyState" style="display:none;">
         <div class="we-ico">🗂️</div>
@@ -359,6 +386,10 @@
       </div>
 
       <div id="dashRealContent">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <h3 class="section-h" style="margin-bottom:0;">Key metrics</h3>
+        <button class="btn btn-customize" id="customizeBtn">✎ Customize tiles</button>
+      </div>
       <div class="tgrid" id="tileGrid"></div>
 
       <div class="addpool" id="addPool">
@@ -366,9 +397,30 @@
         <div class="apool-list" id="apoolList"></div>
       </div>
 
-      <div class="trendcard">
-        <div class="thead2"><b>Estate coverage over time</b><span>% of connected data checked, by week</span></div>
-        <div class="bars" id="trendBars"></div>
+      <h3 class="section-h">Trends &amp; breakdown</h3>
+      <div class="chartsgrid">
+        <div class="chartcard">
+          <div class="thead2"><b>Estate coverage over time</b><span>% of connected data checked, by week</span></div>
+          <div class="bars" id="trendBars"></div>
+        </div>
+        <div class="chartcard">
+          <div class="thead2"><b>Findings by category</b><span id="findingsDonutTotal"></span></div>
+          <div class="donutwrap"><div id="findingsDonut"></div><div class="donutlegend" id="findingsLegend"></div></div>
+        </div>
+        <div class="chartcard">
+          <div class="thead2"><b>Source health</b><span id="sourceDonutTotal"></span></div>
+          <div class="donutwrap"><div id="sourceDonut"></div><div class="donutlegend" id="sourceLegend"></div></div>
+        </div>
+      </div>
+
+      <div class="role-gate" data-role="dpo admin">
+        <h3 class="section-h">Sources at a glance</h3>
+        <div class="dtable-wrap">
+          <table class="dtable">
+            <thead><tr><th>Source</th><th>Type</th><th>Status</th><th>Records checked</th><th></th></tr></thead>
+            <tbody id="sourcesTableRows"></tbody>
+          </table>
+        </div>
       </div>
 
       <div class="ecopanel">
@@ -487,6 +539,130 @@ var TILES = {
   routing:   { label:"Records routed / hr", val:"1.2M", trend:"flat", trendv:"across 7 sources", tint:"#EEF3FC", tintc:"#2563EB", spark:[1.0,1.05,1.1,1.15,1.18,1.19,1.2], href:"ingestion-ops.html", ic:"route", roles:["admin"] }
 };
 var DEFAULT_LAYOUT = ["sources","coverage","findings","attention","accuracy","compliance","alerts","capacity","pipeuptime","queuedepth","gpucost","routing"];
+
+/* ---- quick access: real destinations, not decoration — same role scoping as the tiles ---- */
+var QUICK_ACCESS = [
+  { key:"provisionCta", label:"Provision the pipeline", desc:"One-time setup, before any source is connected", ic:"pulse", tint:"#F3EEFD", tintc:"#7C3AED", href:"pipeline.html#setup", roles:["admin"] },
+  { label:"Connect a source", desc:"Wire up a new database, file store, or app", ic:"plus", tint:"#EEF3FC", tintc:"#2563EB", href:"connect-source.html", connectModal:true, roles:["dpo","admin"] },
+  { label:"View findings", desc:"Every sensitive item found, ranked by urgency", ic:"find", tint:"#FEF3E2", tintc:"#B45309", href:"findings.html", roles:["dpo","compliance"] },
+  { label:"Download a report", desc:"One-page summary or a full evidence pack", ic:"ev", tint:"#E8F6EE", tintc:"#1F9D55", href:"reports.html", roles:["dpo","compliance"] },
+  { label:"Pipeline health", desc:"Queue depth, autoscaling, job lifecycle", ic:"cap", tint:"#F3EEFD", tintc:"#7C3AED", href:"pipeline.html", roles:["admin"] },
+  { label:"Ingestion ops", desc:"Routing rules and real-time job status", ic:"route", tint:"#EEF3FC", tintc:"#2563EB", href:"ingestion-ops.html", roles:["admin"] },
+  { label:"Regulation coverage", desc:"Which regulations your estate is covered under", ic:"comp", tint:"#FCE7F0", tintc:"#DB2777", href:"compliance.html", roles:["compliance"] },
+  { label:"Manage tenants & keys", desc:"Tenants, roles, and encryption key rotation", ic:"team", tint:"#F3EEFD", tintc:"#7C3AED", href:"platform-admin.html", roles:["admin"] }
+];
+function pipelineProvisioned() {
+  try { return !!JSON.parse(localStorage.getItem("cdd_pipeline_shared") || "null"); } catch (e) { return false; }
+}
+function renderQuickAccess() {
+  var role = currentRole();
+  var provisioned = pipelineProvisioned();
+  var items = QUICK_ACCESS.filter(function (q) {
+    if (q.roles.indexOf(role) === -1) return false;
+    if (q.key === "provisionCta" && provisioned) return false;
+    return true;
+  });
+  var grid = document.getElementById("quickAccess");
+  grid.innerHTML = items.map(function (q) {
+    return '<a class="qacard' + (q.connectModal ? " js-connect-open" : "") + '"' + (q.key ? ' id="' + q.key + '"' : "") + ' href="' + q.href + '">' +
+      '<div class="qicon" style="--tint:' + q.tint + ';--tintc:' + q.tintc + '">' + ICONS[q.ic] + '</div>' +
+      '<div><div class="qt">' + q.label + '</div><div class="qd">' + q.desc + '</div></div>' +
+    '</a>';
+  }).join("");
+  grid.querySelectorAll(".js-connect-open").forEach(function (el) {
+    el.addEventListener("click", function (e) { e.preventDefault(); if (window.cddOpenConnectModal) window.cddOpenConnectModal(); });
+  });
+}
+
+/* ---- small dependency-free SVG donut: stroke-based ring, 2px gaps between segments, native
+   per-segment tooltips, a center total, and a legend rendered alongside (never color-alone). ---- */
+function donutSVG(segments, opts) {
+  opts = opts || {};
+  var size = opts.size || 116, stroke = opts.stroke || 17;
+  var r = (size - stroke) / 2, cx = size / 2, cy = size / 2, circ = 2 * Math.PI * r;
+  var total = segments.reduce(function (s, x) { return s + x.value; }, 0) || 1;
+  var offset = 0;
+  var arcs = segments.filter(function (s) { return s.value > 0; }).map(function (seg) {
+    var frac = seg.value / total;
+    var dash = Math.max(frac * circ - 2, 0);
+    var gap = circ - dash;
+    var el = '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="' + seg.color + '" stroke-width="' + stroke + '" stroke-linecap="round" stroke-dasharray="' + dash.toFixed(1) + " " + gap.toFixed(1) + '" stroke-dashoffset="' + (-offset).toFixed(1) + '" transform="rotate(-90 ' + cx + " " + cy + ')"><title>' + seg.label + ": " + seg.value.toLocaleString() + " (" + Math.round(frac * 100) + "%)</title></circle>";
+    offset += frac * circ;
+    return el;
+  }).join("");
+  var center = opts.centerValue ? '<text x="' + cx + '" y="' + (cy - 1) + '" text-anchor="middle" font-size="17" font-weight="800" fill="#092339" font-family="Segoe UI, sans-serif">' + opts.centerValue + '</text><text x="' + cx + '" y="' + (cy + 14) + '" text-anchor="middle" font-size="9.5" fill="#8A93A6" font-family="Segoe UI, sans-serif">' + (opts.centerLabel || "") + "</text>" : "";
+  return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 ' + size + " " + size + '" role="img" aria-label="' + (opts.ariaLabel || "Breakdown") + '">' + arcs + center + "</svg>";
+}
+function renderDonutLegend(containerId, segments) {
+  document.getElementById(containerId).innerHTML = segments.map(function (s) {
+    return '<span><i style="background:' + s.color + '"></i>' + s.label + '<b>' + s.value.toLocaleString() + "</b></span>";
+  }).join("");
+}
+
+/* ---- findings-by-category donut: reads the same real element-breakdown rows the posture strip
+   does, classified into the app's own PII/PHI/PFI taxonomy (see findings.html/elements.html). ---- */
+var FINDING_CATEGORY = {
+  "Government ID numbers": "PII", "People's names": "PII", "Email addresses": "PII", "Phone numbers": "PII",
+  "Health records": "PHI", "Credit card numbers": "PFI"
+};
+var CATEGORY_COLORS = { PII: "#3979BD", PHI: "#7C3AED", PFI: "#0FA3A3", Other: "#8A93A6" };
+function renderFindingsDonut() {
+  var totals = {};
+  document.querySelectorAll(".elrow").forEach(function (row) {
+    var label = row.querySelector(".ellbl").textContent;
+    var v = parseInt(row.querySelector(".elct").textContent.replace(/[^0-9]/g, ""), 10) || 0;
+    var cat = FINDING_CATEGORY[label] || "Other";
+    totals[cat] = (totals[cat] || 0) + v;
+  });
+  var order = ["PII", "PHI", "PFI", "Other"];
+  var segments = order.filter(function (c) { return totals[c]; }).map(function (c) { return { label: c, value: totals[c], color: CATEGORY_COLORS[c] }; });
+  var grand = segments.reduce(function (s, x) { return s + x.value; }, 0);
+  document.getElementById("findingsDonut").innerHTML = donutSVG(segments, { ariaLabel: "Findings by category", centerValue: grand.toLocaleString(), centerLabel: "total" });
+  renderDonutLegend("findingsLegend", segments);
+  document.getElementById("findingsDonutTotal").textContent = grand.toLocaleString() + " items";
+}
+
+/* ---- source-health donut: reads the same real econode rows the ecosystem panel and the
+   sources table below both use. ---- */
+var SOURCE_STATUS_LABEL = { ok: "Healthy", warn: "Delayed", run: "Checking", bad: "Broken" };
+var SOURCE_STATUS_COLOR = { ok: "#1F9D55", warn: "#B45309", run: "#3979BD", bad: "#B42318" };
+function renderSourceDonut() {
+  var totals = {};
+  document.querySelectorAll(".econode[data-src]").forEach(function (a) {
+    var dotEl = a.querySelector(".dot");
+    var cls = dotEl ? dotEl.className.replace("dot", "").trim() : "ok";
+    totals[cls] = (totals[cls] || 0) + 1;
+  });
+  var order = ["ok", "run", "warn", "bad"];
+  var segments = order.filter(function (c) { return totals[c]; }).map(function (c) { return { label: SOURCE_STATUS_LABEL[c], value: totals[c], color: SOURCE_STATUS_COLOR[c] }; });
+  var grand = segments.reduce(function (s, x) { return s + x.value; }, 0);
+  document.getElementById("sourceDonut").innerHTML = donutSVG(segments, { ariaLabel: "Source health", centerValue: grand, centerLabel: "sources" });
+  renderDonutLegend("sourceLegend", segments);
+  document.getElementById("sourceDonutTotal").textContent = grand + " sources";
+}
+
+/* ---- sources-at-a-glance table: reads the same real econode rows, no second copy of the data. */
+function renderSourcesTable() {
+  var rows = Array.prototype.slice.call(document.querySelectorAll(".econode[data-src]"));
+  var tbody = document.getElementById("sourcesTableRows");
+  if (!tbody) return;
+  if (!rows.length) { tbody.innerHTML = '<tr><td colspan="5" style="color:var(--ink-3);">No sources connected yet.</td></tr>'; return; }
+  tbody.innerHTML = rows.map(function (a) {
+    var name = a.getAttribute("data-src");
+    var dotEl = a.querySelector(".dot");
+    var cls = dotEl ? dotEl.className.replace("dot", "").trim() : "ok";
+    var emText = a.querySelector(".nm em") ? a.querySelector(".nm em").textContent : "";
+    var parts = emText.split("·");
+    var type = (parts[0] || "").trim();
+    var statusText = (parts[1] || SOURCE_STATUS_LABEL[cls] || "").trim();
+    var count = a.querySelector(".ct") ? a.querySelector(".ct").textContent : "—";
+    var badgeCls = (cls === "bad" || cls === "warn" || cls === "run") ? cls : "ok";
+    return '<tr><td>' + name + '</td><td>' + type + '</td>' +
+      '<td><span class="status ' + badgeCls + '"><span class="dot"></span>' + statusText + '</span></td>' +
+      '<td class="num">' + count + '</td>' +
+      '<td><a class="rowgo" href="' + a.getAttribute("href") + '">View &rarr;</a></td></tr>';
+  }).join("");
+}
 function currentRole() { return document.body.getAttribute("data-role") || "dpo"; }
 var ICONS = {
   src:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M4 6c0-1.1 3.6-2 8-2s8 .9 8 2-3.6 2-8 2-8-.9-8-2z" stroke="currentColor" stroke-width="1.7"/><path d="M4 6v12c0 1.1 3.6 2 8 2s8-.9 8-2V6" stroke="currentColor" stroke-width="1.7"/><path d="M4 12c0 1.1 3.6 2 8 2s8-.9 8-2" stroke="currentColor" stroke-width="1.7"/></svg>',
@@ -506,7 +682,8 @@ var ICONS = {
   pulse:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M3 12h4l2-7 4 14 2-7h6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   queue:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 3l9 5-9 5-9-5 9-5z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M3 12l9 5 9-5" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M3 17l9 5 9-5" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>',
   gpu:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="7" y="7" width="10" height="10" rx="1.5" stroke="currentColor" stroke-width="1.7"/><path d="M9 3v4M15 3v4M9 17v4M15 17v4M3 9h4M3 15h4M17 9h4M17 15h4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>',
-  route:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M4 6h6l4 12h6M4 18h6l4-12h6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+  route:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M4 6h6l4 12h6M4 18h6l4-12h6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  plus:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>'
 };
 
 function sparkSVG(data, color) {
@@ -750,6 +927,10 @@ function renderPosture() {
   if (badge) badge.textContent = attnCount;
 }
 renderPosture();
+renderQuickAccess();
+renderFindingsDonut();
+renderSourceDonut();
+renderSourcesTable();
 
 /* ---- trend chart: a real area chart, not flexbox bars — thin line, gradient fill, endpoint
    called out directly since it's the number that matters, native <title> tooltips per point. ---- */
@@ -801,22 +982,8 @@ renderPosture();
     }
     if (typeof renderTiles === "function") renderTiles();
     if (typeof updateEcoVisibility === "function") updateEcoVisibility();
+    if (typeof renderQuickAccess === "function") renderQuickAccess();
   });
-})();
-</script>
-<script>
-(function () {
-  // Platform Ops starts from the pipeline, not a source — once the one shared pipeline is
-  // provisioned this CTA has done its job, so it steps aside and "+ Connect a source" becomes
-  // the lead action again. Every tenant uses the shared pipeline automatically (see
-  // pipeline.html); only a tenant promoted to its own dedicated pipeline needs anything more,
-  // and that's a deliberate exception, not something this CTA needs to account for.
-  var provisioned = false;
-  try { provisioned = !!JSON.parse(localStorage.getItem("cdd_pipeline_shared") || "null"); } catch (e) {}
-  if (provisioned) {
-    var cta = document.getElementById("provisionCta");
-    if (cta) cta.style.display = "none";
-  }
 })();
 </script>
 <script>
@@ -957,6 +1124,9 @@ var STEP_NOTES = {
     overlay.classList.remove("open");
     document.body.style.overflow = "";
   }
+  // Exposed so Quick Access can re-bind after re-rendering on role change — the querySelectorAll
+  // binding below only ever runs once, at initial load.
+  window.cddOpenConnectModal = openModal;
   closeBtn.addEventListener("click", closeModal);
   overlay.addEventListener("click", function (e) { if (e.target === overlay) closeModal(); });
   document.addEventListener("keydown", function (e) { if (e.key === "Escape" && overlay.classList.contains("open")) closeModal(); });
